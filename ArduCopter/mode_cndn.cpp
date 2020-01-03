@@ -2,7 +2,7 @@
 
 #if MODE_CNDN_ENABLED == ENABLED
 
-bool ModeCNDN::init(bool ignore_checks) override
+bool ModeCNDN::init(bool ignore_checks)
 {
     if (!copter.failsafe.radio)
     {
@@ -40,7 +40,7 @@ bool ModeCNDN::init(bool ignore_checks) override
     return true;
 }
 
-void ModeCNDN::run() override
+void ModeCNDN::run()
 {
     // initialize vertical speed and acceleration's range
     pos_control->set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
@@ -89,7 +89,7 @@ void ModeCNDN::run() override
     }
 }
 
-bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw = false, float yaw_cd = 0.0, bool use_yaw_rate = false, float yaw_rate_cds = 0.0, bool yaw_relative = false)
+bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool yaw_relative)
 {
     // ensure we are in position control mode
     if (stage != TAKE_PICTURE)
@@ -204,7 +204,7 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
     }
 }
 
-void ModeCNDN::handle_message(const mavlink_message_t &msg) override
+void ModeCNDN::handle_message(const mavlink_message_t &msg)
 {
     switch (msg.msgid)
     {
