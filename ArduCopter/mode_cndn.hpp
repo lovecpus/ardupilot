@@ -28,6 +28,7 @@ class ModeCNDN : public Mode
 {
 
 public:
+    extern Copter copter;
     // inherit constructor
     using Mode::Mode;
 
