@@ -3,8 +3,8 @@
 * Init and run calls for CNDN flight mode
 */
 #define CNDN_WP_RADIUS_CM 200
+#define CASE_CNDN_MODE() case Mode::Number::CNDN: ret = &mode_cndn; break;
 #define CASE_CNDN_AUX_INIT()  case AUX_FUNC::CNDN: case AUX_FUNC::CNDN_ETRI:
-
 #define CASE_CNDN_AUX_FUNC()  case AUX_FUNC::CNDN: \
     do_aux_function_change_mode(Mode::Number::CNDN, ch_flag); \
     break; \
