@@ -21,6 +21,7 @@ public:
         RTL =           6,  // automatic return to launching point
         CIRCLE =        7,  // automatic circular flight with automatic throttle
         LAND =          9,  // automatic landing with horizontal position control
+        CNDN =         10,  // CNDN & ETRI misstion computer control
         DRIFT =        11,  // semi-automous position, yaw and throttle control
         SPORT =        13,  // manual earth-frame angular rate control with manual throttle
         FLIP =         14,  // automatically flip the vehicle on the roll axis
@@ -57,6 +58,7 @@ public:
     virtual bool has_user_takeoff(bool must_navigate) const { return false; }
     virtual bool in_guided_mode() const { return false; }
     virtual bool logs_attitude() const { return false; }
+    virtual bool is_position_target_reached() { return true; }
 
     // return a string for this flightmode
     virtual const char *name() const = 0;
@@ -74,6 +76,7 @@ public:
     virtual int32_t wp_bearing() const { return 0; }
     virtual uint32_t wp_distance() const { return 0; }
     virtual float crosstrack_error() const { return 0.0f;}
+    virtual void handle_message(const mavlink_message_t &msg) {}
 
     void update_navigation();
 
@@ -1468,3 +1471,5 @@ private:
 
 };
 #endif
+
+#include "mode_cndn.hpp"

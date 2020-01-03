@@ -4677,6 +4677,13 @@ void GCS::passthru_timer(void)
     }
 }
 
+void GCS::send_command_long(uint32_t msgid, uint8_t confirmation, float p1, float p2, float p3, float p4, float p5, float p6, float p7)
+{
+    for (uint8_t i=0; i<num_gcs(); i++) {
+        chan(i)->send_command_long(msgid, confirmation, p1,p2,p3,p4,p5,p6,p7);
+    }
+}
+
 bool GCS_MAVLINK::mavlink_coordinate_frame_to_location_alt_frame(const MAV_FRAME coordinate_frame, Location::AltFrame &frame)
 {
     switch (coordinate_frame) {

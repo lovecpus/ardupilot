@@ -179,7 +179,8 @@ public:
         KILL_IMU2 =          101, // disable second IMU (for IMU failure testing)
         // if you add something here, make sure to update the documentation of the parameter in RC_Channel.cpp!
         // also, if you add an option >255, you will need to fix duplicate_options_exist
-
+        CNDN =               120, // CNDN mode
+        CNDN_ETRI =          121, // CNDN_ETRI find waypoint / do edge finder
         // inputs eventually used to replace RCMAP
         MAINSAIL =           207, // mainsail input
     };

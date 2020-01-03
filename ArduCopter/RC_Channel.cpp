@@ -110,6 +110,7 @@ void RC_Channel_Copter::init_aux_function(const aux_func_t ch_option, const aux_
     case AUX_FUNC::FLOWHOLD:
     case AUX_FUNC::CIRCLE:
     case AUX_FUNC::DRIFT:
+    CASE_CNDN_AUX_INIT()    
         break;
     default:
         RC_Channel::init_aux_function(ch_option, ch_flag);
@@ -572,6 +573,8 @@ void RC_Channel_Copter::do_aux_function(const aux_func_t ch_option, const aux_sw
                 break;
             }
             break;
+
+        CASE_CNDN_AUX_FUNC()
 
     default:
         RC_Channel::do_aux_function(ch_option, ch_flag);

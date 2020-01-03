@@ -92,6 +92,9 @@ enum Log_Event : uint8_t {
     DATA_STANDBY_ENABLE = 74,
     DATA_STANDBY_DISABLE = 75,
 
+    DATA_CNDN_ETRI_A = 81,      // CNDN Copter only
+    DATA_CNDN_ETRI_B = 82,      // CNDN Copter only
+
     DATA_SURFACED = 163,
     DATA_NOT_SURFACED = 164,
     DATA_BOTTOMED = 165,

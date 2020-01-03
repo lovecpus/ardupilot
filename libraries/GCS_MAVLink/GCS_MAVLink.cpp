@@ -65,6 +65,19 @@ void GCS_MAVLINK::lock_channel(mavlink_channel_t _chan, bool lock)
     }
 }
 
+void  GCS_MAVLINK::send_command_long(uint32_t msgid, uint8_t confirmation, float p1, float p2, float p3, float p4, float p5, float p6, float p7)
+{
+    if (HAVE_PAYLOAD_SPACE(chan, COMMAND_LONG)) {
+        mavlink_msg_command_long_send(
+            chan,
+            0,
+            0,
+            msgid,
+            confirmation,
+            p1, p2, p3, p4, p5, p6, p7);
+    }
+}
+
 bool GCS_MAVLINK::locked() const
 {
     return (1U<<chan) & mavlink_locked_mask;

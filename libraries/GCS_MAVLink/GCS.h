@@ -215,6 +215,7 @@ public:
     void send_sys_status();
     void send_set_position_target_global_int(uint8_t target_system, uint8_t target_component, const Location& loc);
     void send_rpm() const;
+    void send_command_long(uint32_t msgid, uint8_t confirmation=0, float p1=0.0f, float p2=0.0f, float p3=0.0f, float p4=0.0f, float p5=0.0f, float p6=0.0f, float p7=0.0f);
 
     bool locked() const;
 
@@ -871,6 +872,7 @@ public:
 
     uint8_t get_channel_from_port_number(uint8_t port_num);
 
+    void send_command_long(uint32_t msgid, uint8_t confirmation=0, float p1=0.0f, float p2=0.0f, float p3=0.0f, float p4=0.0f, float p5=0.0f, float p6=0.0f, float p7=0.0f);
 protected:
 
     virtual GCS_MAVLINK *new_gcs_mavlink_backend(GCS_MAVLINK_Parameters &params,
