@@ -44,6 +44,7 @@ public:
     bool set_destination(const Vector3f &destination, bool use_yaw = false, float yaw_cd = 0.0, bool use_yaw_rate = false, float yaw_rate_cds = 0.0, bool yaw_relative = false);
     // save current position as A (dest_num = 0) or B (dest_num = 1).  If both A and B have been saved move to the one specified
     void mission_command(uint8_t dest_num);
+    void return_to_manual_control(bool maintain_target);
     void handle_message(const mavlink_message_t &msg) override;
 
 protected:
