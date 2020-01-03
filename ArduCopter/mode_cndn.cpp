@@ -109,7 +109,7 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
 #endif
 
     // set yaw state
-    set_yaw_state(use_yaw, yaw_cd, use_yaw_rate, yaw_rate_cds, relative_yaw);
+    set_yaw_state(use_yaw, yaw_cd, use_yaw_rate, yaw_rate_cds, yaw_relative);
 
     // no need to check return status because terrain data is not used
     wp_nav->set_wp_destination(destination, false);
