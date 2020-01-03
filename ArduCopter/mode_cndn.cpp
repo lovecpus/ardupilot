@@ -541,14 +541,14 @@ bool ModeCNDN::reached_destination()
 
 bool ModeCNDN::calculate_next_dest(uint8_t position_num, bool use_wpnav_alt, Vector3f &next_dest, bool &terrain_alt) const
 {
-    // sanity check dest_num
-    if (dest_num > 1)
+    // sanity check position_num
+    if (position_num > 1)
     {
         return false;
     }
 
-    // define start_pos as either A or B depending upon dest_num
-    Vector2f start_pos = dest_num == 0 ? dest_A : dest_B;
+    // define start_pos as either A or B depending upon position_num
+    Vector2f start_pos = position_num == 0 ? dest_A : dest_B;
 
     // calculate vector from A to B
     Vector2f AB_diff = dest_B - dest_A;
