@@ -82,7 +82,7 @@ void ModeCNDN::run()
         break;
 
     case PREPARE_FOLLOW:
-        manual_control();
+        auto_control();
         break;
 
     case MANUAL:
@@ -164,20 +164,35 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             stage = EDGE_FOLLOW;
             if (edge_count > 0)
             {
+                const Vector3f curr_pos = inertial_nav.get_position();
+                float maxdt = 999.0f;
+                int mini = 0;
+                for (int i = 0; i < edge_count; i++)
+                {
+                    Vector3f pos(edge_points[i].x, edge_points[i].y, curr_pos.z);
+                    Vector3f dpos(pos - curr_pos);
+                    float dt = sqrtf(dpos.x*dpos.x+dpos.u+dpos.y);
+                    if (dt < maxdt)
+                    {
+                        mini = i;
+                        maxdt = dt;
+                    }
+                }
+
                 Vector3f stopping_point;
                 wp_nav->get_wp_stopping_point(stopping_point);
-                stopping_point.x = edge_points[0].x;
-                stopping_point.y = edge_points[0].y;
+
+                stopping_point.x = edge_points[mini].x;
+                stopping_point.y = edge_points[mini].y;
                 // no need to check return status because terrain data is not used
                 wp_nav->set_wp_destination(stopping_point, false);
 
                 gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "Edge follow stage started.");
+                gcs().send_text(MAV_SEVERITY_INFO, "Edge follow stage started with point %d.", mini);
             }
             return;
         }
-        break;
-    }
+    } break;
 }
 
 // return manual control to the pilot
