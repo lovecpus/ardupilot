@@ -139,19 +139,20 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     // handle state machine changes
     switch (stage)
     {
-
     case MANUAL:
+    {
         if (dest_num > 0)
         {
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             gcs().send_text(MAV_SEVERITY_INFO, "send image start capture to ETRI-MC");
         }
-        break;
+    } break;
 
     case TAKE_PICTURE:
     case PREPARE_FOLLOW:
     case EDGE_FOLLOW:
     case AUTO:
+    {
         if (dest_num == 0)
         {
             wp_nav->wp_and_spline_init();
@@ -192,7 +193,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             }
             return;
         }
-    } break;
+    }  break;
 }
 
 // return manual control to the pilot
