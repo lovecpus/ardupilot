@@ -1169,7 +1169,6 @@ void GCS_MAVLINK_Copter::handleMessage(const mavlink_message_t &msg)
         else if (!pos_ignore && vel_ignore && acc_ignore)
         {
             copter.mode_guided.set_destination(pos_vector, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
-            copter.mode_cndn.set_destination(pos_vector, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
         }
 
         break;
@@ -1250,7 +1249,6 @@ void GCS_MAVLINK_Copter::handleMessage(const mavlink_message_t &msg)
         else if (!pos_ignore && vel_ignore && acc_ignore)
         {
             copter.mode_guided.set_destination(pos_neu_cm, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
-            copter.mode_cndn.set_destination(pos_neu_cm, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
         }
 
         break;

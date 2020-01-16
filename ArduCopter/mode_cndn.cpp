@@ -208,6 +208,109 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 {
     switch (msg.msgid)
     {
+    case MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED: // MAV ID: 84
+    {
+        // decode packet
+        mavlink_set_position_target_local_ned_t packet;
+        mavlink_msg_set_position_target_local_ned_decode(&msg, &packet);
+
+        // exit if vehicle is not in Guided mode or Auto-Guided mode
+        if (!copter.flightmode->in_guided_mode())
+        {
+            break;
+        }
+        packet.coordinate_frame = MAV_FRAME_LOCAL_OFFSET_NED;
+
+        // check for supported coordinate frames
+        if (packet.coordinate_frame != MAV_FRAME_LOCAL_NED &&
+            packet.coordinate_frame != MAV_FRAME_LOCAL_OFFSET_NED &&
+            packet.coordinate_frame != MAV_FRAME_BODY_NED &&
+            packet.coordinate_frame != MAV_FRAME_BODY_OFFSET_NED)
+        {
+            break;
+        }
+
+        bool pos_ignore = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_POS_IGNORE;
+        bool vel_ignore = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_VEL_IGNORE;
+        bool acc_ignore = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_ACC_IGNORE;
+        bool yaw_ignore = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_YAW_IGNORE;
+        bool yaw_rate_ignore = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_YAW_RATE_IGNORE;
+
+        /*
+         * for future use:
+         * bool force           = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_FORCE;
+         */
+
+        // prepare position
+        Vector3f pos_vector;
+        if (!pos_ignore)
+        {
+            // convert to cm
+            pos_vector = Vector3f(packet.x * 100.0f, packet.y * 100.0f, -packet.z * 100.0f);
+            // rotate to body-frame if necessary
+            if (packet.coordinate_frame == MAV_FRAME_BODY_NED ||
+                packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED)
+            {
+                copter.rotate_body_frame_to_NE(pos_vector.x, pos_vector.y);
+            }
+            // add body offset if necessary
+            if (packet.coordinate_frame == MAV_FRAME_LOCAL_OFFSET_NED ||
+                packet.coordinate_frame == MAV_FRAME_BODY_NED ||
+                packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED)
+            {
+                pos_vector += copter.inertial_nav.get_position();
+            }
+            else
+            {
+                // convert from alt-above-home to alt-above-ekf-origin
+                if (!AP::ahrs().home_is_set())
+                {
+                    break;
+                }
+                Location origin;
+                pos_vector.z += AP::ahrs().get_home().alt;
+                if (copter.ahrs.get_origin(origin))
+                {
+                    pos_vector.z -= origin.alt;
+                }
+            }
+        }
+
+        // prepare velocity
+        Vector3f vel_vector;
+        if (!vel_ignore)
+        {
+            // convert to cm
+            vel_vector = Vector3f(packet.vx * 100.0f, packet.vy * 100.0f, -packet.vz * 100.0f);
+            // rotate to body-frame if necessary
+            if (packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED)
+            {
+                copter.rotate_body_frame_to_NE(vel_vector.x, vel_vector.y);
+            }
+        }
+
+        // prepare yaw
+        float yaw_cd = 0.0f;
+        bool yaw_relative = false;
+        float yaw_rate_cds = 0.0f;
+        if (!yaw_ignore)
+        {
+            yaw_cd = ToDeg(packet.yaw) * 100.0f;
+            yaw_relative = packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED;
+        }
+        if (!yaw_rate_ignore)
+        {
+            yaw_rate_cds = ToDeg(packet.yaw_rate) * 100.0f;
+        }
+
+        // send request
+        if (!pos_ignore && vel_ignore && acc_ignore)
+        {
+            copter.mode_cndn.set_destination(pos_vector, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
+        }
+
+        break;
+    }
     case MAVLINK_MSG_ID_NAMED_VALUE_INT:
     {
         mavlink_named_value_int_t packet;
@@ -259,6 +362,9 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         {
             mavlink_etri_paddy_edge_gps_information_t packet;
             mavlink_msg_etri_paddy_edge_gps_information_decode(&msg, &packet);
+
+            wp_nav->wp_and_spline_init();
+
             edge_count = packet.edge_count;
 
             for (int i = 0; i < 10; i++)
