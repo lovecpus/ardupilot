@@ -396,7 +396,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             {
                 edge_points[0].x = packet.latitude1;
                 edge_points[0].y = packet.longitude1;
-                gcs().send_text(MAV_SEVERITY_INFO, "pos1 (%0.10f,%0.10f)", edge_points[0].x, edge_points[0].y);
+                gcs().send_text(MAV_SEVERITY_INFO, "pos1 (%16f,%16f)", edge_points[0].x, edge_points[0].y);
             }
             if (edge_count > 1)
             {
