@@ -139,61 +139,62 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     // handle state machine changes
     switch (stage)
     {
-    case MANUAL:
-    {
-        if (dest_num > 0)
+        case MANUAL:
         {
-            gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
-            gcs().send_text(MAV_SEVERITY_INFO, "send image start capture to ETRI-MC");
-        }
-    } break;
-
-    case TAKE_PICTURE:
-    case PREPARE_FOLLOW:
-    case EDGE_FOLLOW:
-    case AUTO:
-    {
-        if (dest_num == 0)
-        {
-            wp_nav->wp_and_spline_init();
-            return_to_manual_control(false);
-            return;
-        }
-
-        if (stage == PREPARE_FOLLOW && dest_num == 2)
-        {
-            stage = EDGE_FOLLOW;
-            if (edge_count > 0)
+            if (dest_num > 0)
             {
-                const Vector3f curr_pos = inertial_nav.get_position();
-                float maxdt = 999.0f;
-                int mini = 0;
-                for (int i = 0; i < edge_count; i++)
-                {
-                    Vector3f pos(edge_points[i].x, edge_points[i].y, curr_pos.z);
-                    Vector3f dpos(pos - curr_pos);
-                    float dt = sqrtf(dpos.x*dpos.x+dpos.y+dpos.y);
-                    if (dt < maxdt)
-                    {
-                        mini = i;
-                        maxdt = dt;
-                    }
-                }
-
-                Vector3f stopping_point;
-                wp_nav->get_wp_stopping_point(stopping_point);
-
-                stopping_point.x = edge_points[mini].x;
-                stopping_point.y = edge_points[mini].y;
-                // no need to check return status because terrain data is not used
-                wp_nav->set_wp_destination(stopping_point, false);
-
-                gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "Edge follow stage started with point %d.", mini);
+                gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
+                gcs().send_text(MAV_SEVERITY_INFO, "send image start capture to ETRI-MC");
             }
-            return;
-        }
-    }  break;
+        } break;
+
+        case TAKE_PICTURE:
+        case PREPARE_FOLLOW:
+        case EDGE_FOLLOW:
+        case AUTO:
+        {
+            if (dest_num == 0)
+            {
+                wp_nav->wp_and_spline_init();
+                return_to_manual_control(false);
+                return;
+            }
+
+            if (stage == PREPARE_FOLLOW && dest_num == 2)
+            {
+                stage = EDGE_FOLLOW;
+                if (edge_count > 0)
+                {
+                    const Vector3f curr_pos = inertial_nav.get_position();
+                    float maxdt = 999.0f;
+                    int mini = 0;
+                    for (int i = 0; i < edge_count; i++)
+                    {
+                        Vector3f pos(edge_points[i].x, edge_points[i].y, curr_pos.z);
+                        Vector3f dpos(pos - curr_pos);
+                        float dt = sqrtf(dpos.x*dpos.x+dpos.y+dpos.y);
+                        if (dt < maxdt)
+                        {
+                            mini = i;
+                            maxdt = dt;
+                        }
+                    }
+
+                    Vector3f stopping_point;
+                    wp_nav->get_wp_stopping_point(stopping_point);
+
+                    stopping_point.x = edge_points[mini].x;
+                    stopping_point.y = edge_points[mini].y;
+                    // no need to check return status because terrain data is not used
+                    wp_nav->set_wp_destination(stopping_point, false);
+
+                    gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
+                    gcs().send_text(MAV_SEVERITY_INFO, "Edge follow stage started with point %d.", mini);
+                }
+                return;
+            }
+        }  break;
+    }
 }
 
 // return manual control to the pilot
