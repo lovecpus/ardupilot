@@ -139,61 +139,63 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     // handle state machine changes
     switch (stage)
     {
-        case MANUAL:
+    case MANUAL:
+    {
+        if (dest_num > 0)
         {
-            if (dest_num > 0)
-            {
-                gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "send image start capture to ETRI-MC");
-            }
-        } break;
+            gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
+            gcs().send_text(MAV_SEVERITY_INFO, "send image start capture to ETRI-MC");
+        }
+    }
+    break;
 
-        case TAKE_PICTURE:
-        case PREPARE_FOLLOW:
-        case EDGE_FOLLOW:
-        case AUTO:
+    case TAKE_PICTURE:
+    case PREPARE_FOLLOW:
+    case EDGE_FOLLOW:
+    case AUTO:
+    {
+        if (dest_num == 0)
         {
-            if (dest_num == 0)
-            {
-                wp_nav->wp_and_spline_init();
-                return_to_manual_control(false);
-                return;
-            }
+            wp_nav->wp_and_spline_init();
+            return_to_manual_control(false);
+            return;
+        }
 
-            if (stage == PREPARE_FOLLOW && dest_num == 2)
+        if (stage == PREPARE_FOLLOW && dest_num == 2)
+        {
+            stage = EDGE_FOLLOW;
+            if (edge_count > 0)
             {
-                stage = EDGE_FOLLOW;
-                if (edge_count > 0)
+                const Vector3f curr_pos = inertial_nav.get_position();
+                float maxdt = 999.0f;
+                int mini = 0;
+                for (int i = 0; i < edge_count; i++)
                 {
-                    const Vector3f curr_pos = inertial_nav.get_position();
-                    float maxdt = 999.0f;
-                    int mini = 0;
-                    for (int i = 0; i < edge_count; i++)
+                    Vector3f pos(edge_points[i].x, edge_points[i].y, curr_pos.z);
+                    Vector3f dpos(pos - curr_pos);
+                    float dt = sqrtf(dpos.x * dpos.x + dpos.y + dpos.y);
+                    if (dt < maxdt)
                     {
-                        Vector3f pos(edge_points[i].x, edge_points[i].y, curr_pos.z);
-                        Vector3f dpos(pos - curr_pos);
-                        float dt = sqrtf(dpos.x*dpos.x+dpos.y+dpos.y);
-                        if (dt < maxdt)
-                        {
-                            mini = i;
-                            maxdt = dt;
-                        }
+                        mini = i;
+                        maxdt = dt;
                     }
-
-                    Vector3f stopping_point;
-                    wp_nav->get_wp_stopping_point(stopping_point);
-
-                    stopping_point.x = edge_points[mini].x;
-                    stopping_point.y = edge_points[mini].y;
-                    // no need to check return status because terrain data is not used
-                    wp_nav->set_wp_destination(stopping_point, false);
-
-                    gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
-                    gcs().send_text(MAV_SEVERITY_INFO, "Edge follow stage started with point %d.", mini);
                 }
-                return;
+
+                Vector3f stopping_point;
+                wp_nav->get_wp_stopping_point(stopping_point);
+
+                stopping_point.x = edge_points[mini].x;
+                stopping_point.y = edge_points[mini].y;
+                // no need to check return status because terrain data is not used
+                wp_nav->set_wp_destination(stopping_point, false);
+
+                gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
+                gcs().send_text(MAV_SEVERITY_INFO, "Edge follow stage started with point %d.", mini);
             }
-        }  break;
+            return;
+        }
+    }
+    break;
     }
 }
 
@@ -238,7 +240,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         {
             break;
         }
-        
+
         if (packet.coordinate_frame == MAV_FRAME_LOCAL_NED)
             packet.coordinate_frame == MAV_FRAME_LOCAL_OFFSET_NED;
 
@@ -394,62 +396,62 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             gcs().send_text(MAV_SEVERITY_INFO, "ETRI_PADDY_EDGE_GPS_INFORMATION (%d points) received.", packet.edge_count);
             if (edge_count > 0)
             {
-                edge_points[0].x = packet.latitude1;
-                edge_points[0].y = packet.longitude1;
+                edge_points[0].x = packet.latitude1 * 0.01f;
+                edge_points[0].y = packet.longitude1 * 0.01f;
                 gcs().send_text(MAV_SEVERITY_INFO, "pos1 (%16f,%16f)", edge_points[0].x, edge_points[0].y);
             }
             if (edge_count > 1)
             {
-                edge_points[1].x = packet.latitude2;
-                edge_points[1].y = packet.longitude2;
+                edge_points[1].x = packet.latitude2 * 0.01f;
+                edge_points[1].y = packet.longitude2 * 0.01f;
                 gcs().send_text(MAV_SEVERITY_INFO, "pos2 (%0.10f,%0.10f)", edge_points[1].x, edge_points[1].y);
             }
             if (edge_count > 2)
             {
-                edge_points[2].x = packet.latitude3;
-                edge_points[2].y = packet.longitude3;
+                edge_points[2].x = packet.latitude3 * 0.01f;
+                edge_points[2].y = packet.longitude3 * 0.01f;
                 gcs().send_text(MAV_SEVERITY_INFO, "pos3 (%0.10f,%0.10f)", edge_points[2].x, edge_points[2].y);
             }
             if (edge_count > 3)
             {
-                edge_points[3].x = packet.latitude4;
-                edge_points[3].y = packet.longitude4;
+                edge_points[3].x = packet.latitude4 * 0.01f;
+                edge_points[3].y = packet.longitude4 * 0.01f;
                 gcs().send_text(MAV_SEVERITY_INFO, "pos4 (%0.10f,%0.10f)", edge_points[3].x, edge_points[3].y);
             }
             if (edge_count > 4)
             {
-                edge_points[4].x = packet.latitude5;
-                edge_points[4].y = packet.longitude5;
+                edge_points[4].x = packet.latitude5 * 0.01f;
+                edge_points[4].y = packet.longitude5 * 0.01f;
                 gcs().send_text(MAV_SEVERITY_INFO, "pos5 (%0.10f,%0.10f)", edge_points[4].x, edge_points[4].y);
             }
             if (edge_count > 5)
             {
-                edge_points[5].x = packet.latitude6;
-                edge_points[5].y = packet.longitude6;
+                edge_points[5].x = packet.latitude6 * 0.01f;
+                edge_points[5].y = packet.longitude6 * 0.01f;
                 gcs().send_text(MAV_SEVERITY_INFO, "pos6 (%0.10f,%0.10f)", edge_points[5].x, edge_points[5].y);
             }
             if (edge_count > 6)
             {
-                edge_points[6].x = packet.latitude7;
-                edge_points[6].y = packet.longitude7;
+                edge_points[6].x = packet.latitude7 * 0.01f;
+                edge_points[6].y = packet.longitude7 * 0.01f;
                 gcs().send_text(MAV_SEVERITY_INFO, "pos7 (%0.10f,%0.10f)", edge_points[6].x, edge_points[6].y);
             }
             if (edge_count > 7)
             {
-                edge_points[7].x = packet.latitude8;
-                edge_points[7].y = packet.longitude8;
+                edge_points[7].x = packet.latitude8 * 0.01f;
+                edge_points[7].y = packet.longitude8 * 0.01f;
                 gcs().send_text(MAV_SEVERITY_INFO, "pos8 (%0.10f,%0.10f)", edge_points[7].x, edge_points[7].y);
             }
             if (edge_count > 8)
             {
-                edge_points[8].x = packet.latitude9;
-                edge_points[8].y = packet.longitude9;
+                edge_points[8].x = packet.latitude9 * 0.01f;
+                edge_points[8].y = packet.longitude9 * 0.01f;
                 gcs().send_text(MAV_SEVERITY_INFO, "pos9 (%0.10f,%0.10f)", edge_points[8].x, edge_points[8].y);
             }
             if (edge_count > 9)
             {
-                edge_points[9].x = packet.latitude10;
-                edge_points[9].y = packet.longitude10;
+                edge_points[9].x = packet.latitude10 * 0.01f;
+                edge_points[9].y = packet.longitude10 * 0.01f;
                 gcs().send_text(MAV_SEVERITY_INFO, "pos10 (%0.10f,%0.10f)", edge_points[9].x, edge_points[9].y);
             }
         }
