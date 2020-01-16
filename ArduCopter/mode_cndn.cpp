@@ -221,7 +221,9 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         {
             break;
         }
-        packet.coordinate_frame = MAV_FRAME_LOCAL_OFFSET_NED;
+        
+        if (packet.coordinate_frame == MAV_FRAME_LOCAL_NED)
+            packet.coordinate_frame == MAV_FRAME_LOCAL_OFFSET_NED;
 
         // check for supported coordinate frames
         if (packet.coordinate_frame != MAV_FRAME_LOCAL_NED &&
