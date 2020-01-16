@@ -171,7 +171,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 {
                     Vector3f pos(edge_points[i].x, edge_points[i].y, curr_pos.z);
                     Vector3f dpos(pos - curr_pos);
-                    float dt = sqrtf(dpos.x*dpos.x+dpos.u+dpos.y);
+                    float dt = sqrtf(dpos.x*dpos.x+dpos.y+dpos.y);
                     if (dt < maxdt)
                     {
                         mini = i;
