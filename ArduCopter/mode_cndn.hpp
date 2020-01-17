@@ -75,7 +75,6 @@ private:
     bool b_position_target_reached = false;
     uint8_t edge_count = 0;
     uint8_t edge_position = 0;
-    typedef Vector2<double> Vector2D;
-    Vector2D edge_points[10]; // in NEU frame in cm relative to ekf origin
+    Vector2ul edge_points[10]; // in NEU frame in cm relative to ekf origin
 };
 #endif

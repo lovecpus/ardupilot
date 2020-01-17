@@ -396,33 +396,33 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             gcs().send_text(MAV_SEVERITY_INFO, "ETRI_PADDY_EDGE_GPS_INFORMATION (%d points) received.", packet.edge_count);
             if (edge_count > 0)
             {
-                edge_points[0].x = packet.latitude1;
-                edge_points[0].y = packet.longitude1;
-                gcs().send_text(MAV_SEVERITY_INFO, "pos1 (%0.10lf,%0.10lf)", edge_points[0].x, edge_points[0].y);
+                edge_points[0].x = (uint32_t)(packet.latitude1 * 1000000);
+                edge_points[0].y = (uint32_t)(packet.longitude1 * 1000000);
+                gcs().send_text(MAV_SEVERITY_INFO, "pos1 (%d,%d)", edge_points[0].x, edge_points[0].y);
             }
             if (edge_count > 1)
             {
-                edge_points[1].x = packet.latitude2;
-                edge_points[1].y = packet.longitude2;
-                gcs().send_text(MAV_SEVERITY_INFO, "pos2 (%0.10lf,%0.10lf)", edge_points[1].x, edge_points[1].y);
+                edge_points[1].x = (uint32_t)(packet.latitude2 * 1000000);
+                edge_points[1].y = (uint32_t)(packet.longitude2 * 1000000);
+                gcs().send_text(MAV_SEVERITY_INFO, "pos2 (%d,%d)", edge_points[1].x, edge_points[1].y);
             }
             if (edge_count > 2)
             {
-                edge_points[2].x = packet.latitude3;
-                edge_points[2].y = packet.longitude3;
-                gcs().send_text(MAV_SEVERITY_INFO, "pos3 (%0.10lf,%0.10lf)", edge_points[2].x, edge_points[2].y);
+                edge_points[2].x = (uint32_t)(packet.latitude3 * 1000000);
+                edge_points[2].y = (uint32_t)(packet.longitude3 * 1000000);
+                gcs().send_text(MAV_SEVERITY_INFO, "pos3 (%d,%d)", edge_points[2].x, edge_points[2].y);
             }
             if (edge_count > 3)
             {
-                edge_points[3].x = packet.latitude4;
-                edge_points[3].y = packet.longitude4;
-                gcs().send_text(MAV_SEVERITY_INFO, "pos4 (%0.10lf,%0.10lf)", edge_points[3].x, edge_points[3].y);
+                edge_points[3].x = (uint32_t)(packet.latitude4 * 1000000);
+                edge_points[3].y = (uint32_t)(packet.longitude4 * 1000000);
+                gcs().send_text(MAV_SEVERITY_INFO, "pos4 (%d,%d)", edge_points[3].x, edge_points[3].y);
             }
             if (edge_count > 4)
             {
                 edge_points[4].x = packet.latitude5;
                 edge_points[4].y = packet.longitude5;
-                gcs().send_text(MAV_SEVERITY_INFO, "pos5 (%0.10lf,%0.10lf)", edge_points[4].x, edge_points[4].y);
+                gcs().send_text(MAV_SEVERITY_INFO, "pos5 (%d,%d)", edge_points[4].x, edge_points[4].y);
             }
             if (edge_count > 5)
             {
