@@ -171,7 +171,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 int mini = 0;
                 for (int i = 0; i < edge_count; i++)
                 {
-                    Vector3f pos(edge_points[i].x, edge_points[i].y, curr_pos.z);
+                    Vector3f pos(edge_points[i].x * 0.0000001, edge_points[i].y * 0.0000001, curr_pos.z);
                     Vector3f dpos(pos - curr_pos);
                     float dt = sqrtf(dpos.x * dpos.x + dpos.y + dpos.y);
                     if (dt < maxdt)
@@ -184,8 +184,8 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 Vector3f stopping_point;
                 wp_nav->get_wp_stopping_point(stopping_point);
 
-                stopping_point.x = edge_points[mini].x;
-                stopping_point.y = edge_points[mini].y;
+                stopping_point.x = edge_points[mini].x * 0.0000001;
+                stopping_point.y = edge_points[mini].y * 0.0000001;
                 // no need to check return status because terrain data is not used
                 wp_nav->set_wp_destination(stopping_point, false);
 
