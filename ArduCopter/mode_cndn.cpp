@@ -190,7 +190,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 wp_nav->set_wp_destination(stopping_point, false);
 
                 gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "Edge follow stage started with point %d.", mini);
+                gcs().send_text(MAV_SEVERITY_INFO, "Edge follow stage started with point %d,%d.", (uint32_t)(stopping_point.x*1000000), (uint32_t)(stopping_point.y*1000000));
             }
             return;
         }
