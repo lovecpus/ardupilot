@@ -82,7 +82,7 @@ void ModeCNDN::run()
         break;
 
     case PREPARE_FOLLOW:
-        auto_control();
+        manual_control();
         break;
 
     case MANUAL:
@@ -127,15 +127,6 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
 // save current position as A (dest_num = 0) or B (dest_num = 1).  If both A and B have been saved move to the one specified
 void ModeCNDN::mission_command(uint8_t dest_num)
 {
-    // sanity check
-    if (dest_num > 4)
-    {
-        return;
-    }
-
-    // get current position as an offset from EKF origin
-    //const Vector3f curr_pos = inertial_nav.get_position();
-
     // handle state machine changes
     switch (stage)
     {
@@ -145,12 +136,13 @@ void ModeCNDN::mission_command(uint8_t dest_num)
         {
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             gcs().send_text(MAV_SEVERITY_INFO, "send image start capture to ETRI-MC");
+            // set to position control mode
+            stage = TAKE_PICTURE;
         }
     }
     break;
 
     case TAKE_PICTURE:
-    case PREPARE_FOLLOW:
     case EDGE_FOLLOW:
     case AUTO:
     {
@@ -160,8 +152,11 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             return_to_manual_control(false);
             return;
         }
+    } break;
 
-        if (stage == PREPARE_FOLLOW && dest_num == 2)
+    case PREPARE_FOLLOW:
+    {
+        if (dest_num == 2)
         {
             stage = EDGE_FOLLOW;
             if (edge_count > 0)
@@ -472,9 +467,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
 void ModeCNDN::pos_control_start()
 {
-    // set to position control mode
-    stage = TAKE_PICTURE;
-
     // initialise waypoint and spline controller
     wp_nav->wp_and_spline_init();
 
