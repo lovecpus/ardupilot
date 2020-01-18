@@ -237,7 +237,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         }
 
         if (packet.coordinate_frame == MAV_FRAME_LOCAL_NED)
-            packet.coordinate_frame == MAV_FRAME_BODY_NED;
+            packet.coordinate_frame = MAV_FRAME_LOCAL_OFFSET_NED;
 
         // check for supported coordinate frames
         if (packet.coordinate_frame != MAV_FRAME_LOCAL_NED &&
@@ -325,84 +325,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         if (!pos_ignore && vel_ignore && acc_ignore)
         {
             copter.mode_cndn.set_destination(pos_vector, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
-        }
-    } break;
-
-    case MAVLINK_MSG_ID_SET_POSITION_TARGET_GLOBAL_INT: // MAV ID: 86
-    {
-        // decode packet
-        mavlink_set_position_target_global_int_t packet;
-        mavlink_msg_set_position_target_global_int_decode(&msg, &packet);
-
-        // exit if vehicle is not in Guided mode or Auto-Guided mode
-        if (!copter.flightmode->in_guided_mode())
-        {
-            break;
-        }
-
-        bool pos_ignore = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_POS_IGNORE;
-        bool vel_ignore = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_VEL_IGNORE;
-        bool acc_ignore = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_ACC_IGNORE;
-        bool yaw_ignore = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_YAW_IGNORE;
-        bool yaw_rate_ignore = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_YAW_RATE_IGNORE;
-
-        /*
-         * for future use:
-         * bool force           = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_FORCE;
-         */
-
-        Vector3f pos_neu_cm; // position (North, East, Up coordinates) in centimeters
-
-        if (!pos_ignore)
-        {
-            // sanity check location
-            if (!check_latlng(packet.lat_int, packet.lon_int))
-            {
-                break;
-            }
-            Location::AltFrame frame;
-            if (!mavlink_coordinate_frame_to_location_alt_frame((MAV_FRAME)packet.coordinate_frame, frame))
-            {
-                // unknown coordinate frame
-                break;
-            }
-            const Location loc{
-                packet.lat_int,
-                packet.lon_int,
-                int32_t(packet.alt * 100),
-                frame,
-            };
-            if (!loc.get_vector_from_origin_NEU(pos_neu_cm))
-            {
-                break;
-            }
-        }
-
-        // prepare yaw
-        float yaw_cd = 0.0f;
-        bool yaw_relative = false;
-        float yaw_rate_cds = 0.0f;
-        if (!yaw_ignore)
-        {
-            yaw_cd = ToDeg(packet.yaw) * 100.0f;
-            yaw_relative = packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED;
-        }
-        if (!yaw_rate_ignore)
-        {
-            yaw_rate_cds = ToDeg(packet.yaw_rate) * 100.0f;
-        }
-
-        if (!pos_ignore && !vel_ignore && acc_ignore)
-        {
-            //set_destination_posvel(pos_neu_cm, Vector3f(packet.vx * 100.0f, packet.vy * 100.0f, -packet.vz * 100.0f), !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
-        }
-        else if (pos_ignore && !vel_ignore && acc_ignore)
-        {
-            //set_velocity(Vector3f(packet.vx * 100.0f, packet.vy * 100.0f, -packet.vz * 100.0f), !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
-        }
-        else if (!pos_ignore && vel_ignore && acc_ignore)
-        {
-            set_destination(pos_neu_cm, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
         }
     } break;
 
