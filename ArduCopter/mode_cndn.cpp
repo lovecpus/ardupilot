@@ -136,6 +136,10 @@ void ModeCNDN::mission_command(uint8_t dest_num)
         {
             loiter_nav->init_target();
             wp_nav->wp_and_spline_init();
+
+            Vector3f pos_vector = copter.inertial_nav.get_position();
+            set_destination(pos_vector);
+
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             gcs().send_text(MAV_SEVERITY_INFO, "send image start capture to ETRI-MC");
             // set to position control mode
@@ -326,7 +330,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         // send request
         if (!pos_ignore && vel_ignore && acc_ignore)
         {
-            copter.mode_cndn.set_destination(pos_vector, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
+            set_destination(pos_vector, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
         }
     } break;
 
