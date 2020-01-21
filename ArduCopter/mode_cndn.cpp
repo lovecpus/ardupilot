@@ -78,7 +78,7 @@ void ModeCNDN::run()
 
     case TAKE_PICTURE:
         auto_control();
-        b_position_target_reached = b_position_target && (stage == TAKE_PICTURE) && reached_destination();
+        b_position_target_reached = b_position_target && reached_destination();
         break;
 
     case PREPARE_FOLLOW:
@@ -134,6 +134,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     {
         if (dest_num > 0)
         {
+            wp_nav->wp_and_spline_init();
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             gcs().send_text(MAV_SEVERITY_INFO, "send image start capture to ETRI-MC");
             // set to position control mode
