@@ -170,7 +170,7 @@ void ModeCNDN::live_log(const char *fmt, ...)
     va_list args;
     char buff[128];
     va_start(args, fmt);
-    vsprintf_s(buff, 128, fmt, args);
+    vsprintf(buff, fmt, args);
     va_end(args);
     gcs().send_text(MAV_SEVERITY_INFO, "%s", buff);
 }
