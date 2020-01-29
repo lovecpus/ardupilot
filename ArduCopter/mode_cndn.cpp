@@ -661,7 +661,7 @@ bool ModeCNDN::reached_destination()
     if (stage == TAKE_PICTURE)
     {
         const Vector3f cpos = inertial_nav.get_position();
-        Vector3f tpos = wp_nav->get_pos_target();
+        Vector3f tpos = wp_nav->get_wp_destination();
         tpos -= cpos;
         if (sqrtf(tpos.x*tpos.x+tpos.y*+tpos.y+tpos.z*tpos.z) > CNDN_WP_RADIUS_CM)
         {
