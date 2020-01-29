@@ -78,7 +78,7 @@ void ModeCNDN::run()
 
     case TAKE_PICTURE:
         auto_control();
-        b_position_target_reached = b_position_target && reached_destination();
+        b_position_target_reached = reached_destination();
         break;
 
     case PREPARE_FOLLOW:
