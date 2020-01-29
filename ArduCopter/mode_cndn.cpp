@@ -77,6 +77,23 @@ void ModeCNDN::run()
 
     case EDGE_FOLLOW:
         auto_control();
+        if (reached_destination())
+        {
+            if (!vecPoints.empty())
+            {
+                const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                auto_yaw.set_rate(1500.0f);
+                wp_nav->set_wp_destination(tpos, false);
+                gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
+                vecPoints.pop_front();
+            }
+            else
+            {
+                gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
+                AP_Notify::events.waypoint_complete = 1;
+                return_to_manual_control(true);
+            }
+        }
         break;
 
     case MOVE_TO_EDGE:
@@ -84,6 +101,14 @@ void ModeCNDN::run()
         if (reached_destination())
         {
             stage = EDGE_FOLLOW;
+            if (!vecPoints.empty())
+            {
+                const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                auto_yaw.set_rate(1500.0f);
+                wp_nav->set_wp_destination(tpos, false);
+                gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
+                vecPoints.pop_front();
+            }
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to EDGE_FOLLOW.");
         }
         break;
@@ -127,13 +152,6 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
 
     // no need to check return status because terrain data is not used
     wp_nav->set_wp_destination(destination, false);
-
-    Vector3f tpos = wp_nav->get_wp_destination();
-    const Vector3f cpos = inertial_nav.get_position();
-
-    gcs().send_text(MAV_SEVERITY_INFO, "SPT: %0.3f,%0.3f,%0.3f", tpos.x, tpos.y, tpos.z);
-    gcs().send_text(MAV_SEVERITY_INFO, "IGP: %0.3f,%0.3f,%0.3f", cpos.x, cpos.y, cpos.z);
-
     b_position_target_reached = false;
 
     return true;
@@ -171,7 +189,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 int mini = 0;
                 for (int i = 0; i < edge_count; i++)
                 {
-                    Vector3f pos(edge_points[i].x, edge_points[i].y, curr_pos.z);
+                    Vector3f pos(edge_points[i].x, edge_points[i].y, 0.0f);
                     Vector3f dpos(pos - curr_pos);
                     float dt = sqrtf(dpos.x * dpos.x + dpos.y + dpos.y);
                     if (dt < maxdt)
@@ -179,22 +197,16 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                         mini = i;
                         maxdt = dt;
                     }
+                    vecPoints.push_back(edge_points[i]);
                 }
 
-                Vector3f stopping_point;
-                wp_nav->get_wp_stopping_point(stopping_point);
-
-                stopping_point.x = edge_points[mini].x;
-                stopping_point.y = edge_points[mini].y;
-                stopping_point.z = 300.0f;
-
-                vecPoints.push_back(edge_points[mini]);
-
-                // no need to check return status because terrain data is not used
-                wp_nav->set_wp_destination(stopping_point, false);
-
-                gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "EFS: %0.6f,%0.6f,%0.6f.", stopping_point.x, stopping_point.y, stopping_point.z);
+                if (!vecPoints.empty())
+                {
+                    const Vector3f stopping_point(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                    wp_nav->set_wp_destination(stopping_point, false);
+                    gcs().send_text(MAV_SEVERITY_INFO, "EFS: %0.6f,%0.6f,%0.6f.", stopping_point.x, stopping_point.y, stopping_point.z);
+                    vecPoints.pop_front();
+                }
             }
             return;
         }

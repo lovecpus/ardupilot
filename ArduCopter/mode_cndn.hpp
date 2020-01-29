@@ -1,4 +1,4 @@
-#include <vector>
+#include <deque>
 #if MODE_CNDN_ENABLED == ENABLED
 /*
 * Init and run calls for CNDN flight mode
@@ -79,6 +79,7 @@ private:
     uint8_t edge_count = 0;
     uint8_t edge_position = 0;
     Vector2f edge_points[10]; // in NEU frame in cm relative to ekf origin
-    std::vector<Vector2f> vecPoints;
+    std::deque<Vector2f> vecPoints;
+    float  wayHeight = 3.0f;
 };
 #endif
