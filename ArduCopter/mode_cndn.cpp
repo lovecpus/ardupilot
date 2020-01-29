@@ -188,8 +188,8 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 ahrs.get_home().get_vector_from_origin_NEU(hpos);
                 for (int i = 0; i < edge_count; i++)
                     vecPoints.push_back(edge_points[i]);
-
-                std::sort(vecPoints.begin(), vecPoints.end(), [&, hpos](Vector3f& a,Vector3f& b){ return (a-hpos).length() < (b-hpos).length();});
+                Vector2f cpos(hpos.x, hpos.y);
+                std::sort(vecPoints.begin(), vecPoints.end(), [&, hpos](Vector2f& a,Vector2f& b){ return (a-cpos).length() < (b-cpos).length();});
                 if (!vecPoints.empty())
                 {
                     hpos = Vector3f(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
