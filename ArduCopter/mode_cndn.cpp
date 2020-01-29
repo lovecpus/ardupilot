@@ -157,6 +157,7 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
     return true;
 }
 
+#if defined(_DEBUG)
 void ModeCNDN::live_log(const char *fmt, ...)
 {
     uint32_t now = AP_HAL::millis();
@@ -175,6 +176,7 @@ void ModeCNDN::live_log(const char *fmt, ...)
     va_end(args);
     gcs().send_text(MAV_SEVERITY_INFO, "%s", buff);
 }
+#endif
 
 // save current position as A (dest_num = 0) or B (dest_num = 1).  If both A and B have been saved move to the one specified
 void ModeCNDN::mission_command(uint8_t dest_num)
