@@ -685,12 +685,6 @@ bool ModeCNDN::reached_destination()
     // check height to destination
     if (stage == TAKE_PICTURE)
     {
-        if (!b_position_target)
-        {
-            reach_wp_time_ms = 0;
-            return false;
-        }
-
         const Vector3f cpos = inertial_nav.get_position();
         Vector3f tpos = wp_nav->get_wp_destination() - cpos;
         float fz = sqrtf(tpos.x*tpos.x+tpos.y*tpos.y+tpos.z*tpos.z);
@@ -703,6 +697,11 @@ bool ModeCNDN::reached_destination()
             gcs().send_text(MAV_SEVERITY_INFO, "RD: (%0.3f)", fz);
         }
         if (fz > CNDN_WP_RADIUS_CM)
+        {
+            reach_wp_time_ms = 0;
+            return false;
+        }
+        if (!b_position_target)
         {
             reach_wp_time_ms = 0;
             return false;
