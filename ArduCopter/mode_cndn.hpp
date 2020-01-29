@@ -1,5 +1,5 @@
 #include <deque>
-#include <argorithm>
+#include <algorithm>
 
 #if MODE_CNDN_ENABLED == ENABLED
 /*
