@@ -210,23 +210,23 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 
                 if (edge_count > 0)
                 {
-                    float minlen = (edge_points[0]-cpos);
+                    float minlen = (edge_points[0]-cpos).length();
                     int mini = 0;
                     Vector2f apos = edge_points[0];
                     vecPoints.push_back(apos);
                     for (int i = 1; i < edge_count; i++)
                     {
-                        if ((edge_points[i]-cpos) < minlen)
+                        if ((edge_points[i]-cpos).length() < minlen)
                         {
                             apos = edge_points[i];
-                            minlen = (apos-cpos);
+                            minlen = (apos-cpos).length();
                             mini = i;
                         }
                         vecPoints.push_back(edge_points[i]);
                     }
                     for(int i = 0; i < vecPoints.size(); i++)
                     {
-                        if ((vecPoints.front()-apos) <= 0.001f))
+                        if ((vecPoints.front()-apos).length() <= 0.001f))
                             break;
                         cpos = vecPoints.front();
                         vecPoints.pop_front();
@@ -234,7 +234,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                     }
 
                     vecPoints.pop_front();
-                    if (vecPoints.front()-apos < vecPoints.back()-apos)
+                    if ((vecPoints.front()-apos).length() < (vecPoints.back()-apos).length())
                         std::reverse(vecPoints.begin(), vecPoints.end());
                     vecPoints.push_front(apos);
                     vecPoints.push_back(apos);
