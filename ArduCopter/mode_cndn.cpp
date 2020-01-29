@@ -114,11 +114,13 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
     set_yaw_state(use_yaw, yaw_cd, use_yaw_rate, yaw_rate_cds, yaw_relative);
 
     // no need to check return status because terrain data is not used
-    Vector3f sttp;// = copter.inertial_nav.get_position();
-    wp_nav->get_wp_stopping_point(sttp);
     wp_nav->set_wp_destination(destination, false);
-    gcs().send_text(MAV_SEVERITY_INFO, "SPT: %0.3f,%0.3f,%0.3f", destination.x, destination.y, destination.z);
-    gcs().send_text(MAV_SEVERITY_INFO, "IGP: %0.3f,%0.3f,%0.3f", sttp.x, sttp.y, sttp.z);
+
+    Vector3f tpos = wp_nav->get_wp_destination();
+    const Vector3f cpos = inertial_nav.get_position();
+
+    gcs().send_text(MAV_SEVERITY_INFO, "SPT: %0.3f,%0.3f,%0.3f", tpos.x, tpos.y, tpos.z);
+    gcs().send_text(MAV_SEVERITY_INFO, "IGP: %0.3f,%0.3f,%0.3f", cpos.x, cpos.y, cpos.z);
 
     b_position_target_reached = false;
     b_position_target = true;
