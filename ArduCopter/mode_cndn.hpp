@@ -78,5 +78,6 @@ private:
     uint8_t edge_count = 0;
     uint8_t edge_position = 0;
     Vector2f edge_points[10]; // in NEU frame in cm relative to ekf origin
+    std::vector<Vector2f> vecPoints;
 };
 #endif

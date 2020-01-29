@@ -187,6 +187,9 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 stopping_point.x = edge_points[mini].x;
                 stopping_point.y = edge_points[mini].y;
                 stopping_point.z = 300.0f;
+
+                vecPoints.push_back(edge_points[mini]);
+
                 // no need to check return status because terrain data is not used
                 wp_nav->set_wp_destination(stopping_point, false);
 
