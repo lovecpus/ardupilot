@@ -226,7 +226,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                     }
                     for(int i = 0; i < (int)vecPoints.size(); i++)
                     {
-                        if ((vecPoints.front()-apos).length() <= 0.001f))
+                        if ((vecPoints.front()-apos).length() <= 0.001f)
                             break;
                         cpos = vecPoints.front();
                         vecPoints.pop_front();
