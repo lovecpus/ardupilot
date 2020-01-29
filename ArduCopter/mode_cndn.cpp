@@ -78,20 +78,21 @@ void ModeCNDN::run()
 
     case EDGE_FOLLOW:
         auto_control();
-        if (!vecPoints.empty())
+        if (reached_destination())
         {
-            if (reached_destination())
+            if (!vecPoints.empty())
             {
-                const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
-                wp_nav->set_wp_destination(tpos, false);
-                auto_yaw.set_rate(1500.0f);
-                vecPoints.pop_front();
+                    const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                    wp_nav->set_wp_destination(tpos, false);
+                    auto_yaw.set_rate(1500.0f);
+                    vecPoints.pop_front();
+                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to next EDGE.");
             }
-        }
-        else
-        {
-            AP_Notify::events.waypoint_complete = 1;
-            return_to_manual_control(true);
+            else
+            {
+                stage = AUTO;
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to AUTO stage.");
+            }
         }
         break;
 
