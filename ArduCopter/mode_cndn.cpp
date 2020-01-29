@@ -658,12 +658,15 @@ bool ModeCNDN::reached_destination()
     }
 
     // check height to destination
-    Vector3f sttp;
-    wp_nav->get_wp_stopping_point(sttp);
-    if (sqrtf(sttp.x*sttp.x+sttp.y*+sttp.y+sttp.z*sttp.z) > CNDN_WP_RADIUS_CM)
+    if (stage == TAKE_PICTURE)
     {
-        reach_wp_time_ms = 0;
-        return false;
+        Vector3f sttp;
+        wp_nav->get_wp_stopping_point(sttp);
+        if (sqrtf(sttp.x*sttp.x+sttp.y*+sttp.y+sttp.z*sttp.z) > CNDN_WP_RADIUS_CM)
+        {
+            reach_wp_time_ms = 0;
+            return false;
+        }
     }
 
     // wait at least one second
