@@ -114,10 +114,9 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
     set_yaw_state(use_yaw, yaw_cd, use_yaw_rate, yaw_rate_cds, yaw_relative);
 
     // no need to check return status because terrain data is not used
-//    Vector3f sttp;
-//    wp_nav->get_wp_stopping_point(sttp);
+    Vector3f sttp;// = copter.inertial_nav.get_position();
+    wp_nav->get_wp_stopping_point(sttp);
     wp_nav->set_wp_destination(destination, false);
-    Vector3f sttp = copter.inertial_nav.get_position();
     gcs().send_text(MAV_SEVERITY_INFO, "SPT: %0.3f,%0.3f,%0.3f", destination.x, destination.y, destination.z);
     gcs().send_text(MAV_SEVERITY_INFO, "IGP: %0.3f,%0.3f,%0.3f", sttp.x, sttp.y, sttp.z);
 
@@ -659,8 +658,13 @@ bool ModeCNDN::reached_destination()
     }
 
     // check height to destination
-
-
+    Vector3f sttp;
+    wp_nav->get_wp_stopping_point(sttp);
+    if (sqrtf(sttp.x*sttp.x+sttp.y*+sttp.y+sttp.z*sttp.z) > CNDN_WP_RADIUS_CM)
+    {
+        reach_wp_time_ms = 0;
+        return false;
+    }
 
     // wait at least one second
     uint32_t now = AP_HAL::millis();
