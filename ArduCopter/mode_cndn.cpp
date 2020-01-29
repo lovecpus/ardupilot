@@ -206,7 +206,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             else
             {
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
-                return_to_manual_control();
+                return_to_manual_control(false);
             }
             return;
         }
