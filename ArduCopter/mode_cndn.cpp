@@ -323,7 +323,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         {
             //packet.coordinate_frame = MAV_FRAME_BODY_OFFSET_NED;
             bTargeted = true;
-            gcs().send_text(MAV_SEVERITY_INFO, "[MAV]LOCAL_NED for TARGET");
         }
 
         // check for supported coordinate frames
@@ -415,7 +414,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             if (bTargeted)
             {
                 b_position_target = true;
-                gcs().send_text(MAV_SEVERITY_INFO, "[MAV] SET POSITION TARGET ON");
+                gcs().send_text(MAV_SEVERITY_INFO, "[MAV] SPT ON %0.3f,%0.3f,%0.3f", pos_vector.x, pos_vector.y, pos_vector.z);
             }
         }
     } break;
