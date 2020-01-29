@@ -211,7 +211,6 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 if (edge_count > 0)
                 {
                     float minlen = (edge_points[0]-cpos).length();
-                    int mini = 0;
                     Vector2f apos = edge_points[0];
                     vecPoints.push_back(apos);
                     for (int i = 1; i < edge_count; i++)
@@ -220,7 +219,6 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                         {
                             apos = edge_points[i];
                             minlen = (apos-cpos).length();
-                            mini = i;
                         }
                         vecPoints.push_back(edge_points[i]);
                     }
