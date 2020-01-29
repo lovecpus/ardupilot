@@ -187,7 +187,6 @@ void ModeCNDN::mission_command(uint8_t dest_num)
         if (dest_num > 0)
         {
             pos_control_start();
-
             gcs().send_text(MAV_SEVERITY_INFO, "send image start capture to ETRI-MC");
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             // set to position control mode
@@ -231,6 +230,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             else
             {
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
+                pos_control_start();
                 return_to_manual_control(false);
             }
             return;
@@ -243,7 +243,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     {
         if (dest_num == 0)
         {
-            wp_nav->wp_and_spline_init();
+            pos_control_start();
             return_to_manual_control(false);
             return;
         }
@@ -300,7 +300,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         {
             //packet.coordinate_frame = MAV_FRAME_BODY_OFFSET_NED;
             bTargeted = true;
-            gcs().send_text(MAV_SEVERITY_INFO, "[MAV]LOCAL_NED to TARGET");
+            gcs().send_text(MAV_SEVERITY_INFO, "[MAV]LOCAL_NED for TARGET");
         }
 
         // check for supported coordinate frames
@@ -329,7 +329,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         {
             // convert to cm
             pos_vector = Vector3f(packet.x * 100.0f, packet.y * 100.0f, -packet.z * 100.0f);
-            gcs().send_text(MAV_SEVERITY_INFO, "[MAV]SPT: %0.6f,%0.6f,%0.6f.", pos_vector.x, pos_vector.y, pos_vector.z);
             // rotate to body-frame if necessary
             if (packet.coordinate_frame == MAV_FRAME_BODY_NED ||
                 packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED)
@@ -393,7 +392,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             if (bTargeted)
             {
                 b_position_target = true;
-                gcs().send_text(MAV_SEVERITY_INFO, "[MAV] SET POSITION TARGET");
+                gcs().send_text(MAV_SEVERITY_INFO, "[MAV] SET POSITION TARGET ON");
             }
         }
     } break;
@@ -518,12 +517,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 int32_t lng = pos.y * 1e7f;
                 if (!check_latlng(lat, lng))
                     continue;
-                const Location loc{
-                    lat,
-                    lng,
-                    300,
-                    Location::AltFrame::ABSOLUTE,
-                };
+                const Location loc {lat,lng,300,Location::AltFrame::ABSOLUTE,};
                 if (!loc.get_vector_from_origin_NEU(pos_neu_cm))
                     continue;
                 pos.x = pos_neu_cm.x;
@@ -539,7 +533,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
     {
         mavlink_etri_drone_paddy_distance_t packet;
         mavlink_msg_etri_drone_paddy_distance_decode(&msg, &packet);
-        gcs().send_text(MAV_SEVERITY_INFO, "MAVLINK_MSG_ID_ETRI_DRONE_PADDY_DISTANCE (%0.3f)", packet.distance);
+        gcs().send_text(MAV_SEVERITY_INFO, "[MAV] ETRI_DISTANCE (%0.3f)", packet.distance);
     }
     break;
     }
