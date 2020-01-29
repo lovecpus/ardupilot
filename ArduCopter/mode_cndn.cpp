@@ -151,7 +151,8 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
     set_yaw_state(use_yaw, yaw_cd, use_yaw_rate, yaw_rate_cds, yaw_relative);
 
     // no need to check return status because terrain data is not used
-    wp_nav->set_wp_destination(destination, false);
+    Vector3f org = wp_nav->get_wp_destination();
+    wp_nav->set_wp_origin_and_destination(org, destination, false);
     b_position_target_reached = false;
 
     return true;
@@ -393,7 +394,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             if (bTargeted)
             {
                 b_position_target = true;
-                set_destination(pos_vector, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
                 gcs().send_text(MAV_SEVERITY_INFO, "[MAV] SET POSITION TARGET");
             }
         }
