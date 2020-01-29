@@ -123,7 +123,6 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
     gcs().send_text(MAV_SEVERITY_INFO, "IGP: %0.3f,%0.3f,%0.3f", cpos.x, cpos.y, cpos.z);
 
     b_position_target_reached = false;
-    b_position_target = true;
 
     return true;
 }
@@ -250,8 +249,12 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             break;
         }
 
+        bool bTargeted = false;
         if (packet.coordinate_frame == MAV_FRAME_LOCAL_NED)
+        {
             packet.coordinate_frame = MAV_FRAME_BODY_OFFSET_NED;
+            bTargeted = true;
+        }
 
         // check for supported coordinate frames
         if (packet.coordinate_frame != MAV_FRAME_LOCAL_NED &&
@@ -340,6 +343,8 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         if (!pos_ignore && vel_ignore && acc_ignore)
         {
             set_destination(pos_vector, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
+            if (bTargeted)
+                b_position_target = true;
         }
     } break;
 
@@ -680,8 +685,15 @@ bool ModeCNDN::reached_destination()
     // check height to destination
     if (stage == TAKE_PICTURE)
     {
-        const bool wpnav_ok = wp_nav->update_wpnav();
-        if (wpnav_ok)
+        if (!b_position_target)
+        {
+            reach_wp_time_ms = 0;
+            return false;
+        }
+
+        const Vector3f cpos = inertial_nav.get_position();
+        Vector3f tpos = wp_nav->get_wp_destination() - cpos;
+        if (sqrtf(tpos.x*tpos.x+tpos.y*tpos.y+tpos.z*tpos.z) > CNDN_WP_RADIUS_CM)
         {
             reach_wp_time_ms = 0;
             return false;
