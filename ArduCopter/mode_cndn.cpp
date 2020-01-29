@@ -693,7 +693,16 @@ bool ModeCNDN::reached_destination()
 
         const Vector3f cpos = inertial_nav.get_position();
         Vector3f tpos = wp_nav->get_wp_destination() - cpos;
-        if (sqrtf(tpos.x*tpos.x+tpos.y*tpos.y+tpos.z*tpos.z) > CNDN_WP_RADIUS_CM)
+        float fz = sqrtf(tpos.x*tpos.x+tpos.y*tpos.y+tpos.z*tpos.z);
+        uint32_t nowt = AP_HAL::millis();
+        if (reach_wp_logt_ms == 0)
+            reach_wp_logt_ms = nowt;
+        if ((nowt - reach_wp_time_ms) > 1000)
+        {
+            reach_wp_time_ms = nowt;
+            gcs().send_text(MAV_SEVERITY_INFO, "RD: (%0.3f)", fz);
+        }
+        if (fz > CNDN_WP_RADIUS_CM)
         {
             reach_wp_time_ms = 0;
             return false;

@@ -71,6 +71,7 @@ private:
     } stage;
 
     uint32_t reach_wp_time_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
+    uint32_t reach_wp_logt_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
     bool b_position_target = false;
     bool b_position_target_reached = false;
     uint8_t edge_count = 0;
