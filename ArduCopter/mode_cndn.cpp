@@ -224,7 +224,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                         }
                         vecPoints.push_back(edge_points[i]);
                     }
-                    for(int i = 0; i < vecPoints.size(); i++)
+                    for(int i = 0; i < (int)vecPoints.size(); i++)
                     {
                         if ((vecPoints.front()-apos).length() <= 0.001f))
                             break;
