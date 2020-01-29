@@ -185,7 +185,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             if (edge_count > 0)
             {
                 Vector3f hpos;
-                inertial_nav.get_home().get_vector_from_origin_NEU(hpos);
+                ahrs.get_home().get_vector_from_origin_NEU(hpos);
                 for (int i = 0; i < edge_count; i++)
                     vecPoints.push_back(edge_points[i]);
 
@@ -309,7 +309,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 packet.coordinate_frame == MAV_FRAME_BODY_NED ||
                 packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED)
             {
-                pos_vector += copter.inertial_nav.get_position();
+                pos_vector += inertial_nav.get_position();
             }
             else
             {
