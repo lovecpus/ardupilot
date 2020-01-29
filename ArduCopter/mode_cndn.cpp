@@ -673,6 +673,7 @@ bool ModeCNDN::reached_destination()
     if (!wp_nav->reached_wp_destination())
     {
         reach_wp_time_ms = 0;
+        reach_wp_logt_ms = 0;
         return false;
     }
 
@@ -680,6 +681,7 @@ bool ModeCNDN::reached_destination()
     if (wp_nav->get_wp_distance_to_destination() > CNDN_WP_RADIUS_CM)
     {
         reach_wp_time_ms = 0;
+        reach_wp_logt_ms = 0;
         return false;
     }
 
@@ -692,19 +694,25 @@ bool ModeCNDN::reached_destination()
         uint32_t nowt = AP_HAL::millis();
         if (reach_wp_logt_ms == 0)
             reach_wp_logt_ms = nowt;
-        if ((nowt - reach_wp_time_ms) > 1000)
-        {
-            reach_wp_time_ms = nowt;
-            gcs().send_text(MAV_SEVERITY_INFO, "RD: (%0.3f)", fz);
-        }
+
         if (fz > CNDN_WP_RADIUS_CM)
         {
+            if ((nowt - reach_wp_logt_ms) > 1000)
+            {
+                reach_wp_logt_ms = nowt;
+                gcs().send_text(MAV_SEVERITY_INFO, "FO: (%0.3f)", fz);
+            }
             reach_wp_time_ms = 0;
             return false;
         }
         if (!b_position_target)
         {
             reach_wp_time_ms = 0;
+            if ((nowt - reach_wp_logt_ms) > 1000)
+            {
+                reach_wp_logt_ms = nowt;
+                gcs().send_text(MAV_SEVERITY_INFO, "NTG: (%0.3f)", fz);
+            }
             return false;
         }
     }
