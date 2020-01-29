@@ -463,7 +463,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                     continue;
                 const Location loc{
                     pos.x,
-                    poy.y,
+                    pos.y,
                     int32_t(3.0f * 100.0f),
                     Location::AltFrame::ABSOLUTE,
                 };
