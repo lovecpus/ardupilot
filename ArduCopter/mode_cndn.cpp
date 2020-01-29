@@ -459,12 +459,14 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             for (int i = 0; i < edge_count; i++)
             {
                 Vector2f& pos = edge_points[i];
-                if (!check_latlng(pos.x, pos.y))
+                int32_t lat = pos.x * 1e7f;
+                int32_t lng = pos.y * 1e7f;
+                if (!check_latlng(lat, lng))
                     continue;
                 const Location loc{
-                    pos.x,
-                    pos.y,
-                    int32_t(3.0f * 100.0f),
+                    lat,
+                    lng,
+                    300,
                     Location::AltFrame::ABSOLUTE,
                 };
                 if (!loc.get_vector_from_origin_NEU(pos_neu_cm))
