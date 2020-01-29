@@ -461,14 +461,11 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 Vector2f& pos = edge_points[i];
                 if (!check_latlng(pos.x, pos.y))
                     continue;
-                Location::AltFrame frame;
-                if (!mavlink_coordinate_frame_to_location_alt_frame(MAV_FRAME_GLOBAL_INT, frame))
-                    continue;
                 const Location loc{
                     pos.x,
                     poy.y,
                     int32_t(3.0f * 100.0f),
-                    frame,
+                    Location::AltFrame::ABSOLUTE,
                 };
                 if (!loc.get_vector_from_origin_NEU(pos_neu_cm))
                     continue;
