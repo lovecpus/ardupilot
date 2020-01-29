@@ -206,18 +206,40 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 
                 if (!ahrs.get_home().get_vector_from_origin_NEU(hpos))
                     return;
-
-                stage = MOVE_TO_EDGE;
-
-                for (int i = 0; i < edge_count; i++)
-                    vecPoints.push_back(edge_points[i]);
                 Vector2f cpos(hpos.x, hpos.y);
-                std::sort(vecPoints.begin(), vecPoints.end(), [&, cpos](Vector2f& a,Vector2f& b){ return (a-cpos).length() < (b-cpos).length();});
-                cpos = vecPoints.front();
-                vecPoints.pop_front();
-                std::sort(vecPoints.begin(), vecPoints.end(), [&, cpos](Vector2f& a,Vector2f& b){ return (a-cpos).length() > (b-cpos).length();});
-                vecPoints.push_front(cpos);
-                vecPoints.push_back(cpos);
+
+                if (edge_count > 0)
+                {
+                    float minlen = (edge_points[0]-cpos);
+                    int mini = 0;
+                    Vector2f apos = edge_points[0];
+                    vecPoints.push_back(apos);
+                    for (int i = 1; i < edge_count; i++)
+                    {
+                        if ((edge_points[i]-cpos) < minlen)
+                        {
+                            apos = edge_points[i];
+                            minlen = (apos-cpos);
+                            mini = i;
+                        }
+                        vecPoints.push_back(edge_points[i]);
+                    }
+                    for(int i = 0; i < vecPoints.size(); i++)
+                    {
+                        if ((vecPoints.front()-apos) <= 0.001f))
+                            break;
+                        cpos = vecPoints.front();
+                        vecPoints.pop_front();
+                        vecPoints.push_back(cpos);
+                    }
+
+                    vecPoints.pop_front();
+                    if (vecPoints.front()-apos < vecPoints.back()-apos)
+                        std::reverse(vecPoints.begin(), vecPoints.end());
+                    vecPoints.push_front(apos);
+                    vecPoints.push_back(apos);
+                }
+
                 if (!vecPoints.empty())
                 {
                     hpos = Vector3f(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
@@ -225,6 +247,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                     auto_yaw.set_rate(1500.0f);
                     gcs().send_text(MAV_SEVERITY_INFO, "EFS: %0.6f,%0.6f,%0.6f.", hpos.x, hpos.y, hpos.z);
                     vecPoints.pop_front();
+                    stage = MOVE_TO_EDGE;
                 }
             }
             else
