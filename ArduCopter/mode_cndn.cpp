@@ -660,9 +660,10 @@ bool ModeCNDN::reached_destination()
     // check height to destination
     if (stage == TAKE_PICTURE)
     {
-        Vector3f sttp;
-        wp_nav->get_wp_stopping_point(sttp);
-        if (sqrtf(sttp.x*sttp.x+sttp.y*+sttp.y+sttp.z*sttp.z) > CNDN_WP_RADIUS_CM)
+        const Vector3f cpos = inertial_nav.get_position();
+        Vector3f tpos = wp_nav->get_pos_target();
+        tpos -= cpos;
+        if (sqrtf(tpos.x*tpos.x+tpos.y*+tpos.y+tpos.z*tpos.z) > CNDN_WP_RADIUS_CM)
         {
             reach_wp_time_ms = 0;
             return false;
