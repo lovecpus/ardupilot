@@ -151,8 +151,8 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
     set_yaw_state(use_yaw, yaw_cd, use_yaw_rate, yaw_rate_cds, yaw_relative);
 
     // no need to check return status because terrain data is not used
-    Vector3f org = wp_nav->get_wp_destination();
-    wp_nav->set_wp_origin_and_destination(org, destination, false);
+    wp_nav->wp_and_spline_init();
+    wp_nav->set_wp_destination(destination, false);
     b_position_target_reached = false;
 
     return true;
