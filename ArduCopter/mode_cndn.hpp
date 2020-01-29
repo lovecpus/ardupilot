@@ -54,6 +54,8 @@ protected:
     const char *name() const override { return "CNDN_ETRI"; }
     const char *name4() const override { return "CNDN"; }
 
+    void live_log(const char *fmt, ...);
+
 private:
     void pos_control_start();
     void auto_control();

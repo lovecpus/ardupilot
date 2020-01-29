@@ -155,6 +155,25 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
     return true;
 }
 
+void ModeCNDN::live_log(const char *fmt, ...)
+{
+    uint32_t now = AP_HAL::millis();
+    if (reach_wp_logt_ms == 0)
+        reach_wp_logt_ms = now;
+
+    if ((now - reach_wp_logt_ms) < 500)
+        return;
+
+    reach_wp_logt_ms = now;
+
+    va_list args;
+    char buff[128];
+    va_start(args, fmt);
+    vsprintf_s<128>(buff, fmt, args);
+    va_end(args);
+    gcs().send_text(MAV_SEVERITY_INFO, "%s", buff);
+}
+
 // save current position as A (dest_num = 0) or B (dest_num = 1).  If both A and B have been saved move to the one specified
 void ModeCNDN::mission_command(uint8_t dest_num)
 {
@@ -578,7 +597,6 @@ bool ModeCNDN::reached_destination()
     if (!wp_nav->reached_wp_destination())
     {
         reach_wp_time_ms = 0;
-        reach_wp_logt_ms = 0;
         return false;
     }
 
@@ -586,7 +604,6 @@ bool ModeCNDN::reached_destination()
     if (wp_nav->get_wp_distance_to_destination() > CNDN_WP_RADIUS_CM)
     {
         reach_wp_time_ms = 0;
-        reach_wp_logt_ms = 0;
         return false;
     }
 
@@ -594,8 +611,6 @@ bool ModeCNDN::reached_destination()
     uint32_t now = AP_HAL::millis();
     if (reach_wp_time_ms == 0)
         reach_wp_time_ms = now;
-    if (reach_wp_logt_ms == 0)
-        reach_wp_logt_ms = now;
 
     // check height to destination
     if (stage == TAKE_PICTURE)
@@ -617,13 +632,14 @@ bool ModeCNDN::reached_destination()
         }
         else
         {
-            if ((now - reach_wp_logt_ms) > 1000)
-            {
-                reach_wp_logt_ms = now;
-                gcs().send_text(MAV_SEVERITY_INFO, "%s: (%0.3f)", ((now - reach_wp_time_ms) > 1000)?"RCH":"NGG", fz);
-            }
+            live_log("%s: (%0.3f)", ((now - reach_wp_time_ms) > 1000)?"RCH":"NGG", fz);
         }
     }
+    else
+    {
+        live_log("%s: (%0.3f)", ((now - reach_wp_time_ms) > 1000)?"RCH":"NGG", fz);
+    }
+    
     return ((now - reach_wp_time_ms) > 1000);
 }
 
