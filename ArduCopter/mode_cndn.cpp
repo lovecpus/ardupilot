@@ -184,21 +184,14 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             stage = MOVE_TO_EDGE;
             if (edge_count > 0)
             {
-                const Vector3f curr_pos = inertial_nav.get_position();
-                float maxdt = 999.0f;
-                int mini = 0;
+                Vector3f hpos;
+                inertial_nav.get_home().get_vector_from_origin_NEU(hpos);
                 for (int i = 0; i < edge_count; i++)
-                {
-                    Vector3f pos(edge_points[i].x, edge_points[i].y, 0.0f);
-                    Vector3f dpos(pos - curr_pos);
-                    float dt = sqrtf(dpos.x * dpos.x + dpos.y + dpos.y);
-                    if (dt < maxdt)
-                    {
-                        mini = i;
-                        maxdt = dt;
-                    }
                     vecPoints.push_back(edge_points[i]);
-                }
+
+                std::sort(vecPoints.begin(), vecPoints.end(), [&, hpos](Vector3f& a,Vector3f& b){ return (a-hpos).length() < (b-hpos).length();});
+
+                const Vector3f stopping_point(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
 
                 if (!vecPoints.empty())
                 {
