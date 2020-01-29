@@ -114,12 +114,12 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
     set_yaw_state(use_yaw, yaw_cd, use_yaw_rate, yaw_rate_cds, yaw_relative);
 
     // no need to check return status because terrain data is not used
-    Vector3f sttp;
+//    Vector3f sttp;
+//    wp_nav->get_wp_stopping_point(sttp);
     wp_nav->set_wp_destination(destination, false);
-    wp_nav->get_wp_stopping_point(sttp);
-
-    gcs().send_text(MAV_SEVERITY_INFO, "SPT: %0.3f,%0.3f,%0.3f(%0.3f)", destination.x, destination.y, destination.z);
-    gcs().send_text(MAV_SEVERITY_INFO, "WSP: %0.3f,%0.3f,%0.3f(%0.3f)", sttp.x, sttp.y, sttp.z);
+    Vector3f sttp = copter.inertial_nav.get_position();
+    gcs().send_text(MAV_SEVERITY_INFO, "SPT: %0.3f,%0.3f,%0.3f", destination.x, destination.y, destination.z);
+    gcs().send_text(MAV_SEVERITY_INFO, "IGP: %0.3f,%0.3f,%0.3f", sttp.x, sttp.y, sttp.z);
 
     b_position_target_reached = false;
     b_position_target = true;
@@ -143,8 +143,8 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             Vector3f pos_vector = copter.inertial_nav.get_position();
             set_destination(pos_vector);
 
-            gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             gcs().send_text(MAV_SEVERITY_INFO, "send image start capture to ETRI-MC");
+            gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             // set to position control mode
             stage = TAKE_PICTURE;
         }
@@ -175,7 +175,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 int mini = 0;
                 for (int i = 0; i < edge_count; i++)
                 {
-                    Vector3f pos(edge_points[i].x * 0.000001, edge_points[i].y * 0.000001, curr_pos.z);
+                    Vector3f pos(edge_points[i].x, edge_points[i].y, curr_pos.z);
                     Vector3f dpos(pos - curr_pos);
                     float dt = sqrtf(dpos.x * dpos.x + dpos.y + dpos.y);
                     if (dt < maxdt)
@@ -188,13 +188,13 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 Vector3f stopping_point;
                 wp_nav->get_wp_stopping_point(stopping_point);
 
-                stopping_point.x = edge_points[mini].x * 0.000001;
-                stopping_point.y = edge_points[mini].y * 0.000001;
+                stopping_point.x = edge_points[mini].x;
+                stopping_point.y = edge_points[mini].y;
                 // no need to check return status because terrain data is not used
                 wp_nav->set_wp_destination(stopping_point, false);
 
                 gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "Edge follow stage to %d,%d.", (uint32_t)(stopping_point.x*1000000), (uint32_t)(stopping_point.y*1000000));
+                gcs().send_text(MAV_SEVERITY_INFO, "EFS: %0.6f,%0.6f.", stopping_point.x, (stopping_point.y);
             }
             return;
         }
@@ -489,10 +489,6 @@ void ModeCNDN::pos_control_start()
 
 void ModeCNDN::auto_control()
 {
-
-
-
-
     // process pilot's yaw input
     float target_yaw_rate = 0;
     if (!copter.failsafe.radio)
@@ -663,6 +659,8 @@ bool ModeCNDN::reached_destination()
     }
 
     // check height to destination
+
+
 
     // wait at least one second
     uint32_t now = AP_HAL::millis();
