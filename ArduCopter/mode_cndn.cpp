@@ -181,11 +181,16 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     {
         if (dest_num == 2)
         {
-            stage = MOVE_TO_EDGE;
+            vecPoints.clear();
             if (edge_count > 0)
             {
                 Vector3f hpos;
-                ahrs.get_home().get_vector_from_origin_NEU(hpos);
+
+                if (!ahrs.get_home().get_vector_from_origin_NEU(hpos))
+                    return;
+
+                stage = MOVE_TO_EDGE;
+
                 for (int i = 0; i < edge_count; i++)
                     vecPoints.push_back(edge_points[i]);
                 Vector2f cpos(hpos.x, hpos.y);
@@ -197,6 +202,11 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                     gcs().send_text(MAV_SEVERITY_INFO, "EFS: %0.6f,%0.6f,%0.6f.", hpos.x, hpos.y, hpos.z);
                     vecPoints.pop_front();
                 }
+            }
+            else
+            {
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
+                return_to_manual_control();
             }
             return;
         }
