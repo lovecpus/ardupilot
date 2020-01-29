@@ -83,6 +83,7 @@ void ModeCNDN::run()
             if (!vecPoints.empty())
             {
                     const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                    wp_nav->wp_and_spline_init();
                     wp_nav->set_wp_destination(tpos, false);
                     auto_yaw.set_rate(1500.0f);
                     vecPoints.pop_front();
@@ -104,6 +105,8 @@ void ModeCNDN::run()
             if (!vecPoints.empty())
             {
                 const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+
+                wp_nav->wp_and_spline_init();
                 wp_nav->set_wp_destination(tpos, false);
                 auto_yaw.set_rate(1500.0f);
                 gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
@@ -223,6 +226,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 if (!vecPoints.empty())
                 {
                     hpos = Vector3f(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                    wp_nav->wp_and_spline_init();
                     wp_nav->set_wp_destination(hpos, false);
                     auto_yaw.set_rate(1500.0f);
                     gcs().send_text(MAV_SEVERITY_INFO, "EFS: %0.6f,%0.6f,%0.6f.", hpos.x, hpos.y, hpos.z);
@@ -390,6 +394,8 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         // send request
         if (!pos_ignore && vel_ignore && acc_ignore)
         {
+            if (bTargeted)
+                wp_nav->shift_wp_origin_to_current_pos();
             set_destination(pos_vector, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
             if (bTargeted)
             {
