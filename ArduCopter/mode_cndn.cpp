@@ -685,43 +685,52 @@ bool ModeCNDN::reached_destination()
         return false;
     }
 
+    // wait at least one second
+    uint32_t now = AP_HAL::millis();
+    if (reach_wp_time_ms == 0)
+    {
+        reach_wp_time_ms = now;
+    }
+
     // check height to destination
     if (stage == TAKE_PICTURE)
     {
         const Vector3f cpos = inertial_nav.get_position();
         Vector3f tpos = wp_nav->get_wp_destination() - cpos;
         float fz = sqrtf(tpos.x*tpos.x+tpos.y*tpos.y+tpos.z*tpos.z);
-        uint32_t nowt = AP_HAL::millis();
+
         if (reach_wp_logt_ms == 0)
-            reach_wp_logt_ms = nowt;
+            reach_wp_logt_ms = now;
 
         if (fz > CNDN_WP_RADIUS_CM)
         {
-            if ((nowt - reach_wp_logt_ms) > 1000)
+            if ((now - reach_wp_logt_ms) > 1000)
             {
-                reach_wp_logt_ms = nowt;
+                reach_wp_logt_ms = now;
                 gcs().send_text(MAV_SEVERITY_INFO, "FO: (%0.3f)", fz);
             }
             reach_wp_time_ms = 0;
             return false;
         }
+
         if (!b_position_target)
         {
             reach_wp_time_ms = 0;
-            if ((nowt - reach_wp_logt_ms) > 1000)
+            if ((now - reach_wp_logt_ms) > 1000)
             {
-                reach_wp_logt_ms = nowt;
+                reach_wp_logt_ms = now;
                 gcs().send_text(MAV_SEVERITY_INFO, "NTG: (%0.3f)", fz);
             }
             return false;
         }
-    }
-
-    // wait at least one second
-    uint32_t now = AP_HAL::millis();
-    if (reach_wp_time_ms == 0)
-    {
-        reach_wp_time_ms = now;
+        else
+        {
+            if ((now - reach_wp_logt_ms) > 1000)
+            {
+                reach_wp_logt_ms = now;
+                gcs().send_text(MAV_SEVERITY_INFO, "%s: (%0.3f)", ((now - reach_wp_time_ms) > 1000)?"RCH":"NGG", fz);
+            }
+        }
     }
     return ((now - reach_wp_time_ms) > 1000);
 }
