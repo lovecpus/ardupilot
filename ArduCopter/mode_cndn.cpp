@@ -623,12 +623,14 @@ bool ModeCNDN::reached_destination()
         if (fz > CNDN_WP_RADIUS_CM)
         {
             reach_wp_time_ms = 0;
+            live_log("%s", "NWP");
             return false;
         }
 
         if (!b_position_target)
         {
             reach_wp_time_ms = 0;
+            live_log("%s", "NPT");
             return false;
         }
         else
