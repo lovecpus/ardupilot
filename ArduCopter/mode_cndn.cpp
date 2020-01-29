@@ -252,9 +252,9 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         bool bTargeted = false;
         if (packet.coordinate_frame == MAV_FRAME_LOCAL_NED)
         {
-            packet.coordinate_frame = MAV_FRAME_BODY_OFFSET_NED;
+            //packet.coordinate_frame = MAV_FRAME_BODY_OFFSET_NED;
             bTargeted = true;
-            gcs().send_text(MAV_SEVERITY_INFO, "[MAV]LOCAL_NED to BODY_OFFSET_NED");
+            gcs().send_text(MAV_SEVERITY_INFO, "[MAV]LOCAL_NED to TARGET");
         }
 
         // check for supported coordinate frames
