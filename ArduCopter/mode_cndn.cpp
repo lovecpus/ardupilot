@@ -192,9 +192,9 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 std::sort(vecPoints.begin(), vecPoints.end(), [&, hpos](Vector3f& a,Vector3f& b){ return (a-hpos).length() < (b-hpos).length();});
                 if (!vecPoints.empty())
                 {
-                    const Vector3f stopping_point(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
-                    wp_nav->set_wp_destination(stopping_point, false);
-                    gcs().send_text(MAV_SEVERITY_INFO, "EFS: %0.6f,%0.6f,%0.6f.", stopping_point.x, stopping_point.y, stopping_point.z);
+                    hpos = Vector3f(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                    wp_nav->set_wp_destination(hpos, false);
+                    gcs().send_text(MAV_SEVERITY_INFO, "EFS: %0.6f,%0.6f,%0.6f.", hpos.x, hpos.y, hpos.z);
                     vecPoints.pop_front();
                 }
             }
