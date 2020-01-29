@@ -391,7 +391,11 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         {
             set_destination(pos_vector, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
             if (bTargeted)
+            {
                 b_position_target = true;
+                set_destination(pos_vector, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
+                gcs().send_text(MAV_SEVERITY_INFO, "[MAV] SET POSITION TARGET");
+            }
         }
     } break;
 
@@ -405,28 +409,28 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             {
             case 0:
                 return_to_manual_control(false);
-                gcs().send_text(MAV_SEVERITY_INFO, "CNDN immediatly applied %d : return_to_manual_control.", packet.value);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : return_to_manual_control.", packet.value);
                 break;
 
             case 1:
                 gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "CNDN immediatly applied %d : IMAGE_START_CAPTURE.", packet.value);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : IMAGE_START_CAPTURE.", packet.value);
                 break;
 
             case 2:
                 b_position_target_reached = true;
                 gcs().send_message(MSG_POSITION_TARGET_LOCAL_NED);
-                gcs().send_text(MAV_SEVERITY_INFO, "CNDN immediatly applied %d : POSITION_TARGET_LOCAL_NED.", packet.value);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : POSITION_TARGET_LOCAL_NED.", packet.value);
                 break;
 
             case 3:
                 gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "CNDN immediatly applied %d : VIDEO_START_CAPTURE.", packet.value);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : VIDEO_START_CAPTURE.", packet.value);
                 break;
 
             case 4:
                 gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "CNDN immediatly applied %d : VIDEO_STOP_CAPTURE.", packet.value);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : VIDEO_STOP_CAPTURE.", packet.value);
                 break;
             }
         }
