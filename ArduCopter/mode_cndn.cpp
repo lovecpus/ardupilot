@@ -195,6 +195,13 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             }
             return;
         }
+
+        if (dest_num == 0)
+        {
+            wp_nav->wp_and_spline_init();
+            return_to_manual_control(false);
+            return;
+        }
     }
     break;
     }
@@ -222,6 +229,7 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
         {
             loiter_nav->init_target();
         }
+        gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
         gcs().send_text(MAV_SEVERITY_INFO, "CNDN: manual control");
     }
 }
