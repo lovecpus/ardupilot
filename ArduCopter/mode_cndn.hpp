@@ -1,3 +1,4 @@
+#include <vector>
 #if MODE_CNDN_ENABLED == ENABLED
 /*
 * Init and run calls for CNDN flight mode
