@@ -63,7 +63,6 @@ void ModeCNDN::run()
     switch (stage)
     {
     case AUTO:
-    case EDGE_FOLLOW:
         // if vehicle has reached destination switch to manual control
         if (reached_destination())
         {
@@ -73,6 +72,19 @@ void ModeCNDN::run()
         else
         {
             auto_control();
+        }
+        break;
+
+    case EDGE_FOLLOW:
+        auto_control();
+        break;
+
+    case MOVE_TO_EDGE:
+        auto_control();
+        if (reached_destination())
+        {
+            stage = EDGE_FOLLOW;
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to EDGE_FOLLOW.");
         }
         break;
 
@@ -147,23 +159,11 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     }
     break;
 
-    case TAKE_PICTURE:
-    case EDGE_FOLLOW:
-    case AUTO:
-    {
-        if (dest_num == 0)
-        {
-            wp_nav->wp_and_spline_init();
-            return_to_manual_control(false);
-            return;
-        }
-    } break;
-
     case PREPARE_FOLLOW:
     {
         if (dest_num == 2)
         {
-            stage = EDGE_FOLLOW;
+            stage = MOVE_TO_EDGE;
             if (edge_count > 0)
             {
                 const Vector3f curr_pos = inertial_nav.get_position();
@@ -186,6 +186,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 
                 stopping_point.x = edge_points[mini].x;
                 stopping_point.y = edge_points[mini].y;
+                stopping_point.z = 300.0f;
                 // no need to check return status because terrain data is not used
                 wp_nav->set_wp_destination(stopping_point, false);
 
@@ -194,7 +195,12 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             }
             return;
         }
-
+    }
+    case TAKE_PICTURE:
+    case EDGE_FOLLOW:
+    case MOVE_TO_EDGE:
+    case AUTO:
+    {
         if (dest_num == 0)
         {
             wp_nav->wp_and_spline_init();
