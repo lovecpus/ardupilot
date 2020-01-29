@@ -283,6 +283,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         {
             // convert to cm
             pos_vector = Vector3f(packet.x * 100.0f, packet.y * 100.0f, -packet.z * 100.0f);
+            gcs().send_text(MAV_SEVERITY_INFO, "[MAV]SPT: %0.6f,%0.6f,%0.6f.", pos_vector.x, pos_vector.y, pos_vector.z);
             // rotate to body-frame if necessary
             if (packet.coordinate_frame == MAV_FRAME_BODY_NED ||
                 packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED)
