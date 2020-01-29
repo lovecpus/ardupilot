@@ -118,7 +118,8 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
     wp_nav->set_wp_destination(destination, false);
     wp_nav->get_wp_stopping_point(sttp);
 
-    gcs().send_text(MAV_SEVERITY_INFO, "set position target %0.3f,%0.3f,%0.3f", sttp.x, sttp.y, sttp.z);
+    gcs().send_text(MAV_SEVERITY_INFO, "SPT: %0.3f,%0.3f,%0.3f(%0.3f)", destination.x, destination.y, destination.z);
+    gcs().send_text(MAV_SEVERITY_INFO, "WSP: %0.3f,%0.3f,%0.3f(%0.3f)", sttp.x, sttp.y, sttp.z);
 
     b_position_target_reached = false;
     b_position_target = true;
