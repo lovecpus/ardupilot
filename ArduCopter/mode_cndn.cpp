@@ -194,7 +194,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 wp_nav->set_wp_destination(stopping_point, false);
 
                 gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "EFS: %0.6f,%0.6f.", stopping_point.x, (stopping_point.y);
+                gcs().send_text(MAV_SEVERITY_INFO, "EFS: %0.6f,%0.6f,%0.6f.", stopping_point.x, stopping_point.y, stopping_point.z);
             }
             return;
         }
