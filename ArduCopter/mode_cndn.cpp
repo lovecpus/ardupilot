@@ -400,7 +400,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             edge_count = packet.edge_count;
 
             for (int i = 0; i < 10; i++)
-                edge_points[0].zero();
+                edge_points[i].zero();
 
             gcs().send_text(MAV_SEVERITY_INFO, "ETRI_PADDY_EDGE_GPS_INFORMATION (%d points) received.", packet.edge_count);
             if (edge_count > 0)
@@ -452,6 +452,28 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             {
                 edge_points[9].x = packet.latitude10;
                 edge_points[9].y = packet.longitude10;
+            }
+
+            // GEO to NEU
+            Vector3f pos_neu_cm; // position (North, East, Up coordinates) in centimeters
+            for (int i = 0; i < edge_count; i++)
+            {
+                Vector2f& pos = edge_points[i];
+                if (!check_latlng(pos.x, pos.y))
+                    continue;
+                Location::AltFrame frame;
+                if (!mavlink_coordinate_frame_to_location_alt_frame(MAV_FRAME_GLOBAL_INT, frame))
+                    continue;
+                const Location loc{
+                    pos.x,
+                    poy.y,
+                    int32_t(3.0f * 100.0f),
+                    frame,
+                };
+                if (!loc.get_vector_from_origin_NEU(pos_neu_cm))
+                    continue;
+                pos.x = pos_neu_cm.x;
+                pos.y = pos_neu_cm.y;
             }
         }
         break;
