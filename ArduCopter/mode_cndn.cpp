@@ -638,7 +638,7 @@ bool ModeCNDN::reached_destination()
     }
     else
     {
-        live_log("%s: (%0.3f)", ((now - reach_wp_time_ms) > 1000)?"RCH":"NGG", fz);
+        live_log("%s", ((now - reach_wp_time_ms) > 1000)?"RCH":"NGG");
     }
     
     return ((now - reach_wp_time_ms) > 1000);
