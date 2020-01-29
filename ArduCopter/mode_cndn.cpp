@@ -114,9 +114,11 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
     set_yaw_state(use_yaw, yaw_cd, use_yaw_rate, yaw_rate_cds, yaw_relative);
 
     // no need to check return status because terrain data is not used
+    Vector3f sttp;
     wp_nav->set_wp_destination(destination, false);
+    wp_nav->get_wp_stopping_point(sttp);
 
-    gcs().send_text(MAV_SEVERITY_INFO, "set position target %0.3f,%0.3f,%0.3f", destination.x, destination.y, destination.z);
+    gcs().send_text(MAV_SEVERITY_INFO, "set position target %0.3f,%0.3f,%0.3f", sttp.x, sttp.y, sttp.z);
 
     b_position_target_reached = false;
     b_position_target = true;
@@ -486,6 +488,10 @@ void ModeCNDN::pos_control_start()
 
 void ModeCNDN::auto_control()
 {
+
+
+
+
     // process pilot's yaw input
     float target_yaw_rate = 0;
     if (!copter.failsafe.radio)
@@ -516,126 +522,127 @@ void ModeCNDN::auto_control()
 
 void ModeCNDN::manual_control()
 {
-    float target_roll, target_pitch;
-    float target_yaw_rate = 0.0f;
-    float target_climb_rate = 0.0f;
-    float takeoff_climb_rate = 0.0f;
+    copter.mode_loiter.run();
+    // float target_roll, target_pitch;
+    // float target_yaw_rate = 0.0f;
+    // float target_climb_rate = 0.0f;
+    // float takeoff_climb_rate = 0.0f;
 
-    // initialize vertical speed and acceleration
-    pos_control->set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
-    pos_control->set_max_accel_z(g.pilot_accel_z);
+    // // initialize vertical speed and acceleration
+    // pos_control->set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
+    // pos_control->set_max_accel_z(g.pilot_accel_z);
 
-    // process pilot inputs unless we are in radio failsafe
-    if (!copter.failsafe.radio)
-    {
-        // apply SIMPLE mode transform to pilot inputs
-        update_simple_mode();
+    // // process pilot inputs unless we are in radio failsafe
+    // if (!copter.failsafe.radio)
+    // {
+    //     // apply SIMPLE mode transform to pilot inputs
+    //     update_simple_mode();
 
-        // convert pilot input to lean angles
-        get_pilot_desired_lean_angles(target_roll, target_pitch, loiter_nav->get_angle_max_cd(), attitude_control->get_althold_lean_angle_max());
+    //     // convert pilot input to lean angles
+    //     get_pilot_desired_lean_angles(target_roll, target_pitch, loiter_nav->get_angle_max_cd(), attitude_control->get_althold_lean_angle_max());
 
-        // process pilot's roll and pitch input
-        loiter_nav->set_pilot_desired_acceleration(target_roll, target_pitch, G_Dt);
-        // get pilot's desired yaw rate
-        target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
+    //     // process pilot's roll and pitch input
+    //     loiter_nav->set_pilot_desired_acceleration(target_roll, target_pitch, G_Dt);
+    //     // get pilot's desired yaw rate
+    //     target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
 
-        // get pilot desired climb rate
-        target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());
+    //     // get pilot desired climb rate
+    //     target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());
 
-        // make sure the climb rate is in the given range, prevent floating point errors
-        target_climb_rate = constrain_float(target_climb_rate, -get_pilot_speed_dn(), g.pilot_speed_up);
-    }
-    else
-    {
-        // clear out pilot desired acceleration in case radio failsafe event occurs and we
-        // do not switch to RTL for some reason
-        loiter_nav->clear_pilot_desired_acceleration();
-    }
+    //     // make sure the climb rate is in the given range, prevent floating point errors
+    //     target_climb_rate = constrain_float(target_climb_rate, -get_pilot_speed_dn(), g.pilot_speed_up);
+    // }
+    // else
+    // {
+    //     // clear out pilot desired acceleration in case radio failsafe event occurs and we
+    //     // do not switch to RTL for some reason
+    //     loiter_nav->clear_pilot_desired_acceleration();
+    // }
 
-    // relax loiter target if we might be landed
-    if (copter.ap.land_complete_maybe)
-    {
-        loiter_nav->soften_for_landing();
-    }
+    // // relax loiter target if we might be landed
+    // if (copter.ap.land_complete_maybe)
+    // {
+    //     loiter_nav->soften_for_landing();
+    // }
 
-    // Loiter State Machine Determination
-    AltHoldModeState loiter_state = get_alt_hold_state(target_climb_rate);
+    // // Loiter State Machine Determination
+    // AltHoldModeState loiter_state = get_alt_hold_state(target_climb_rate);
 
-    // Loiter State Machine
-    switch (loiter_state)
-    {
+    // // Loiter State Machine
+    // switch (loiter_state)
+    // {
 
-    case AltHold_MotorStopped:
+    // case AltHold_MotorStopped:
 
-        attitude_control->reset_rate_controller_I_terms();
-        attitude_control->set_yaw_target_to_current_heading();
-        pos_control->relax_alt_hold_controllers(0.0f); // forces throttle output to go to zero
-        loiter_nav->init_target();
-        attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(loiter_nav->get_roll(), loiter_nav->get_pitch(), target_yaw_rate);
-        pos_control->update_z_controller();
-        break;
+    //     attitude_control->reset_rate_controller_I_terms();
+    //     attitude_control->set_yaw_target_to_current_heading();
+    //     pos_control->relax_alt_hold_controllers(0.0f); // forces throttle output to go to zero
+    //     loiter_nav->init_target();
+    //     attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(loiter_nav->get_roll(), loiter_nav->get_pitch(), target_yaw_rate);
+    //     pos_control->update_z_controller();
+    //     break;
 
-    case AltHold_Takeoff:
+    // case AltHold_Takeoff:
 
-        // initiate take-off
-        if (!takeoff.running())
-        {
-            takeoff.start(constrain_float(g.pilot_takeoff_alt, 0.0f, 1000.0f));
-        }
+    //     // initiate take-off
+    //     if (!takeoff.running())
+    //     {
+    //         takeoff.start(constrain_float(g.pilot_takeoff_alt, 0.0f, 1000.0f));
+    //     }
 
-        // get takeoff adjusted pilot and takeoff climb rates
-        takeoff.get_climb_rates(target_climb_rate, takeoff_climb_rate);
+    //     // get takeoff adjusted pilot and takeoff climb rates
+    //     takeoff.get_climb_rates(target_climb_rate, takeoff_climb_rate);
 
-        // get avoidance adjusted climb rate
-        target_climb_rate = get_avoidance_adjusted_climbrate(target_climb_rate);
+    //     // get avoidance adjusted climb rate
+    //     target_climb_rate = get_avoidance_adjusted_climbrate(target_climb_rate);
 
-        // run loiter controller
-        loiter_nav->update();
+    //     // run loiter controller
+    //     loiter_nav->update();
 
-        // call attitude controller
-        attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(loiter_nav->get_roll(), loiter_nav->get_pitch(), target_yaw_rate);
+    //     // call attitude controller
+    //     attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(loiter_nav->get_roll(), loiter_nav->get_pitch(), target_yaw_rate);
 
-        // update altitude target and call position controller
-        pos_control->set_alt_target_from_climb_rate_ff(target_climb_rate, G_Dt, false);
-        pos_control->add_takeoff_climb_rate(takeoff_climb_rate, G_Dt);
-        pos_control->update_z_controller();
-        break;
+    //     // update altitude target and call position controller
+    //     pos_control->set_alt_target_from_climb_rate_ff(target_climb_rate, G_Dt, false);
+    //     pos_control->add_takeoff_climb_rate(takeoff_climb_rate, G_Dt);
+    //     pos_control->update_z_controller();
+    //     break;
 
-    case AltHold_Landed_Ground_Idle:
+    // case AltHold_Landed_Ground_Idle:
 
-        attitude_control->reset_rate_controller_I_terms();
-        attitude_control->set_yaw_target_to_current_heading();
-        // FALLTHROUGH
+    //     attitude_control->reset_rate_controller_I_terms();
+    //     attitude_control->set_yaw_target_to_current_heading();
+    //     // FALLTHROUGH
 
-    case AltHold_Landed_Pre_Takeoff:
+    // case AltHold_Landed_Pre_Takeoff:
 
-        loiter_nav->init_target();
-        attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, 0.0f);
-        pos_control->relax_alt_hold_controllers(0.0f); // forces throttle output to go to zero
-        pos_control->update_z_controller();
-        break;
+    //     loiter_nav->init_target();
+    //     attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, 0.0f);
+    //     pos_control->relax_alt_hold_controllers(0.0f); // forces throttle output to go to zero
+    //     pos_control->update_z_controller();
+    //     break;
 
-    case AltHold_Flying:
+    // case AltHold_Flying:
 
-        // set motors to full range
-        motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
+    //     // set motors to full range
+    //     motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
-        // run loiter controller
-        loiter_nav->update();
+    //     // run loiter controller
+    //     loiter_nav->update();
 
-        // call attitude controller
-        attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(loiter_nav->get_roll(), loiter_nav->get_pitch(), target_yaw_rate);
+    //     // call attitude controller
+    //     attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(loiter_nav->get_roll(), loiter_nav->get_pitch(), target_yaw_rate);
 
-        // adjust climb rate using rangefinder
-        target_climb_rate = copter.surface_tracking.adjust_climb_rate(target_climb_rate);
+    //     // adjust climb rate using rangefinder
+    //     target_climb_rate = copter.surface_tracking.adjust_climb_rate(target_climb_rate);
 
-        // get avoidance adjusted climb rate
-        target_climb_rate = get_avoidance_adjusted_climbrate(target_climb_rate);
+    //     // get avoidance adjusted climb rate
+    //     target_climb_rate = get_avoidance_adjusted_climbrate(target_climb_rate);
 
-        pos_control->set_alt_target_from_climb_rate_ff(target_climb_rate, G_Dt, false);
-        pos_control->update_z_controller();
-        break;
-    }
+    //     pos_control->set_alt_target_from_climb_rate_ff(target_climb_rate, G_Dt, false);
+    //     pos_control->update_z_controller();
+    //     break;
+    // }
 }
 
 bool ModeCNDN::reached_destination()
@@ -653,6 +660,8 @@ bool ModeCNDN::reached_destination()
         reach_wp_time_ms = 0;
         return false;
     }
+
+    // check height to destination
 
     // wait at least one second
     uint32_t now = AP_HAL::millis();
