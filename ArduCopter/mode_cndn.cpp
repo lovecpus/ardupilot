@@ -190,9 +190,6 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                     vecPoints.push_back(edge_points[i]);
 
                 std::sort(vecPoints.begin(), vecPoints.end(), [&, hpos](Vector3f& a,Vector3f& b){ return (a-hpos).length() < (b-hpos).length();});
-
-                const Vector3f stopping_point(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
-
                 if (!vecPoints.empty())
                 {
                     const Vector3f stopping_point(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
