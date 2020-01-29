@@ -1,4 +1,5 @@
 #include "Copter.h"
+#include <stdio.h>
 
 #if MODE_CNDN_ENABLED == ENABLED
 
