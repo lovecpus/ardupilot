@@ -598,6 +598,7 @@ bool ModeCNDN::reached_destination()
     if (!wp_nav->reached_wp_destination())
     {
         reach_wp_time_ms = 0;
+        live_log("%s", "FLY");
         return false;
     }
 
@@ -605,6 +606,7 @@ bool ModeCNDN::reached_destination()
     if (wp_nav->get_wp_distance_to_destination() > CNDN_WP_RADIUS_CM)
     {
         reach_wp_time_ms = 0;
+        live_log("%s", "OOR");
         return false;
     }
 
