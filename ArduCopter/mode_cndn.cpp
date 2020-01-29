@@ -596,7 +596,6 @@ bool ModeCNDN::reached_destination()
     if (!wp_nav->reached_wp_destination())
     {
         reach_wp_time_ms = 0;
-        live_log("%s", "FLY");
         return false;
     }
 
@@ -604,14 +603,8 @@ bool ModeCNDN::reached_destination()
     if (wp_nav->get_wp_distance_to_destination() > CNDN_WP_RADIUS_CM)
     {
         reach_wp_time_ms = 0;
-        live_log("%s", "OOR");
         return false;
     }
-
-    // wait at least one second
-    uint32_t now = AP_HAL::millis();
-    if (reach_wp_time_ms == 0)
-        reach_wp_time_ms = now;
 
     // check height to destination
     if (stage == TAKE_PICTURE)
@@ -623,26 +616,20 @@ bool ModeCNDN::reached_destination()
         if (fz > CNDN_WP_RADIUS_CM)
         {
             reach_wp_time_ms = 0;
-            live_log("%s", "NWP");
             return false;
         }
 
         if (!b_position_target)
         {
             reach_wp_time_ms = 0;
-            live_log("%s", "NPT");
             return false;
         }
-        else
-        {
-            live_log("%s: (%0.3f)", ((now - reach_wp_time_ms) > 1000)?"RCH":"NGG", fz);
-        }
     }
-    else
-    {
-        live_log("%s", ((now - reach_wp_time_ms) > 1000)?"RCH":"NGG");
-    }
-    
+    // wait at least one second
+    uint32_t now = AP_HAL::millis();
+    if (reach_wp_time_ms == 0)
+        reach_wp_time_ms = now;
+
     return ((now - reach_wp_time_ms) > 1000);
 }
 
