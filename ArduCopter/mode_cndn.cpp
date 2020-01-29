@@ -77,22 +77,20 @@ void ModeCNDN::run()
 
     case EDGE_FOLLOW:
         auto_control();
-        if (reached_destination())
+        if (!vecPoints.empty())
         {
-            if (!vecPoints.empty())
+            if (reached_destination())
             {
                 const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
-                auto_yaw.set_rate(1500.0f);
                 wp_nav->set_wp_destination(tpos, false);
-                gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
+                auto_yaw.set_rate(1500.0f);
                 vecPoints.pop_front();
             }
-            else
-            {
-                gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
-                AP_Notify::events.waypoint_complete = 1;
-                return_to_manual_control(true);
-            }
+        }
+        else
+        {
+            AP_Notify::events.waypoint_complete = 1;
+            return_to_manual_control(true);
         }
         break;
 
@@ -104,8 +102,8 @@ void ModeCNDN::run()
             if (!vecPoints.empty())
             {
                 const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
-                auto_yaw.set_rate(1500.0f);
                 wp_nav->set_wp_destination(tpos, false);
+                auto_yaw.set_rate(1500.0f);
                 gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
                 vecPoints.pop_front();
             }
@@ -194,11 +192,17 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 for (int i = 0; i < edge_count; i++)
                     vecPoints.push_back(edge_points[i]);
                 Vector2f cpos(hpos.x, hpos.y);
-                std::sort(vecPoints.begin(), vecPoints.end(), [&, hpos](Vector2f& a,Vector2f& b){ return (a-cpos).length() < (b-cpos).length();});
+                std::sort(vecPoints.begin(), vecPoints.end(), [&, cpos](Vector2f& a,Vector2f& b){ return (a-cpos).length() < (b-cpos).length();});
+                cpos = vecPoints.front();
+                vecPoints.pop_front();
+                std::sort(vecPoints.begin(), vecPoints.end(), [&, cpos](Vector2f& a,Vector2f& b){ return (a-cpos).length() > (b-cpos).length();});
+                vecPoints.push_front(cpos);
+                vecPoints.push_back(cpos);
                 if (!vecPoints.empty())
                 {
                     hpos = Vector3f(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
                     wp_nav->set_wp_destination(hpos, false);
+                    auto_yaw.set_rate(1500.0f);
                     gcs().send_text(MAV_SEVERITY_INFO, "EFS: %0.6f,%0.6f,%0.6f.", hpos.x, hpos.y, hpos.z);
                     vecPoints.pop_front();
                 }
@@ -566,126 +570,6 @@ void ModeCNDN::auto_control()
 void ModeCNDN::manual_control()
 {
     copter.mode_loiter.run();
-    // float target_roll, target_pitch;
-    // float target_yaw_rate = 0.0f;
-    // float target_climb_rate = 0.0f;
-    // float takeoff_climb_rate = 0.0f;
-
-    // // initialize vertical speed and acceleration
-    // pos_control->set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
-    // pos_control->set_max_accel_z(g.pilot_accel_z);
-
-    // // process pilot inputs unless we are in radio failsafe
-    // if (!copter.failsafe.radio)
-    // {
-    //     // apply SIMPLE mode transform to pilot inputs
-    //     update_simple_mode();
-
-    //     // convert pilot input to lean angles
-    //     get_pilot_desired_lean_angles(target_roll, target_pitch, loiter_nav->get_angle_max_cd(), attitude_control->get_althold_lean_angle_max());
-
-    //     // process pilot's roll and pitch input
-    //     loiter_nav->set_pilot_desired_acceleration(target_roll, target_pitch, G_Dt);
-    //     // get pilot's desired yaw rate
-    //     target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
-
-    //     // get pilot desired climb rate
-    //     target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());
-
-    //     // make sure the climb rate is in the given range, prevent floating point errors
-    //     target_climb_rate = constrain_float(target_climb_rate, -get_pilot_speed_dn(), g.pilot_speed_up);
-    // }
-    // else
-    // {
-    //     // clear out pilot desired acceleration in case radio failsafe event occurs and we
-    //     // do not switch to RTL for some reason
-    //     loiter_nav->clear_pilot_desired_acceleration();
-    // }
-
-    // // relax loiter target if we might be landed
-    // if (copter.ap.land_complete_maybe)
-    // {
-    //     loiter_nav->soften_for_landing();
-    // }
-
-    // // Loiter State Machine Determination
-    // AltHoldModeState loiter_state = get_alt_hold_state(target_climb_rate);
-
-    // // Loiter State Machine
-    // switch (loiter_state)
-    // {
-
-    // case AltHold_MotorStopped:
-
-    //     attitude_control->reset_rate_controller_I_terms();
-    //     attitude_control->set_yaw_target_to_current_heading();
-    //     pos_control->relax_alt_hold_controllers(0.0f); // forces throttle output to go to zero
-    //     loiter_nav->init_target();
-    //     attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(loiter_nav->get_roll(), loiter_nav->get_pitch(), target_yaw_rate);
-    //     pos_control->update_z_controller();
-    //     break;
-
-    // case AltHold_Takeoff:
-
-    //     // initiate take-off
-    //     if (!takeoff.running())
-    //     {
-    //         takeoff.start(constrain_float(g.pilot_takeoff_alt, 0.0f, 1000.0f));
-    //     }
-
-    //     // get takeoff adjusted pilot and takeoff climb rates
-    //     takeoff.get_climb_rates(target_climb_rate, takeoff_climb_rate);
-
-    //     // get avoidance adjusted climb rate
-    //     target_climb_rate = get_avoidance_adjusted_climbrate(target_climb_rate);
-
-    //     // run loiter controller
-    //     loiter_nav->update();
-
-    //     // call attitude controller
-    //     attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(loiter_nav->get_roll(), loiter_nav->get_pitch(), target_yaw_rate);
-
-    //     // update altitude target and call position controller
-    //     pos_control->set_alt_target_from_climb_rate_ff(target_climb_rate, G_Dt, false);
-    //     pos_control->add_takeoff_climb_rate(takeoff_climb_rate, G_Dt);
-    //     pos_control->update_z_controller();
-    //     break;
-
-    // case AltHold_Landed_Ground_Idle:
-
-    //     attitude_control->reset_rate_controller_I_terms();
-    //     attitude_control->set_yaw_target_to_current_heading();
-    //     // FALLTHROUGH
-
-    // case AltHold_Landed_Pre_Takeoff:
-
-    //     loiter_nav->init_target();
-    //     attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(0.0f, 0.0f, 0.0f);
-    //     pos_control->relax_alt_hold_controllers(0.0f); // forces throttle output to go to zero
-    //     pos_control->update_z_controller();
-    //     break;
-
-    // case AltHold_Flying:
-
-    //     // set motors to full range
-    //     motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
-
-    //     // run loiter controller
-    //     loiter_nav->update();
-
-    //     // call attitude controller
-    //     attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(loiter_nav->get_roll(), loiter_nav->get_pitch(), target_yaw_rate);
-
-    //     // adjust climb rate using rangefinder
-    //     target_climb_rate = copter.surface_tracking.adjust_climb_rate(target_climb_rate);
-
-    //     // get avoidance adjusted climb rate
-    //     target_climb_rate = get_avoidance_adjusted_climbrate(target_climb_rate);
-
-    //     pos_control->set_alt_target_from_climb_rate_ff(target_climb_rate, G_Dt, false);
-    //     pos_control->update_z_controller();
-    //     break;
-    // }
 }
 
 bool ModeCNDN::reached_destination()
@@ -709,9 +593,9 @@ bool ModeCNDN::reached_destination()
     // wait at least one second
     uint32_t now = AP_HAL::millis();
     if (reach_wp_time_ms == 0)
-    {
         reach_wp_time_ms = now;
-    }
+    if (reach_wp_logt_ms == 0)
+        reach_wp_logt_ms = now;
 
     // check height to destination
     if (stage == TAKE_PICTURE)
@@ -720,16 +604,8 @@ bool ModeCNDN::reached_destination()
         Vector3f tpos = wp_nav->get_wp_destination() - cpos;
         float fz = sqrtf(tpos.x*tpos.x+tpos.y*tpos.y+tpos.z*tpos.z);
 
-        if (reach_wp_logt_ms == 0)
-            reach_wp_logt_ms = now;
-
         if (fz > CNDN_WP_RADIUS_CM)
         {
-            if ((now - reach_wp_logt_ms) > 1000)
-            {
-                reach_wp_logt_ms = now;
-                gcs().send_text(MAV_SEVERITY_INFO, "FO: (%0.3f)", fz);
-            }
             reach_wp_time_ms = 0;
             return false;
         }
@@ -737,11 +613,6 @@ bool ModeCNDN::reached_destination()
         if (!b_position_target)
         {
             reach_wp_time_ms = 0;
-            if ((now - reach_wp_logt_ms) > 1000)
-            {
-                reach_wp_logt_ms = now;
-                gcs().send_text(MAV_SEVERITY_INFO, "NTG: (%0.3f)", fz);
-            }
             return false;
         }
         else
