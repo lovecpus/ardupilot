@@ -138,11 +138,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     {
         if (dest_num > 0)
         {
-            loiter_nav->init_target();
-            wp_nav->wp_and_spline_init();
-
-            Vector3f pos_vector = copter.inertial_nav.get_position();
-            set_destination(pos_vector);
+            pos_control_start();
 
             gcs().send_text(MAV_SEVERITY_INFO, "send image start capture to ETRI-MC");
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
