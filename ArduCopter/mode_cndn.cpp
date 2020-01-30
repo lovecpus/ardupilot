@@ -428,15 +428,15 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         {
             switch (packet.value)
             {
-            case 0:
-                return_to_manual_control(false);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : return_to_manual_control.", packet.value);
-                break;
+            // case 0:
+            //     return_to_manual_control(false);
+            //     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : return_to_manual_control.", packet.value);
+            //     break;
 
-            case 1:
-                gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : IMAGE_START_CAPTURE.", packet.value);
-                break;
+            // case 1:
+            //     gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
+            //     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : IMAGE_START_CAPTURE.", packet.value);
+            //     break;
 
             case 2:
                 b_position_target_reached = true;
@@ -479,7 +479,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             for (int i = 0; i < 10; i++)
                 edge_points[i].zero();
 
-            gcs().send_text(MAV_SEVERITY_INFO, "ETRI_PADDY_EDGE_GPS_INFORMATION (%d points) received.", packet.edge_count);
+            gcs().send_text(MAV_SEVERITY_INFO, "ETRI_GPS_INFO(%d points) received.", packet.edge_count);
             if (edge_count > 0)
             {
                 edge_points[0].x = packet.latitude1;
