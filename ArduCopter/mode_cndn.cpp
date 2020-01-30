@@ -324,7 +324,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             //packet.coordinate_frame = MAV_FRAME_BODY_OFFSET_NED;
             bTargeted = true;
         }
-        gcs().send_text(MAV_SEVERITY_INFO, "[MAV] SPT(%d) %s %0.2f,%0.2f,%0.2f", packet.coordinate_frame, bTargeted?"ON":"OFF", packet.x, packet.y, packet.z);
+        gcs().send_text(MAV_SEVERITY_INFO, "[MAV] SPT(%d) %s %0.3f,%0.3f,%0.3f", packet.coordinate_frame, bTargeted?"ON":"OFF", packet.x, packet.y, packet.z);
 
         // check for supported coordinate frames
         if (packet.coordinate_frame != MAV_FRAME_LOCAL_NED &&
