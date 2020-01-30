@@ -441,17 +441,17 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             case 2:
                 b_position_target_reached = true;
                 gcs().send_message(MSG_POSITION_TARGET_LOCAL_NED);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : POSITION_TARGET_LOCAL_NED.", packet.value);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %ld : POSITION_TARGET_LOCAL_NED.", packet.value);
                 break;
 
             case 3:
                 gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : VIDEO_START_CAPTURE.", packet.value);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %ld : VIDEO_START_CAPTURE.", packet.value);
                 break;
 
             case 4:
                 gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : VIDEO_STOP_CAPTURE.", packet.value);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %ld : VIDEO_STOP_CAPTURE.", packet.value);
                 break;
             }
         }
