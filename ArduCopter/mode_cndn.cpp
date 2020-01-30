@@ -319,7 +319,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         }
 
         bool bTargeted = false;
-        if (packet.coordinate_frame == MAV_FRAME_LOCAL_NED)
+        if (packet.coordinate_frame == MAV_FRAME_BODY_NED)
         {
             //packet.coordinate_frame = MAV_FRAME_BODY_OFFSET_NED;
             bTargeted = true;
