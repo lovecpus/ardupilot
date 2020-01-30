@@ -318,13 +318,22 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             break;
         }
 
+        Vector3f cpos = inertial_nav.get_position();
+
         bool bTargeted = false;
+        gcs().send_text(MAV_SEVERITY_INFO, "[MAV] SPT(%d) %0.3f,%0.3f,%0.3f", packet.coordinate_frame, packet.x, packet.y, packet.z);
         if (packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_LOCAL_NED)
         {
             //packet.coordinate_frame = MAV_FRAME_BODY_OFFSET_NED;
+            if (packet.coordinate_frame == MAV_FRAME_BODY_NED)
+            {
+                //packet.coordinate_frame = MAV_FRAME_LOCAL_NED;
+                packet.x = 0.0f;
+                packet.y = 0.0f;
+                packet.z = -15.0f;
+            }
             bTargeted = true;
         }
-        gcs().send_text(MAV_SEVERITY_INFO, "[MAV] SPT(%d) %s %0.3f,%0.3f,%0.3f", packet.coordinate_frame, bTargeted?"ON":"OFF", packet.x, packet.y, packet.z);
 
         // check for supported coordinate frames
         if (packet.coordinate_frame != MAV_FRAME_LOCAL_NED &&
@@ -363,7 +372,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 packet.coordinate_frame == MAV_FRAME_BODY_NED ||
                 packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED)
             {
-                pos_vector += inertial_nav.get_position();
+                pos_vector += cpos;
             }
             else
             {
