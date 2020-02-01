@@ -67,8 +67,13 @@ void ModeCNDN::run()
         // if vehicle has reached destination switch to manual control
         if (reached_destination())
         {
+            stage = FINISHED:
             AP_Notify::events.waypoint_complete = 1;
-            return_to_manual_control(true);
+            b_position_target_reached = false;
+            b_position_target = false;
+            loiter_nav->clear_pilot_desired_acceleration();
+            loiter_nav->init_target();
+            gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
         }
         else
         {
@@ -114,14 +119,21 @@ void ModeCNDN::run()
         break;
 
     case TAKE_PICTURE:
+    {
         auto_control();
+        bool bReach = b_position_target_reached;
         b_position_target_reached = reached_destination();
-        break;
+        if (bReach != b_position_target_reached && b_position_target_reached)
+        {
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SPT COMPLETE. TAKE PICTURE.");
+        }
+    } break;
 
     case PREPARE_FOLLOW:
         manual_control();
         break;
 
+    case FINISHED:
     case MANUAL:
         manual_control();
         break;
@@ -263,6 +275,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     case EDGE_FOLLOW:
     case MOVE_TO_EDGE:
     case AUTO:
+    case FINISHED:
     {
         if (dest_num == 0)
         {

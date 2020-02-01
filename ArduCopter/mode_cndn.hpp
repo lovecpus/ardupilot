@@ -76,6 +76,7 @@ private:
         MOVE_TO_EDGE,
         EDGE_FOLLOW,
         AUTO, // after A and B defined, pilot toggle the switch from one side to the other, vehicle flies autonomously
+        FINISHED,
     } stage;
 
     uint32_t reach_wp_time_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
