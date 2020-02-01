@@ -329,7 +329,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 packet.x = 0.0f;
                 packet.y = 0.0f;
                 packet.z = -25.0f;
-                packet.z += cpos.z;
+                packet.z += cpos.z * 0.01f;
             }
 #endif
             bTargeted = true;
