@@ -484,14 +484,14 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             wp_nav->wp_and_spline_init();
 
 #if defined(SIM_LOCATION)
-            packet.latitude1  = 37.2842037f;
-            packet.longitude1 = 126.8735806f;
-            packet.latitude2  = 37.2836382f;
-            packet.longitude2 = 126.8727176f;
-            packet.latitude3  = 37.2838916f;
-            packet.longitude3 = 126.872444f;
-            packet.latitude4  = 37.2844592f;
-            packet.longitude4 = 126.873313f;
+            packet.latitude1  = 37.2842096f;
+            packet.longitude1 = 126.8735343f;
+            packet.latitude2  = 37.2836760f;
+            packet.longitude2 = 126.8727310f;
+            packet.latitude3  = 37.2839001f;
+            packet.longitude3 = 126.8725044f;
+            packet.latitude4  = 37.2844283f;
+            packet.longitude4 = 126.8733077f;
 #endif
 
             edge_count = packet.edge_count;
