@@ -74,6 +74,7 @@ void ModeCNDN::run()
             loiter_nav->clear_pilot_desired_acceleration();
             loiter_nav->init_target();
             gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING Stages.");
         }
         else
         {
@@ -96,6 +97,7 @@ void ModeCNDN::run()
             else
             {
                 stage = AUTO;
+                // calculating waypoints
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to AUTO stage.");
             }
         }
