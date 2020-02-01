@@ -302,6 +302,7 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
     }
 }
 
+#define SIM_LOCATION 1
 void ModeCNDN::handle_message(const mavlink_message_t &msg)
 {
     switch (msg.msgid)
@@ -314,9 +315,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
         // exit if vehicle is not in Guided mode or Auto-Guided mode
         if (!copter.flightmode->in_guided_mode())
-        {
             break;
-        }
 
         Vector3f cpos = inertial_nav.get_position();
 
@@ -324,14 +323,14 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         gcs().send_text(MAV_SEVERITY_INFO, "[MAV] SPT(%d) %0.3f,%0.3f,%0.3f", packet.coordinate_frame, packet.x, packet.y, packet.z);
         if (packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_LOCAL_NED)
         {
-            //packet.coordinate_frame = MAV_FRAME_BODY_OFFSET_NED;
+#if defined(SIM_LOCATION)
             if (packet.coordinate_frame == MAV_FRAME_BODY_NED)
             {
-                //packet.coordinate_frame = MAV_FRAME_LOCAL_NED;
                 packet.x = 0.0f;
                 packet.y = 0.0f;
-                packet.z = -15.0f;
+                packet.z = -25.0f;
             }
+#endif
             bTargeted = true;
         }
 
@@ -482,6 +481,17 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             mavlink_msg_etri_paddy_edge_gps_information_decode(&msg, &packet);
 
             wp_nav->wp_and_spline_init();
+
+#if defined(SIM_LOCATION)
+            packet.latitude1  = 37.2842037f;
+            packet.longitude1 = 126.8735806f;
+            packet.latitude2  = 37.2836382f;
+            packet.longitude2 = 126.8727176f;
+            packet.latitude3  = 37.2838916f;
+            packet.longitude3 = 126.872444f;
+            packet.latitude4  = 37.2844592f;
+            packet.longitude4 = 126.873313f;
+#endif
 
             edge_count = packet.edge_count;
 
