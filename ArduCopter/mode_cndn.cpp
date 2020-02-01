@@ -67,7 +67,7 @@ void ModeCNDN::run()
         // if vehicle has reached destination switch to manual control
         if (reached_destination())
         {
-            stage = FINISHED:
+            stage = FINISHED;
             AP_Notify::events.waypoint_complete = 1;
             b_position_target_reached = false;
             b_position_target = false;
