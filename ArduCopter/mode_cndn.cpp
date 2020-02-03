@@ -78,7 +78,7 @@ void ModeCNDN::run()
             loiter_nav->init_target();
             auto_yaw.set_mode(AUTO_YAW_RESETTOARMEDYAW);
             gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH Stages.");
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to PREPARE FINISH stage.");
         }
         else
         {
@@ -109,7 +109,7 @@ void ModeCNDN::run()
             {
                 stage = FINISHED;
                 auto_yaw.set_mode(AUTO_YAW_HOLD);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING Stages.");
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING stages.");
             }
         }
     } break;
