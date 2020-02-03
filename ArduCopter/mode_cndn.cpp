@@ -311,6 +311,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     case EDGE_FOLLOW:
     case MOVE_TO_EDGE:
     case AUTO:
+    case PREPARE_FINISH:
     case FINISHED:
     {
         if (dest_num == 0)
