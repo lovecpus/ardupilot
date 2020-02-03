@@ -89,17 +89,18 @@ void ModeCNDN::run()
     {
         auto_control();
         uint32_t now = AP_HAL::millis();
+        float yaw = auto_yaw.yaw();
         if (last_yaw_ms == 0)
         {
             last_yaw_ms = now;
-            last_yaw = auto_yaw.yaw();
+            last_yaw = yaw;
         }
 
         if (now - last_yaw_ms > 1000)
         {
             last_yaw_ms = now;
-            if (last_yaw != auto_yaw.yaw())
-                last_yaw = auto_yaw.yaw();
+            if (last_yaw != yaw)
+                last_yaw = yaw;
             else
             {
                 stage = FINISHED;
