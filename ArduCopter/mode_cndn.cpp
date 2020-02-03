@@ -99,8 +99,11 @@ void ModeCNDN::run()
         if (now - last_yaw_ms > 1000)
         {
             last_yaw_ms = now;
-            if (last_yaw != yaw)
+            float dy = last_yaw - yaw;
+            if (dy*dy > 1.0f)
+            {
                 last_yaw = yaw;
+            }
             else
             {
                 stage = FINISHED;
