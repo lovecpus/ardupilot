@@ -73,6 +73,7 @@ void ModeCNDN::run()
             b_position_target = false;
             loiter_nav->clear_pilot_desired_acceleration();
             loiter_nav->init_target();
+            auto_yaw.set_mode(AUTO_YAW_HOLD);
             gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING Stages.");
         }
@@ -89,8 +90,10 @@ void ModeCNDN::run()
             if (!vecPoints.empty())
             {
                     const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                    const Vector3f epos = wp_nav->get_wp_destination();
                     wp_nav->set_wp_destination(tpos, false);
-                    auto_yaw.set_rate(1500.0f);
+                    auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
+                    const Vector3f rpos(tpos-epos), npos(1.0f,0.0f,0.0f);
                     vecPoints.pop_front();
                     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to next EDGE.");
             }
@@ -112,7 +115,7 @@ void ModeCNDN::run()
             {
                 const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
                 wp_nav->set_wp_destination(tpos, false);
-                auto_yaw.set_rate(1500.0f);
+                auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
                 gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
                 vecPoints.pop_front();
             }
@@ -312,6 +315,7 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
         {
             loiter_nav->init_target();
         }
+        auto_yaw.set_mode(AUTO_YAW_HOLD);
         gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
         gcs().send_text(MAV_SEVERITY_INFO, "CNDN: manual control");
     }
