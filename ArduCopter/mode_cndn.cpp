@@ -70,6 +70,7 @@ void ModeCNDN::run()
         if (reached_destination())
         {
             stage = PREPARE_FINISH;
+            last_yaw_ms = 0;
             AP_Notify::events.waypoint_complete = 1;
             b_position_target_reached = false;
             b_position_target = false;
@@ -77,7 +78,7 @@ void ModeCNDN::run()
             loiter_nav->init_target();
             auto_yaw.set_mode(AUTO_YAW_RESETTOARMEDYAW);
             gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING Stages.");
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH Stages.");
         }
         else
         {
@@ -96,7 +97,7 @@ void ModeCNDN::run()
             last_yaw = yaw;
         }
 
-        if (now - last_yaw_ms > 1000)
+        if ((now - last_yaw_ms) > 3000)
         {
             last_yaw_ms = now;
             float dy = last_yaw - yaw;
@@ -313,6 +314,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     case AUTO:
     case PREPARE_FINISH:
     case FINISHED:
+    default:
     {
         if (dest_num == 0)
         {
