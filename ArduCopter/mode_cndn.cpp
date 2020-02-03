@@ -34,6 +34,8 @@ bool ModeCNDN::init(bool ignore_checks)
     // initialise waypoint state
     stage = MANUAL;
     b_position_target = false;
+    last_yaw = -1.0f;
+    last_yaw_ms = 0;
 
     dest_A.zero();
     dest_B.zero();
@@ -67,7 +69,7 @@ void ModeCNDN::run()
         // if vehicle has reached destination switch to manual control
         if (reached_destination())
         {
-            stage = FINISHED;
+            stage = PREPARE_FINISH;
             AP_Notify::events.waypoint_complete = 1;
             b_position_target_reached = false;
             b_position_target = false;
@@ -82,6 +84,30 @@ void ModeCNDN::run()
             auto_control();
         }
         break;
+
+    case PREPARE_FINISH:
+    {
+        auto_control();
+        uint32_t now = AP_HAL::millis();
+        if (last_yaw_ms == 0)
+        {
+            last_yaw_ms = now;
+            last_yaw = auto_yaw.yaw();
+        }
+
+        if (now - last_yaw_ms > 1000)
+        {
+            last_yaw_ms = now;
+            if (last_yaw != auto_yaw.yaw())
+                last_yaw = auto_yaw.yaw();
+            else
+            {
+                stage = FINISHED;
+                auto_yaw.set_mode(AUTO_YAW_HOLD);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING Stages.");
+            }
+        }
+    } break;
 
     case EDGE_FOLLOW:
         auto_control();

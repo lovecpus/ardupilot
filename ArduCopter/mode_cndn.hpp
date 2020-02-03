@@ -76,6 +76,7 @@ private:
         MOVE_TO_EDGE,
         EDGE_FOLLOW,
         AUTO, // after A and B defined, pilot toggle the switch from one side to the other, vehicle flies autonomously
+        PREPARE_FINISH,
         FINISHED,
     } stage;
 
@@ -88,5 +89,7 @@ private:
     Vector2f edge_points[10]; // in NEU frame in cm relative to ekf origin
     std::deque<Vector2f> vecPoints;
     float  wayHeight = 3.0f;
+    uint32_t last_yaw_ms = 0;
+    float  last_yaw = -1.0f;
 };
 #endif
