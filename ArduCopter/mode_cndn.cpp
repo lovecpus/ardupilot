@@ -96,7 +96,6 @@ void ModeCNDN::run()
         {
             last_yaw_ms = now;
             float dy = copter.initial_armed_bearing - ahrs.yaw_sensor;
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] YAW %ld/%ld", ahrs.yaw_sensor, copter.initial_armed_bearing);
             if (dy*dy < 1000.0f)
             {
                 stage = FINISHED;
