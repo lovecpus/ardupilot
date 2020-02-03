@@ -93,6 +93,7 @@ void ModeCNDN::run()
                     const Vector3f epos = wp_nav->get_wp_destination();
                     wp_nav->set_wp_destination(tpos, false);
                     auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
+                    auto_yaw.set_rate(4500.0f);
                     const Vector3f rpos(tpos-epos), npos(1.0f,0.0f,0.0f);
                     vecPoints.pop_front();
                     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to next EDGE.");
@@ -116,6 +117,7 @@ void ModeCNDN::run()
                 const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
                 wp_nav->set_wp_destination(tpos, false);
                 auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
+                auto_yaw.set_rate(4500.0f);
                 gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
                 vecPoints.pop_front();
             }
@@ -261,7 +263,6 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 {
                     hpos = Vector3f(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
                     wp_nav->set_wp_destination(hpos, false);
-                    auto_yaw.set_rate(1500.0f);
                     gcs().send_text(MAV_SEVERITY_INFO, "EFS: %0.6f,%0.6f,%0.6f.", hpos.x, hpos.y, hpos.z);
                     vecPoints.pop_front();
                     stage = MOVE_TO_EDGE;
@@ -439,6 +440,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         // send request
         if (!pos_ignore && vel_ignore && acc_ignore)
         {
+            auto_yaw.set_mode(AUTO_YAW_HOLD);
             set_destination(pos_vector, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
             if (bTargeted)
             {
@@ -490,6 +492,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         if (stage == TAKE_PICTURE)
         {
             stage = PREPARE_FOLLOW;
+            auto_yaw.set_mode(AUTO_YAW_HOLD);
             gcs().send_text(MAV_SEVERITY_INFO, "CAMERA_TRIGGER received, prepare to EDGE FOLLOW.");
         }
         break;
