@@ -90,6 +90,5 @@ private:
     std::deque<Vector2f> vecPoints;
     float  wayHeight = 3.0f;
     uint32_t last_yaw_ms = 0;
-    float  last_yaw = -1.0f;
 };
 #endif

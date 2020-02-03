@@ -34,7 +34,6 @@ bool ModeCNDN::init(bool ignore_checks)
     // initialise waypoint state
     stage = MANUAL;
     b_position_target = false;
-    last_yaw = -1.0f;
     last_yaw_ms = 0;
 
     dest_A.zero();
@@ -91,22 +90,14 @@ void ModeCNDN::run()
         auto_control();
         uint32_t now = AP_HAL::millis();
         if (last_yaw_ms == 0)
-        {
             last_yaw_ms = now;
-            last_yaw = ahrs.yaw_sensor;
-        }
 
-        if ((now - last_yaw_ms) > 1000)
+        if ((now - last_yaw_ms) > 500)
         {
             last_yaw_ms = now;
-            float yaw = ahrs.yaw_sensor;
-            float dy = last_yaw - yaw;
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] YAW: %0.3f/%0.3f", yaw, last_yaw);
-            if (dy*dy > 1.0f)
-            {
-                last_yaw = yaw;
-            }
-            else
+            float dy = copter.initial_armed_bearing - ahrs.yaw_sensor;
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] YAW %0.1f/%0.1", ahrs.yaw_sensor, copter.initial_armed_bearing * 1.0f);
+            if (dy*dy < 1000.0f)
             {
                 stage = FINISHED;
                 auto_yaw.set_mode(AUTO_YAW_HOLD);
