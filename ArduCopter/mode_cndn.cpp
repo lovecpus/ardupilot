@@ -90,17 +90,18 @@ void ModeCNDN::run()
     {
         auto_control();
         uint32_t now = AP_HAL::millis();
-        float yaw = auto_yaw.yaw();
         if (last_yaw_ms == 0)
         {
             last_yaw_ms = now;
-            last_yaw = yaw;
+            last_yaw = auto_yaw.yaw();
         }
 
-        if ((now - last_yaw_ms) > 3000)
+        if ((now - last_yaw_ms) > 1000)
         {
             last_yaw_ms = now;
+            float yaw = auto_yaw.yaw();
             float dy = last_yaw - yaw;
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] YAW: %0.3f/%0.3f", yaw, last_yaw);
             if (dy*dy > 1.0f)
             {
                 last_yaw = yaw;
