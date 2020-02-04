@@ -57,10 +57,6 @@ protected:
 #if defined(_DEBUG)
     void live_log(const char *fmt, ...);
 #endif
-    AP_Mission mission{
-        FUNCTOR_BIND_MEMBER(&ModeCNDN::start_command, bool, const AP_Mission::Mission_Command &),
-        FUNCTOR_BIND_MEMBER(&ModeCNDN::verify_command, bool, const AP_Mission::Mission_Command &),
-        FUNCTOR_BIND_MEMBER(&ModeCNDN::exit_mission, void)};
 
 private:
     bool start_command(const AP_Mission::Mission_Command& cmd);

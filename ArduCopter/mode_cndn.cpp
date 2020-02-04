@@ -84,7 +84,8 @@ void ModeCNDN::run()
         }
         else
         {
-            auto_control();
+            copter.mode_auto.run();
+            //auto_control();
         }
         break;
 
@@ -139,8 +140,7 @@ void ModeCNDN::run()
                 copter.mode_guided.limit_clear();
 
                 // start/resume the mission (based on MIS_RESTART parameter)
-                mission.start_or_resume();
-
+                copter.mode_auto.init(false);
                 //copter.set_mode(Mode::Number::AUTO, ModeReason::RC_COMMAND);
             }
         }

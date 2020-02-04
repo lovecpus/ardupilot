@@ -326,6 +326,7 @@ private:
 
 
 class ModeAuto : public Mode {
+    friend class ModeCNDN;
 
 public:
     // inherit constructor
