@@ -1170,9 +1170,7 @@ void ModeCNDN::exit_mission()
     // if we are not on the ground switch to loiter or land
     if (!copter.ap.land_complete) {
         // try to enter loiter but if that fails land
-        if (!loiter_start()) {
-            set_mode(Mode::Number::LAND, ModeReason::MISSION_END);
-        }
+        set_mode(Mode::Number::CNDN, ModeReason::MISSION_END);
     } else {
         // if we've landed it's safe to disarm
         copter.arming.disarm();
