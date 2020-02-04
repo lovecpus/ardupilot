@@ -295,7 +295,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 
                 if (!vecRects.empty())
                 {
-                    Vector2f cpos;
+                    cpos.zero();
                     for(auto cp = vecRects.begin(); cp != vecRects.end(); cp ++)
                         cpos += *cp;
                     cpos.x /= vecRects.size() * 1.0f;
