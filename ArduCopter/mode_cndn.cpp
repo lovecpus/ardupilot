@@ -303,13 +303,11 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                     cpos.x /= vecRects.size() * 1.0f;
                     cpos.y /= vecRects.size() * 1.0f;
 
-                    for(auto cp = vecRects.begin(); cp != vecRects.end(); cp ++)
-                    {
-                        Vector2f apos = (cpos-*cp).normalized();
+                    // for(auto cp = vecRects.begin(); cp != vecRects.end(); cp ++)
+                    // {
+                    //     Vector2f apos = (cpos-*cp).normalized();
 
-                    }
-
-
+                    // }
                     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Offset center %0.3f,%0.3f", cpos.x, cpos.y);
                 }
             }
