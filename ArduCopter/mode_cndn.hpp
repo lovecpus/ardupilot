@@ -67,6 +67,7 @@ private:
     bool verify_command(const AP_Mission::Mission_Command& cmd);
     void exit_mission();
     // mission commands
+    Location loc_from_cmd(const AP_Mission::Mission_Command& cmd) const;
     void do_nav_wp(const AP_Mission::Mission_Command& cmd);
 
     void pos_control_start();

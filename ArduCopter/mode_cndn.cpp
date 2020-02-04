@@ -523,17 +523,17 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             case 2:
                 b_position_target_reached = true;
                 gcs().send_message(MSG_POSITION_TARGET_LOCAL_NED);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %ld : POSITION_TARGET_LOCAL_NED.", packet.value);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : POSITION_TARGET_LOCAL_NED.", int(packet.value));
                 break;
 
             case 3:
                 gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %ld : VIDEO_START_CAPTURE.", packet.value);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : VIDEO_START_CAPTURE.", int(packet.value));
                 break;
 
             case 4:
                 gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %ld : VIDEO_STOP_CAPTURE.", packet.value);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : VIDEO_STOP_CAPTURE.", int(packet.value));
                 break;
             }
         }
@@ -847,6 +847,30 @@ void ModeCNDN::set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, floa
     {
         auto_yaw.set_rate(yaw_rate_cds);
     }
+}
+
+Location ModeCNDN::loc_from_cmd(const AP_Mission::Mission_Command& cmd) const
+{
+    Location ret(cmd.content.location);
+
+    // use current lat, lon if zero
+    if (ret.lat == 0 && ret.lng == 0) {
+        ret.lat = copter.current_loc.lat;
+        ret.lng = copter.current_loc.lng;
+    }
+    // use current altitude if not provided
+    if (ret.alt == 0) {
+        // set to current altitude but in command's alt frame
+        int32_t curr_alt;
+        if (copter.current_loc.get_alt_cm(ret.get_alt_frame(),curr_alt)) {
+            ret.set_alt_cm(curr_alt, ret.get_alt_frame());
+        } else {
+            // default to current altitude as alt-above-home
+            ret.set_alt_cm(copter.current_loc.alt,
+                           copter.current_loc.get_alt_frame());
+        }
+    }
+    return ret;
 }
 
 // do_nav_wp - initiate move to next waypoint
