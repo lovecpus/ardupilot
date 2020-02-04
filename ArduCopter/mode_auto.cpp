@@ -523,7 +523,6 @@ bool ModeAuto::start_command(const AP_Mission::Mission_Command& cmd)
 
     case 31015:
         copter.set_mode(Mode::Number::CNDN, ModeReason::MISSION_END);
-        cmd_complete = true;
         break;
 
     default:
