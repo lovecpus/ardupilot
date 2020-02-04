@@ -59,13 +59,6 @@ protected:
 #endif
 
 private:
-    bool start_command(const AP_Mission::Mission_Command& cmd);
-    bool verify_command(const AP_Mission::Mission_Command& cmd);
-    void exit_mission();
-    // mission commands
-    Location loc_from_cmd(const AP_Mission::Mission_Command& cmd) const;
-    void do_nav_wp(const AP_Mission::Mission_Command& cmd);
-
     void pos_control_start();
     void auto_control();
     void manual_control();
