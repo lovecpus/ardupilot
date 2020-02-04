@@ -124,7 +124,7 @@ void ModeCNDN::run()
             {
                 stage = AUTO;
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to AUTO stage.");
-                copter.set_mode(Mode::Number::AUTO);
+                copter.set_mode(Mode::Number::AUTO, ModeReason::RC_COMMAND);
             }
         }
         break;
