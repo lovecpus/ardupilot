@@ -57,8 +57,18 @@ protected:
 #if defined(_DEBUG)
     void live_log(const char *fmt, ...);
 #endif
+    AP_Mission mission{
+        FUNCTOR_BIND_MEMBER(&ModeCNDN::start_command, bool, const AP_Mission::Mission_Command &),
+        FUNCTOR_BIND_MEMBER(&ModeCNDN::verify_command, bool, const AP_Mission::Mission_Command &),
+        FUNCTOR_BIND_MEMBER(&ModeCNDN::exit_mission, void)};
 
 private:
+    bool start_command(const AP_Mission::Mission_Command& cmd);
+    bool verify_command(const AP_Mission::Mission_Command& cmd);
+    void exit_mission();
+    // mission commands
+    void do_nav_wp(const AP_Mission::Mission_Command& cmd);
+
     void pos_control_start();
     void auto_control();
     void manual_control();

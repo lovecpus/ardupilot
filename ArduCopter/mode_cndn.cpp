@@ -78,6 +78,9 @@ void ModeCNDN::run()
             auto_yaw.set_fixed_yaw(copter.initial_armed_bearing * 0.01f, 0.0f, 0, false);
             gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to PREPARE FINISH stage.");
+
+            const Vector3f tpos(vecRects.back().x, vecRects.back().y, wayHeight * 100.0f);
+            wp_nav->set_wp_destination(tpos, false);
         }
         else
         {
@@ -88,19 +91,22 @@ void ModeCNDN::run()
     case PREPARE_FINISH:
     {
         auto_control();
-        uint32_t now = AP_HAL::millis();
-        if (last_yaw_ms == 0)
-            last_yaw_ms = now;
-
-        if ((now - last_yaw_ms) > 500)
+        if (reached_destination())
         {
-            last_yaw_ms = now;
-            float dy = copter.initial_armed_bearing - ahrs.yaw_sensor;
-            if (dy*dy < 1000.0f)
+            uint32_t now = AP_HAL::millis();
+            if (last_yaw_ms == 0)
+                last_yaw_ms = now;
+
+            if ((now - last_yaw_ms) > 500)
             {
-                stage = FINISHED;
-                auto_yaw.set_mode(AUTO_YAW_HOLD);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING stages.");
+                last_yaw_ms = now;
+                float dy = copter.initial_armed_bearing - ahrs.yaw_sensor;
+                if (dy*dy < 1000.0f)
+                {
+                    stage = FINISHED;
+                    auto_yaw.set_mode(AUTO_YAW_HOLD);
+                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING stages.");
+                }
             }
         }
     } break;
@@ -111,20 +117,31 @@ void ModeCNDN::run()
         {
             if (!vecPoints.empty())
             {
-                    const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
-                    const Vector3f epos = wp_nav->get_wp_destination();
-                    wp_nav->set_wp_destination(tpos, false);
-                    auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
-                    auto_yaw.set_rate(4500.0f);
-                    const Vector3f rpos(tpos-epos), npos(1.0f,0.0f,0.0f);
-                    vecPoints.pop_front();
-                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to next EDGE.");
+                const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                const Vector3f epos = wp_nav->get_wp_destination();
+                wp_nav->set_wp_destination(tpos, false);
+                auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
+                const Vector3f rpos(tpos-epos), npos(1.0f,0.0f,0.0f);
+                vecPoints.pop_front();
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to next EDGE.");
             }
             else
             {
                 stage = AUTO;
+
+                auto_yaw.set_fixed_yaw(23100 * 0.01f, 0.0f, 0, false);
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to AUTO stage.");
-                copter.set_mode(Mode::Number::AUTO, ModeReason::RC_COMMAND);
+
+                // initialise waypoint and spline controller
+                wp_nav->wp_and_spline_init();
+
+                // clear guided limits
+                copter.mode_guided.limit_clear();
+
+                // start/resume the mission (based on MIS_RESTART parameter)
+                mission.start_or_resume();
+
+                //copter.set_mode(Mode::Number::AUTO, ModeReason::RC_COMMAND);
             }
         }
         break;
@@ -139,7 +156,6 @@ void ModeCNDN::run()
                 const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
                 wp_nav->set_wp_destination(tpos, false);
                 auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
-                auto_yaw.set_rate(4500.0f);
                 gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
                 vecPoints.pop_front();
             }
@@ -830,6 +846,307 @@ void ModeCNDN::set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, floa
     else if (use_yaw_rate)
     {
         auto_yaw.set_rate(yaw_rate_cds);
+    }
+}
+
+// do_nav_wp - initiate move to next waypoint
+void ModeCNDN::do_nav_wp(const AP_Mission::Mission_Command& cmd)
+{
+    Location target_loc = loc_from_cmd(cmd);
+
+    // this will be used to remember the time in millis after we reach or pass the WP.
+    loiter_time = 0;
+    // this is the delay, stored in seconds
+    loiter_time_max = cmd.p1;
+
+    // Set wp navigation target
+    wp_start(target_loc);
+
+    // if no delay as well as not final waypoint set the waypoint as "fast"
+    AP_Mission::Mission_Command temp_cmd;
+    bool fast_waypoint = false;
+    if (loiter_time_max == 0 && mission.get_next_nav_cmd(cmd.index+1, temp_cmd)) {
+
+        // whether vehicle should stop at the target position depends upon the next command
+        switch (temp_cmd.id) {
+            case MAV_CMD_NAV_WAYPOINT:
+            case MAV_CMD_NAV_LOITER_UNLIM:
+            case MAV_CMD_NAV_LOITER_TURNS:
+            case MAV_CMD_NAV_LOITER_TIME:
+            case MAV_CMD_NAV_LAND:
+            case MAV_CMD_NAV_SPLINE_WAYPOINT:
+                // if next command's lat, lon is specified then do not slowdown at this waypoint
+                if ((temp_cmd.content.location.lat != 0) || (temp_cmd.content.location.lng != 0)) {
+                    fast_waypoint = true;
+                }
+                break;
+            case MAV_CMD_NAV_RETURN_TO_LAUNCH:
+                // do not stop for RTL
+                fast_waypoint = true;
+                break;
+            case MAV_CMD_NAV_TAKEOFF:
+            default:
+                // always stop for takeoff commands
+                // for unsupported commands it is safer to stop
+                break;
+        }
+        copter.wp_nav->set_fast_waypoint(fast_waypoint);
+    }
+}
+
+// start_command - this function will be called when the ap_mission lib wishes to start a new command
+bool ModeCNDN::start_command(const AP_Mission::Mission_Command& cmd)
+{
+    // To-Do: logging when new commands start/end
+    if (copter.should_log(MASK_LOG_CMD)) {
+        copter.logger.Write_Mission_Cmd(mission, cmd);
+    }
+
+    switch(cmd.id) {
+
+    case MAV_CMD_NAV_WAYPOINT:                  // 16  Navigate to Waypoint
+        do_nav_wp(cmd);
+        break;
+/*
+    ///
+    /// navigation commands
+    ///
+    case MAV_CMD_NAV_TAKEOFF:                   // 22
+        do_takeoff(cmd);
+        break;
+
+    case MAV_CMD_NAV_LAND:              // 21 LAND to Waypoint
+        do_land(cmd);
+        break;
+
+    case MAV_CMD_NAV_LOITER_UNLIM:              // 17 Loiter indefinitely
+        do_loiter_unlimited(cmd);
+        break;
+
+    case MAV_CMD_NAV_LOITER_TURNS:              //18 Loiter N Times
+        do_circle(cmd);
+        break;
+
+    case MAV_CMD_NAV_LOITER_TIME:              // 19
+        do_loiter_time(cmd);
+        break;
+
+    case MAV_CMD_NAV_LOITER_TO_ALT:
+        do_loiter_to_alt(cmd);
+        break;
+
+    case MAV_CMD_NAV_RETURN_TO_LAUNCH:             //20
+        do_RTL();
+        break;
+
+    case MAV_CMD_NAV_SPLINE_WAYPOINT:           // 82  Navigate to Waypoint using spline
+        do_spline_wp(cmd);
+        break;
+
+#if NAV_GUIDED == ENABLED
+    case MAV_CMD_NAV_GUIDED_ENABLE:             // 92  accept navigation commands from external nav computer
+        do_nav_guided_enable(cmd);
+        break;
+#endif
+
+    case MAV_CMD_NAV_DELAY:                    // 93 Delay the next navigation command
+        do_nav_delay(cmd);
+        break;
+
+    case MAV_CMD_NAV_PAYLOAD_PLACE:              // 94 place at Waypoint
+        do_payload_place(cmd);
+        break;
+
+    //
+    // conditional commands
+    //
+    case MAV_CMD_CONDITION_DELAY:             // 112
+        do_wait_delay(cmd);
+        break;
+
+    case MAV_CMD_CONDITION_DISTANCE:             // 114
+        do_within_distance(cmd);
+        break;
+
+    case MAV_CMD_CONDITION_YAW:             // 115
+        do_yaw(cmd);
+        break;
+
+    ///
+    /// do commands
+    ///
+    case MAV_CMD_DO_CHANGE_SPEED:             // 178
+        do_change_speed(cmd);
+        break;
+
+    case MAV_CMD_DO_SET_HOME:             // 179
+        do_set_home(cmd);
+        break;
+
+    case MAV_CMD_DO_SET_ROI:                // 201
+        // point the copter and camera at a region of interest (ROI)
+        do_roi(cmd);
+        break;
+
+    case MAV_CMD_DO_MOUNT_CONTROL:          // 205
+        // point the camera to a specified angle
+        do_mount_control(cmd);
+        break;
+    
+    case MAV_CMD_DO_FENCE_ENABLE:
+#if AC_FENCE == ENABLED
+        if (cmd.p1 == 0) { //disable
+            copter.fence.enable(false);
+            gcs().send_text(MAV_SEVERITY_INFO, "Fence Disabled");
+        } else { //enable fence
+            copter.fence.enable(true);
+            gcs().send_text(MAV_SEVERITY_INFO, "Fence Enabled");
+        }
+#endif //AC_FENCE == ENABLED
+        break;
+
+#if NAV_GUIDED == ENABLED
+    case MAV_CMD_DO_GUIDED_LIMITS:                      // 220  accept guided mode limits
+        do_guided_limits(cmd);
+        break;
+#endif
+
+#if WINCH_ENABLED == ENABLED
+    case MAV_CMD_DO_WINCH:                             // Mission command to control winch
+        do_winch(cmd);
+        break;
+#endif
+*/
+    default:
+        // unable to use the command, allow the vehicle to try the next command
+        return false;
+    }
+
+    // always return success
+    return true;
+}
+
+// verify_command - callback function called from ap-mission at 10hz or higher when a command is being run
+//      we double check that the flight mode is AUTO to avoid the possibility of ap-mission triggering actions while we're not in AUTO mode
+bool ModeCNDN::verify_command(const AP_Mission::Mission_Command& cmd)
+{
+    if (copter.flightmode != &copter.mode_cndn) {
+        return false;
+    }
+
+    bool cmd_complete = false;
+
+    switch (cmd.id) {
+/*
+    //
+    // navigation commands
+    //
+    case MAV_CMD_NAV_TAKEOFF:
+        cmd_complete = verify_takeoff();
+        break;
+
+    case MAV_CMD_NAV_WAYPOINT:
+        cmd_complete = verify_nav_wp(cmd);
+        break;
+
+    case MAV_CMD_NAV_LAND:
+        cmd_complete = verify_land();
+        break;
+
+    case MAV_CMD_NAV_PAYLOAD_PLACE:
+        cmd_complete = verify_payload_place();
+        break;
+
+    case MAV_CMD_NAV_LOITER_UNLIM:
+        cmd_complete = verify_loiter_unlimited();
+        break;
+
+    case MAV_CMD_NAV_LOITER_TURNS:
+        cmd_complete = verify_circle(cmd);
+        break;
+
+    case MAV_CMD_NAV_LOITER_TIME:
+        cmd_complete = verify_loiter_time(cmd);
+        break;
+
+    case MAV_CMD_NAV_LOITER_TO_ALT:
+        return verify_loiter_to_alt();
+
+    case MAV_CMD_NAV_RETURN_TO_LAUNCH:
+        cmd_complete = verify_RTL();
+        break;
+
+    case MAV_CMD_NAV_SPLINE_WAYPOINT:
+        cmd_complete = verify_spline_wp(cmd);
+        break;
+
+#if NAV_GUIDED == ENABLED
+    case MAV_CMD_NAV_GUIDED_ENABLE:
+        cmd_complete = verify_nav_guided_enable(cmd);
+        break;
+#endif
+
+     case MAV_CMD_NAV_DELAY:
+        cmd_complete = verify_nav_delay(cmd);
+        break;
+
+    ///
+    /// conditional commands
+    ///
+    case MAV_CMD_CONDITION_DELAY:
+        cmd_complete = verify_wait_delay();
+        break;
+
+    case MAV_CMD_CONDITION_DISTANCE:
+        cmd_complete = verify_within_distance();
+        break;
+
+    case MAV_CMD_CONDITION_YAW:
+        cmd_complete = verify_yaw();
+        break;
+
+    // do commands (always return true)
+    case MAV_CMD_DO_CHANGE_SPEED:
+    case MAV_CMD_DO_SET_HOME:
+    case MAV_CMD_DO_SET_ROI:
+    case MAV_CMD_DO_MOUNT_CONTROL:
+    case MAV_CMD_DO_GUIDED_LIMITS:
+    case MAV_CMD_DO_FENCE_ENABLE:
+    case MAV_CMD_DO_WINCH:
+        cmd_complete = true;
+        break;
+*/
+    default:
+        // error message
+        gcs().send_text(MAV_SEVERITY_WARNING,"Skipping invalid cmd #%i",cmd.id);
+        // return true if we do not recognize the command so that we move on to the next command
+        cmd_complete = true;
+        break;
+    }
+
+
+    // send message to GCS
+    if (cmd_complete) {
+        gcs().send_mission_item_reached_message(cmd.index);
+    }
+
+    return cmd_complete;
+}
+
+// exit_mission - function that is called once the mission completes
+void ModeCNDN::exit_mission()
+{
+    // play a tone
+    AP_Notify::events.mission_complete = 1;
+    // if we are not on the ground switch to loiter or land
+    if (!copter.ap.land_complete) {
+        // try to enter loiter but if that fails land
+        if (!loiter_start()) {
+            set_mode(Mode::Number::LAND, ModeReason::MISSION_END);
+        }
+    } else {
+        // if we've landed it's safe to disarm
+        copter.arming.disarm();
     }
 }
 
