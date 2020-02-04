@@ -521,6 +521,11 @@ bool ModeAuto::start_command(const AP_Mission::Mission_Command& cmd)
         break;
 #endif
 
+    case 31014:
+        copter.set_mode(Mode::Number::CNDN, ModeReason::MISSION_END);
+        cmd_complete = true;
+        break;
+
     default:
         // unable to use the command, allow the vehicle to try the next command
         return false;
@@ -716,6 +721,10 @@ bool ModeAuto::verify_command(const AP_Mission::Mission_Command& cmd)
     case MAV_CMD_DO_GUIDED_LIMITS:
     case MAV_CMD_DO_FENCE_ENABLE:
     case MAV_CMD_DO_WINCH:
+        cmd_complete = true;
+        break;
+
+    case 31014:
         cmd_complete = true;
         break;
 
