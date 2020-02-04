@@ -84,9 +84,7 @@ void ModeCNDN::run()
         }
         else
         {
-            copter.mode_auto.run();
-            copter.mode_auto.run_autopilot();
-            //auto_control();
+            auto_control();
         }
         break;
 
@@ -133,16 +131,7 @@ void ModeCNDN::run()
 
                 auto_yaw.set_fixed_yaw(23100 * 0.01f, 0.0f, 0, false);
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to AUTO stage.");
-
-                // initialise waypoint and spline controller
-                wp_nav->wp_and_spline_init();
-
-                // clear guided limits
-                copter.mode_guided.limit_clear();
-
-                // start/resume the mission (based on MIS_RESTART parameter)
-                copter.mode_auto.init(false);
-                //copter.set_mode(Mode::Number::AUTO, ModeReason::RC_COMMAND);
+                copter.set_mode(Mode::Number::AUTO, ModeReason::RC_COMMAND);
             }
         }
         break;
