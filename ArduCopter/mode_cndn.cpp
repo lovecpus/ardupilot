@@ -605,7 +605,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 pos.x = pos_neu_cm.x;
                 pos.y = pos_neu_cm.y;
 
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d,%0.1f,%0.1f", pos_neu_cm.x, pos_neu_cm.y);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d,%0.1f,%0.1f", i, pos_neu_cm.x, pos_neu_cm.y);
             }
         }
         break;
