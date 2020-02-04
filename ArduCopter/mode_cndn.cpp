@@ -85,6 +85,7 @@ void ModeCNDN::run()
         else
         {
             copter.mode_auto.run();
+            copter.mode_auto.run_autopilot();
             //auto_control();
         }
         break;
