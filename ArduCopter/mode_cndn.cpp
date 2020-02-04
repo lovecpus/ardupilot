@@ -611,13 +611,13 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                     Vector2f nort(1, 0);
 
                     int rd = (int)(nort.angle(npos) * 180 / M_PI);
+                    if (npos.y<0) rd = 360 - rd;
                     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d,%0.1f,%0.1f,%d", i, pos_neu_cm.x, pos_neu_cm.y, rd);
                 }
                 else
                 {
                     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d,%0.1f,%0.1f", i, pos_neu_cm.x, pos_neu_cm.y);
                 }
-                
             }
         }
         break;
