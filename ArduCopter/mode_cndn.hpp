@@ -102,5 +102,6 @@ private:
     float  wayHeight = 3.0f; // M
     float  wayWidth = 6.0f; // M
     uint32_t last_yaw_ms = 0;
+    uint16_t loiter_time_max;                // How long we should stay in Loiter Mode for mission scripting (time in seconds)
 };
 #endif

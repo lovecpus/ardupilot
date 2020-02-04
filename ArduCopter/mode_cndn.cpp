@@ -879,7 +879,7 @@ void ModeCNDN::do_nav_wp(const AP_Mission::Mission_Command& cmd)
     Location target_loc = loc_from_cmd(cmd);
 
     // this will be used to remember the time in millis after we reach or pass the WP.
-    loiter_time = 0;
+    // loiter_time = 0;
     // this is the delay, stored in seconds
     loiter_time_max = cmd.p1;
 
