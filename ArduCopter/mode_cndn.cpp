@@ -615,7 +615,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
     {
         mavlink_etri_drone_paddy_distance_t packet;
         mavlink_msg_etri_drone_paddy_distance_decode(&msg, &packet);
-        gcs().send_text(MAV_SEVERITY_INFO, "[MAV] ETRI_DISTANCE (%0.3f)", packet.distance);
+        //gcs().send_text(MAV_SEVERITY_INFO, "[MAV] ETRI_DISTANCE (%0.3f)", packet.distance);
     }
     break;
     }
