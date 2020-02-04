@@ -367,15 +367,8 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         gcs().send_text(MAV_SEVERITY_INFO, "[MAV] SPT(%d) %0.3f,%0.3f,%0.3f", packet.coordinate_frame, packet.x, packet.y, packet.z);
         if (packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_LOCAL_NED)
         {
-#if defined(SIM_LOCATION)
             if (packet.coordinate_frame == MAV_FRAME_BODY_NED)
-            {
-                packet.x = 0.0f;
-                packet.y = 0.0f;
-                packet.z = -25.0f;
                 packet.z += cpos.z * 0.01f;
-            }
-#endif
             bTargeted = true;
         }
 
