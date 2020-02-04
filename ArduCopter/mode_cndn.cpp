@@ -31,15 +31,23 @@ bool ModeCNDN::init(bool ignore_checks)
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
 
-    // initialise waypoint state
-    stage = MANUAL;
-    b_position_target = false;
-    last_yaw_ms = 0;
+    if (copter.control_mode_reason != ModeReason::MISSION_END)
+    {
+        // initialise waypoint state
+        stage = MANUAL;
+        b_position_target = false;
+        last_yaw_ms = 0;
 
-    dest_A.zero();
-    dest_B.zero();
+        dest_A.zero();
+        dest_B.zero();
 
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mode initialzied.");
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mode initialzied.");
+    }
+    else
+    {
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mission complete.");
+    }
+    
 
     return true;
 }
