@@ -87,7 +87,7 @@ private:
     uint8_t edge_count = 0;
     uint8_t edge_position = 0;
     Vector2f edge_points[10]; // in NEU frame in cm relative to ekf origin
-    std::deque<Vector2f> vecPoints;
+    std::deque<Vector2f> vecPoints, vecRects;
     float  wayHeight = 3.0f;
     uint32_t last_yaw_ms = 0;
 };

@@ -278,6 +278,9 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                     if ((vecPoints.front()-apos).length() < (vecPoints.back()-apos).length())
                         std::reverse(vecPoints.begin(), vecPoints.end());
                     vecPoints.push_front(apos);
+                    vecRects.resize(vecPoints.size());
+                    std::copy(vecPoints.begin(), vecPoints.end(), vecRects.begin());
+
                     vecPoints.push_back(apos);
                 }
 
@@ -288,6 +291,17 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to start point.");
                     vecPoints.pop_front();
                     stage = MOVE_TO_EDGE;
+                }
+
+                if (!vecRects.empty())
+                {
+                    Vector2f cpos;
+                    for(auto cp = vecRects.begin(); cp != vecRects.end(); cp ++)
+                        cpos += *cp;
+                    cpos.x /= vecRects.size() * 1.0f;
+                    cpos.y /= vecRects.size() * 1.0f;
+
+                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Offset center %0.3f,%0.3f", cpos.x, cpos.y);
                 }
             }
             else
