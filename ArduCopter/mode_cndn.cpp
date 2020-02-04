@@ -81,8 +81,7 @@ void ModeCNDN::run()
         }
         else
         {
-            copter.mode_auto.run();
-            //auto_control();
+            auto_control();
         }
         break;
 
@@ -124,9 +123,8 @@ void ModeCNDN::run()
             else
             {
                 stage = AUTO;
-                copter.mode_auto.init(false);
-                // calculating waypoints
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to AUTO stage.");
+                copter.set_mode(Mode::Number::AUTO);
             }
         }
         break;
