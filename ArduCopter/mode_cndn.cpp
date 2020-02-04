@@ -39,7 +39,7 @@ bool ModeCNDN::init(bool ignore_checks)
     dest_A.zero();
     dest_B.zero();
 
-    gcs().send_text(MAV_SEVERITY_INFO, "CNDN mode initialzied.");
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mode initialzied.");
 
     return true;
 }
@@ -230,7 +230,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
         if (dest_num > 0)
         {
             pos_control_start();
-            gcs().send_text(MAV_SEVERITY_INFO, "send image start capture to ETRI-MC");
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Image capture to ETRI-MC");
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             // set to position control mode
             stage = TAKE_PICTURE;
@@ -285,7 +285,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 {
                     hpos = Vector3f(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
                     wp_nav->set_wp_destination(hpos, false);
-                    gcs().send_text(MAV_SEVERITY_INFO, "EFS: %0.6f,%0.6f,%0.6f.", hpos.x, hpos.y, hpos.z);
+                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to start point.");
                     vecPoints.pop_front();
                     stage = MOVE_TO_EDGE;
                 }
@@ -342,7 +342,7 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
         }
         auto_yaw.set_mode(AUTO_YAW_HOLD);
         gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
-        gcs().send_text(MAV_SEVERITY_INFO, "CNDN: manual control");
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Manual control");
     }
 }
 
@@ -364,7 +364,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         Vector3f cpos = inertial_nav.get_position();
 
         bool bTargeted = false;
-        gcs().send_text(MAV_SEVERITY_INFO, "[MAV] SPT(%d) %0.3f,%0.3f,%0.3f", packet.coordinate_frame, packet.x, packet.y, packet.z);
+        gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] SPT(%d) %0.3f,%0.3f,%0.3f", packet.coordinate_frame, packet.x, packet.y, packet.z);
         if (packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_LOCAL_NED)
         {
             if (packet.coordinate_frame == MAV_FRAME_BODY_NED)
@@ -462,7 +462,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             if (bTargeted)
             {
                 b_position_target = true;
-                gcs().send_text(MAV_SEVERITY_INFO, "[MAV] SPT ON %0.3f,%0.3f,%0.3f", pos_vector.x, pos_vector.y, pos_vector.z);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SPT ON %0.3f,%0.3f,%0.3f", pos_vector.x, pos_vector.y, pos_vector.z);
             }
         }
     } break;
@@ -510,7 +510,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         {
             stage = PREPARE_FOLLOW;
             auto_yaw.set_mode(AUTO_YAW_HOLD);
-            gcs().send_text(MAV_SEVERITY_INFO, "CAMERA_TRIGGER received, prepare to EDGE FOLLOW.");
+            gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] CAMERA_TRIGGERED, Prepare to EDGE FOLLOW.");
         }
         break;
 
@@ -538,7 +538,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             for (int i = 0; i < 10; i++)
                 edge_points[i].zero();
 
-            gcs().send_text(MAV_SEVERITY_INFO, "ETRI_GPS_INFO(%d points) received.", packet.edge_count);
+            gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] GPS_INFO(%d points) received.", packet.edge_count);
             if (edge_count > 0)
             {
                 edge_points[0].x = packet.latitude1;
