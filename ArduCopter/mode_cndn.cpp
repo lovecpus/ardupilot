@@ -81,6 +81,7 @@ void ModeCNDN::run()
         }
         else
         {
+            copter.mode_auto.run();
             auto_control();
         }
         break;
@@ -123,6 +124,7 @@ void ModeCNDN::run()
             else
             {
                 stage = AUTO;
+                copter.mode_auto.init(false);
                 // calculating waypoints
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to AUTO stage.");
             }
@@ -278,10 +280,10 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                     if ((vecPoints.front()-apos).length() < (vecPoints.back()-apos).length())
                         std::reverse(vecPoints.begin(), vecPoints.end());
                     vecPoints.push_front(apos);
+                    vecPoints.push_back(apos);
+
                     vecRects.resize(vecPoints.size());
                     std::copy(vecPoints.begin(), vecPoints.end(), vecRects.begin());
-
-                    vecPoints.push_back(apos);
                 }
 
                 if (!vecPoints.empty())
@@ -300,6 +302,13 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                         cpos += *cp;
                     cpos.x /= vecRects.size() * 1.0f;
                     cpos.y /= vecRects.size() * 1.0f;
+
+                    for(auto cp = vecRects.begin(); cp != vecRects.end(); cp ++)
+                    {
+                        Vector2f apos = (cpos-*cp).normalized();
+
+                    }
+
 
                     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Offset center %0.3f,%0.3f", cpos.x, cpos.y);
                 }
