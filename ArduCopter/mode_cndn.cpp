@@ -884,7 +884,12 @@ void ModeCNDN::do_nav_wp(const AP_Mission::Mission_Command& cmd)
     loiter_time_max = cmd.p1;
 
     // Set wp navigation target
-    wp_start(target_loc);
+    // send target to waypoint controller
+    if (!wp_nav->set_wp_destination(target_loc)) {
+        // failure to set destination can only be because of missing terrain data
+        copter.failsafe_terrain_on_event();
+        return;
+    }
 
     // if no delay as well as not final waypoint set the waypoint as "fast"
     AP_Mission::Mission_Command temp_cmd;
