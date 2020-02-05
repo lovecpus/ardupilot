@@ -17,13 +17,13 @@ int degNE(const Vector2f& p1, const Vector2f& p2)
     return degNE(p1-p2);
 }
 
-Vector3f locNEU(const Location& loc)
+Vector3f locNEU(float latf, float lngf, float altf)
 {
     Vector3f pos;
-    int32_t lat = loc.lat * 1e7f;
-    int32_t lng = loc.lng * 1e7f;
-    const Location loc {lat,lng,loc.alt,Location::AltFrame::ABSOLUTE,};
-    if (loc.check_latlng() && loc.get_vector_from_origin_NEU(pos))
+    int32_t lat = latf * 1e7f;
+    int32_t lng = lngf * 1e7f;
+    const Location lc {lat,lng,(int)(altf*100),Location::AltFrame::ABSOLUTE,};
+    if (lc.check_latlng() && loc.get_vector_from_origin_NEU(pos))
         return pos;
     return pos;
 }
@@ -314,8 +314,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 for (int i = 0; i < edge_count; i++)
                 {
                     Vector2f& pos = edge_points[i];
-                    Location loc{pos.x * 1e7f, pos.y * 1e7f, 300, Location::AltFrame::ABSOLUTE,};
-                    pcm = locNEU(loc);
+                    pcm = locNEU(pos.x, pos.y, 3.0f);
                     vecRects.push_back(Vector2f(pcm.x, pcm.y));
                 }
 
