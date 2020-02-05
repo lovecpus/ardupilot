@@ -350,22 +350,22 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 
                 vecRects.resize(vecPoints.size());
                 std::copy(vecPoints.begin(), vecPoints.end(), vecRects.begin());
-            }
 
-            if (!vecPoints.empty())
-            {
-                hpos = Vector3f(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
-                wp_nav->set_wp_destination(hpos, false);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to start point.");
-                vecPoints.pop_front();
-                stage = MOVE_TO_EDGE;
+                if (!vecPoints.empty())
+                {
+                    hpos = Vector3f(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                    wp_nav->set_wp_destination(hpos, false);
+                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to start point.");
+                    vecPoints.pop_front();
+                    stage = MOVE_TO_EDGE;
+                }
             }
-        }
-        else
-        {
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
-            pos_control_start();
-            return_to_manual_control(false);
+            else
+            {
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
+                pos_control_start();
+                return_to_manual_control(false);
+            }
         }
     } return;
 
