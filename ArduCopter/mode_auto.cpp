@@ -522,6 +522,7 @@ bool ModeAuto::start_command(const AP_Mission::Mission_Command& cmd)
 #endif
 
     case MAV_CMD_USER_1:
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mission complete.");
         copter.set_mode(Mode::Number::CNDN, ModeReason::MISSION_END);
         break;
 
