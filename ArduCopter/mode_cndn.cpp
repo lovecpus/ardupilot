@@ -556,11 +556,18 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] CAMERA_TRIGGERED, Prepare to EDGE FOLLOW.");
             AP_Notify::events.waypoint_complete = 1;
 
+            AP_Mission::Mission_Command cmd;
+            AP::mission()->get_next_nav_cmd(0, cmd);
+
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] NAV_CMD(%d,%d)", int(cmd.content.location.alt), int(cmd.content.location.get_alt_frame()));
+
             AP::mission()->clear();
             AP::mission()->reset();
-            AP_Mission::Mission_Command cmd;
 
+            AP::mission()->write_home_to_storage();
             cmd.index = 0;
+
+            cmd.index ++;
             cmd.id = MAV_CMD_NAV_WAYPOINT;
             cmd.content.location = Location(Vector3f(vecRects[0].x, vecRects[0].y, 300.0f));
             cmd.content.location.set_alt_cm(300, Location::AltFrame::ABSOLUTE);
@@ -569,12 +576,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             cmd.index ++;
             cmd.id = MAV_CMD_NAV_WAYPOINT;
             cmd.content.location = Location(Vector3f(vecRects[1].x, vecRects[1].y, 300.0f));
-            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABSOLUTE);
-            AP::mission()->add_cmd(cmd);
-
-            cmd.index ++;
-            cmd.id = MAV_CMD_NAV_WAYPOINT;
-            cmd.content.location = Location(Vector3f(vecRects[2].x, vecRects[2].y, 300.0f));
             cmd.content.location.set_alt_cm(300, Location::AltFrame::ABSOLUTE);
             AP::mission()->add_cmd(cmd);
 
