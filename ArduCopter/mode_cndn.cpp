@@ -14,7 +14,7 @@ int degNE(const Vector2f& pp)
 
 int degNE(const Vector2f& p1, const Vector2f& p2)
 {
-    return degNE(p2-p1);
+    return degNE(p1-p2);
 }
 
 bool ModeCNDN::init(bool ignore_checks)
@@ -667,14 +667,14 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 pos.x = pos_neu_cm.x;
                 pos.y = pos_neu_cm.y;
 
-                if (i > 0)
+                if (i == 0)
                 {
-                    int rd = degNE(edge_points[i-1], pos);
+                    int rd = degNE(pos, edge_points[edge_count-1]);
                     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d,%0.1f,%0.1f,%d", i, pos_neu_cm.x, pos_neu_cm.y, rd);
                 }
                 else
                 {
-                    int rd = degNE(pos, edge_points[edge_count-1]);
+                    int rd = degNE(pos, edge_points[i-1]);
                     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d,%0.1f,%0.1f,%d", i, pos_neu_cm.x, pos_neu_cm.y, rd);
                 }
             }
