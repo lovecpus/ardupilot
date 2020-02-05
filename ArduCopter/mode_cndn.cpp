@@ -569,16 +569,19 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             cmd.index ++;
             cmd.id = MAV_CMD_NAV_WAYPOINT;
             cmd.content.location = Location(Vector3f(vecRects[1].x, vecRects[1].y, 300.0f));
+            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABSOLUTE);
             AP::mission()->add_cmd(cmd);
 
             cmd.index ++;
             cmd.id = MAV_CMD_NAV_WAYPOINT;
             cmd.content.location = Location(Vector3f(vecRects[2].x, vecRects[2].y, 300.0f));
+            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABSOLUTE);
             AP::mission()->add_cmd(cmd);
 
             cmd.index ++;
             cmd.id = MAV_CMD_DO_SET_RELAY;
             cmd.content.location = Location(Vector3f(vecRects.front().x, vecRects.front().y, 300.0f));
+            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABSOLUTE);
             cmd.content.relay.num = 255;
             cmd.content.relay.state = 1;
             AP::mission()->add_cmd(cmd);
