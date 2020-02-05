@@ -183,10 +183,16 @@ void ModeCNDN::run()
                 }
                 AP::mission()->clear();
                 AP_Mission::Mission_Command cmd;
-                cmd.index = 0;
-                cmd.id = MAV_CMD_DO_GRIPPER;
 
-                //AP::mission()->add_cmd();
+                cmd.index = 0;
+                cmd.id = MAV_CMD_NAV_WAYPOINT;
+                cmd.content.location = Location(Vector3f(vecRects[0].x, vecRects[0].y, 300.0f));
+                AP::mission()->add_cmd(cmd);
+
+                cmd.index = 1;
+                cmd.content.location = Location(Vector3f(vecRects[1].x, vecRects[1].y, 300.0f));
+                AP::mission()->add_cmd(cmd);
+
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to PREPARE_AUTO stage.");
             }
         }
