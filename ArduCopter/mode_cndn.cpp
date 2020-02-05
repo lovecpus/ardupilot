@@ -544,6 +544,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             stage = PREPARE_FOLLOW;
             auto_yaw.set_mode(AUTO_YAW_HOLD);
             gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] CAMERA_TRIGGERED, Prepare to EDGE FOLLOW.");
+            AP_Notify::events.waypoint_complete = 1;
         }
         break;
 
