@@ -521,9 +521,11 @@ bool ModeAuto::start_command(const AP_Mission::Mission_Command& cmd)
         break;
 #endif
 
+#if MODE_CNDN_ENABLED == ENABLED
     case MAV_CMD_DO_SET_RELAY:
         copter.mode_cndn.return_to_mode();
     break;
+#endif
 
     default:
         // unable to use the command, allow the vehicle to try the next command
