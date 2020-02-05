@@ -571,14 +571,14 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             cmd.index = 3;
             cmd.id = MAV_CMD_DO_SET_RELAY;
             cmd.content.location = Location(Vector3f(vecRects.front().x, vecRects.front().y, 300.0f));
-            cmd.content.relay.num = 255;
-            cmd.content.relay.state = 255;
+            cmd.content.relay.num = 1;
+            cmd.content.relay.state = 1;
             AP::mission()->add_cmd(cmd);
 
             cmd.index = 4;
             cmd.id = MAV_CMD_DO_SET_RELAY;
             cmd.content.location = Location(Vector3f(vecRects.front().x, vecRects.front().y, 300.0f));
-            cmd.content.relay.num = 255;
+            cmd.content.relay.num = 1;
             cmd.content.relay.state = 0;
             AP::mission()->add_cmd(cmd);
         }
