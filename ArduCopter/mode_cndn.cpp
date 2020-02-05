@@ -180,9 +180,8 @@ void ModeCNDN::run()
                 AP_Mission::Mission_Command cmd;
                 cmd.index = 0;
                 cmd.id = MAV_CMD_DO_GRIPPER;
-                cmd.content.location.lat = 
-                
-                AP::mission()->add_cmd();
+
+                //AP::mission()->add_cmd();
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to PREPARE_AUTO stage.");
             }
         }
