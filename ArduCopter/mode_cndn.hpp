@@ -49,6 +49,7 @@ public:
     void mission_command(uint8_t dest_num);
     void return_to_manual_control(bool maintain_target);
     void handle_message(const mavlink_message_t &msg) override;
+    void return_to_mode();
 
 protected:
     const char *name() const override { return "CNDN_ETRI"; }
@@ -77,6 +78,7 @@ private:
         EDGE_FOLLOW,
         PREPARE_AUTO,
         AUTO, // after A and B defined, pilot toggle the switch from one side to the other, vehicle flies autonomously
+        RETURN_AUTO,
         PREPARE_FINISH,
         FINISHED,
     } stage;

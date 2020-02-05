@@ -58,7 +58,7 @@ bool ModeCNDN::init(bool ignore_checks)
 
     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mode %d,%d", copter.prev_control_mode, copter.control_mode_reason);
 
-    if (copter.control_mode_reason != ModeReason::MISSION_END)
+    if (stage != RETURN_AUTO)
     {
         // initialise waypoint state
         stage = MANUAL;
@@ -74,7 +74,6 @@ bool ModeCNDN::init(bool ignore_checks)
     {
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mission complete.");
     }
-    
 
     return true;
 }
@@ -100,6 +99,31 @@ void ModeCNDN::run()
     switch (stage)
     {
     case AUTO:
+        // if vehicle has reached destination switch to manual control
+        if (reached_destination())
+        {
+            stage = PREPARE_FINISH;
+            last_yaw_ms = 0;
+            last_yaw_cd = copter.initial_armed_bearing;
+            AP_Notify::events.waypoint_complete = 1;
+            b_position_target_reached = false;
+            b_position_target = false;
+            loiter_nav->clear_pilot_desired_acceleration();
+            loiter_nav->init_target();
+            auto_yaw.set_fixed_yaw(copter.initial_armed_bearing * 0.01f, 0.0f, 0, false);
+            gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to PREPARE FINISH stage.");
+
+            const Vector3f tpos(vecRects.back().x, vecRects.back().y, wayHeight * 100.0f);
+            wp_nav->set_wp_destination(tpos, false);
+        }
+        else
+        {
+            auto_control();
+        }
+        break;
+
+    case RETURN_AUTO:
         // if vehicle has reached destination switch to manual control
         if (reached_destination())
         {
@@ -322,6 +346,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     case MOVE_TO_EDGE:
     case PREPARE_AUTO:
     case AUTO:
+    case RETURN_AUTO:
     case PREPARE_FINISH:
     case FINISHED:
     default:
@@ -874,6 +899,13 @@ void ModeCNDN::set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, floa
     {
         auto_yaw.set_rate(yaw_rate_cds);
     }
+}
+
+void ModeCNDN::return_to_mode()
+{
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Return to CNDN mode.");
+    stage = RETURN_AUTO;
+    copter.set_mode(Mode::Number::CNDN, ModeReason::MISSION_END);
 }
 
 #endif
