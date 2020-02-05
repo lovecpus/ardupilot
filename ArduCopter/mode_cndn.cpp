@@ -21,7 +21,7 @@ Vector3f locNEU(const Location& loc)
 {
     Vector3f pos;
     int32_t lat = loc.lat * 1e7f;
-    int32_t lng = loc.lon * 1e7f;
+    int32_t lng = loc.lng * 1e7f;
     const Location loc {lat,lng,loc.alt,Location::AltFrame::ABSOLUTE,};
     if (loc.check_latlng() && loc.get_vector_from_origin_NEU(pos))
         return pos;
