@@ -591,8 +591,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             AP::mission()->add_cmd(cmd);
 
             cmd.id = MAV_CMD_DO_SET_RELAY;
-            cmd.content.location = Location(Vector3f(vecRects.front().x, vecRects.front().y, 300.0f));
-            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
+            cmd.content.location = Location();
             cmd.content.relay.num = 255;
             cmd.content.relay.state = 1;
             AP::mission()->add_cmd(cmd);
