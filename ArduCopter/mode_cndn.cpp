@@ -136,6 +136,7 @@ void ModeCNDN::run()
             else
             {
                 stage = AUTO;
+                AP::mission()->clear();
 
                 auto_yaw.set_fixed_yaw(23100 * 0.01f, 0.0f, 0, false);
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to AUTO stage.");
