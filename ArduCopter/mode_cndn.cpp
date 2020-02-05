@@ -181,24 +181,6 @@ void ModeCNDN::run()
                     last_yaw_cd = rd * 100.0f;
                     auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
                 }
-                AP::mission()->clear();
-                AP_Mission::Mission_Command cmd;
-
-                cmd.index = 0;
-                cmd.id = MAV_CMD_NAV_WAYPOINT;
-                cmd.content.location = Location(Vector3f(vecRects[0].x, vecRects[0].y, 300.0f));
-                AP::mission()->add_cmd(cmd);
-
-                cmd.index = 1;
-                cmd.content.location = Location(Vector3f(vecRects[1].x, vecRects[1].y, 300.0f));
-                AP::mission()->add_cmd(cmd);
-
-                cmd.index = 2;
-                cmd.id = MAV_CMD_USER_1;
-                cmd.p1 = 1;
-                cmd.content.location = Location(Vector3f(vecRects.front().x, vecRects.front().y, 300.0f));
-                AP::mission()->add_cmd(cmd);
-
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to PREPARE_AUTO stage.");
             }
         }
@@ -316,66 +298,13 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     {
         if (dest_num == 2)
         {
-            vecPoints.clear();
-            if (edge_count > 0)
+            if (!vecPoints.empty())
             {
-                Vector3f hpos;
-                if (!ahrs.get_home().get_vector_from_origin_NEU(hpos))
-                    return;
-                Vector2f cpos(hpos.x, hpos.y);
-
-                // GEO to NEU
-                Vector3f pcm, pem; // position (North, East, Up coordinates) in centimeters
-                vecRects.clear();
-                for (int i = 0; i < edge_count; i++)
-                {
-                    Vector2f& pos = edge_points[i];
-                    pcm = locNEU(pos.x, pos.y, 3.0f);
-                    vecRects.push_back(Vector2f(pcm.x, pcm.y));
-                }
-
-                float minlen = (vecRects.front()-cpos).length();
-                Vector2f apos = vecRects.front();
-                vecPoints.push_back(apos);
-                for (int i = 1; i < (int)vecRects.size(); i++)
-                {
-                    if ((vecRects[i]-cpos).length() < minlen)
-                    {
-                        apos = vecRects[i];
-                        minlen = (apos-cpos).length();
-                    }
-                    vecPoints.push_back(vecRects[i]);
-
-                    int rd = degNE(vecRects[i], vecRects[i-1]);
-                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d,%d", i, rd);
-                }
-
-                for(int i = 0; i < (int)vecPoints.size(); i++)
-                {
-                    if ((vecPoints.front()-apos).length() <= 0.001f)
-                        break;
-                    cpos = vecPoints.front();
-                    vecPoints.pop_front();
-                    vecPoints.push_back(cpos);
-                }
-
+                Vector3f hpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                wp_nav->set_wp_destination(hpos, false);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to start point.");
                 vecPoints.pop_front();
-                if ((vecPoints.front()-apos).length() < (vecPoints.back()-apos).length())
-                    std::reverse(vecPoints.begin(), vecPoints.end());
-                vecPoints.push_front(apos);
-                vecPoints.push_back(apos);
-
-                vecRects.resize(vecPoints.size());
-                std::copy(vecPoints.begin(), vecPoints.end(), vecRects.begin());
-
-                if (!vecPoints.empty())
-                {
-                    hpos = Vector3f(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
-                    wp_nav->set_wp_destination(hpos, false);
-                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to start point.");
-                    vecPoints.pop_front();
-                    stage = MOVE_TO_EDGE;
-                }
+                stage = MOVE_TO_EDGE;
             }
             else
             {
@@ -599,6 +528,24 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             auto_yaw.set_mode(AUTO_YAW_HOLD);
             gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] CAMERA_TRIGGERED, Prepare to EDGE FOLLOW.");
             AP_Notify::events.waypoint_complete = 1;
+
+            AP::mission()->clear();
+            AP_Mission::Mission_Command cmd;
+
+            cmd.index = 0;
+            cmd.id = MAV_CMD_NAV_WAYPOINT;
+            cmd.content.location = Location(Vector3f(vecRects[0].x, vecRects[0].y, 300.0f));
+            AP::mission()->add_cmd(cmd);
+
+            cmd.index = 1;
+            cmd.content.location = Location(Vector3f(vecRects[1].x, vecRects[1].y, 300.0f));
+            AP::mission()->add_cmd(cmd);
+
+            cmd.index = 2;
+            cmd.id = MAV_CMD_USER_1;
+            cmd.p1 = 1;
+            cmd.content.location = Location(Vector3f(vecRects.front().x, vecRects.front().y, 300.0f));
+            AP::mission()->add_cmd(cmd);
         }
         break;
 
@@ -676,6 +623,59 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             {
                 edge_points[9].x = packet.latitude10;
                 edge_points[9].y = packet.longitude10;
+            }
+
+            vecRects.clear();
+            vecPoints.clear();
+
+            if (edge_count > 0) {
+                Vector3f hpos;
+                if (!ahrs.get_home().get_vector_from_origin_NEU(hpos))
+                    return;
+                Vector2f cpos(hpos.x, hpos.y);
+
+                // GEO to NEU
+                Vector3f pcm; // position (North, East, Up coordinates) in centimeters
+                for (int i = 0; i < edge_count; i++)
+                {
+                    Vector2f& pos = edge_points[i];
+                    pcm = locNEU(pos.x, pos.y, 3.0f);
+                    vecRects.push_back(Vector2f(pcm.x, pcm.y));
+                }
+
+                float minlen = (vecRects.front()-cpos).length();
+                Vector2f apos = vecRects.front();
+                vecPoints.push_back(apos);
+                for (int i = 1; i < (int)vecRects.size(); i++)
+                {
+                    if ((vecRects[i]-cpos).length() < minlen)
+                    {
+                        apos = vecRects[i];
+                        minlen = (apos-cpos).length();
+                    }
+                    vecPoints.push_back(vecRects[i]);
+
+                    int rd = degNE(vecRects[i], vecRects[i-1]);
+                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d,%d", i, rd);
+                }
+
+                for(int i = 0; i < (int)vecPoints.size(); i++)
+                {
+                    if ((vecPoints.front()-apos).length() <= 0.001f)
+                        break;
+                    cpos = vecPoints.front();
+                    vecPoints.pop_front();
+                    vecPoints.push_back(cpos);
+                }
+
+                vecPoints.pop_front();
+                if ((vecPoints.front()-apos).length() < (vecPoints.back()-apos).length())
+                    std::reverse(vecPoints.begin(), vecPoints.end());
+                vecPoints.push_front(apos);
+                vecPoints.push_back(apos);
+
+                vecRects.resize(vecPoints.size());
+                std::copy(vecPoints.begin(), vecPoints.end(), vecRects.begin());
             }
         }
         break;
