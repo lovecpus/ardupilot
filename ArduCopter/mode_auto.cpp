@@ -521,6 +521,11 @@ bool ModeAuto::start_command(const AP_Mission::Mission_Command& cmd)
         break;
 #endif
 
+    case MAV_CMD_DO_SET_RELAY:
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Return to CNDN mode.");
+        copter.set_mode(Mode::Number::CNDN, ModeReason::MISSION_END);
+    break;
+
     default:
         // unable to use the command, allow the vehicle to try the next command
         return false;
