@@ -56,6 +56,8 @@ bool ModeCNDN::init(bool ignore_checks)
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
 
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mode %d,%d", copter.prev_control_mode, copter.control_mode_reason);
+
     if (copter.control_mode_reason != ModeReason::MISSION_END)
     {
         // initialise waypoint state
