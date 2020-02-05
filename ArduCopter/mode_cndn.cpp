@@ -557,6 +557,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             AP_Notify::events.waypoint_complete = 1;
 
             AP::mission()->clear();
+            AP::mission()->reset();
             AP_Mission::Mission_Command cmd;
 
             cmd.index = 1;
