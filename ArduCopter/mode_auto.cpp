@@ -521,7 +521,7 @@ bool ModeAuto::start_command(const AP_Mission::Mission_Command& cmd)
         break;
 #endif
 
-    case 31015:
+    case MAV_CMD_USER_1:
         copter.set_mode(Mode::Number::CNDN, ModeReason::MISSION_END);
         break;
 
@@ -727,7 +727,7 @@ bool ModeAuto::verify_command(const AP_Mission::Mission_Command& cmd)
         cmd_complete = true;
         break;
 
-    case 31014:
+    case MAV_CMD_USER_1:
         cmd_complete = true;
         break;
 
