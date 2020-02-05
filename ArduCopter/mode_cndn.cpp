@@ -72,11 +72,18 @@ bool ModeCNDN::init(bool ignore_checks)
     }
     else
     {
+        stage = PREPARE_FINISH;
+        last_yaw_ms = 0;
+        last_yaw_cd = copter.initial_armed_bearing;
+        AP_Notify::events.waypoint_complete = 1;
+        b_position_target_reached = false;
+        b_position_target = false;
         loiter_nav->clear_pilot_desired_acceleration();
-        const Vector3f wp_dest = wp_nav->get_wp_destination();
-        loiter_nav->init_target(wp_dest);
-        if (wp_nav->origin_and_destination_are_terrain_alt())
-            copter.surface_tracking.set_target_alt_cm(wp_dest.z);
+        loiter_nav->init_target();
+        auto_yaw.set_fixed_yaw(copter.initial_armed_bearing * 0.01f, 0.0f, 0, false);
+        const Vector3f tpos(vecRects.back().x, vecRects.back().y, wayHeight * 100.0f);
+        wp_nav->set_wp_destination(tpos, false);
+
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mission complete.");
     }
 
@@ -103,33 +110,11 @@ void ModeCNDN::run()
 
     switch (stage)
     {
-    case AUTO:
-        // if vehicle has reached destination switch to manual control
-        if (reached_destination())
-        {
-            stage = PREPARE_FINISH;
-            last_yaw_ms = 0;
-            last_yaw_cd = copter.initial_armed_bearing;
-            AP_Notify::events.waypoint_complete = 1;
-            b_position_target_reached = false;
-            b_position_target = false;
-            loiter_nav->clear_pilot_desired_acceleration();
-            loiter_nav->init_target();
-            auto_yaw.set_fixed_yaw(copter.initial_armed_bearing * 0.01f, 0.0f, 0, false);
-            gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to PREPARE FINISH stage.");
-
-            const Vector3f tpos(vecRects.back().x, vecRects.back().y, wayHeight * 100.0f);
-            wp_nav->set_wp_destination(tpos, false);
-        }
-        else
-        {
-            auto_control();
-        }
-        break;
-
     case RETURN_AUTO:
-        // if vehicle has reached destination switch to manual control
+    case AUTO:
+    {
+        // if vehicle has reached destination switch to PREPARE_FINISH
+        auto_control();
         if (reached_destination())
         {
             stage = PREPARE_FINISH;
@@ -141,17 +126,12 @@ void ModeCNDN::run()
             loiter_nav->clear_pilot_desired_acceleration();
             loiter_nav->init_target();
             auto_yaw.set_fixed_yaw(copter.initial_armed_bearing * 0.01f, 0.0f, 0, false);
-            gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to PREPARE FINISH stage.");
 
             const Vector3f tpos(vecRects.back().x, vecRects.back().y, wayHeight * 100.0f);
             wp_nav->set_wp_destination(tpos, false);
         }
-        else
-        {
-            auto_control();
-        }
-        break;
+    } break;
 
     case PREPARE_AUTO:
     case PREPARE_FINISH:
@@ -212,6 +192,7 @@ void ModeCNDN::run()
                     last_yaw_cd = rd * 100.0f;
                     auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
                 }
+                gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to PREPARE_AUTO stage.");
             }
         }
@@ -246,9 +227,6 @@ void ModeCNDN::run()
     } break;
 
     case PREPARE_FOLLOW:
-        manual_control();
-        break;
-
     case FINISHED:
     case MANUAL:
         manual_control();
