@@ -521,11 +521,6 @@ bool ModeAuto::start_command(const AP_Mission::Mission_Command& cmd)
         break;
 #endif
 
-    case MAV_CMD_WAYPOINT_USER_1:
-        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mission complete.");
-        copter.set_mode(Mode::Number::CNDN, ModeReason::MISSION_END);
-        break;
-
     default:
         // unable to use the command, allow the vehicle to try the next command
         return false;
@@ -725,10 +720,6 @@ bool ModeAuto::verify_command(const AP_Mission::Mission_Command& cmd)
     case MAV_CMD_DO_GUIDED_LIMITS:
     case MAV_CMD_DO_FENCE_ENABLE:
     case MAV_CMD_DO_WINCH:
-        cmd_complete = true;
-        break;
-
-    case MAV_CMD_WAYPOINT_USER_1:
         cmd_complete = true;
         break;
 
@@ -1474,6 +1465,10 @@ void ModeAuto::do_winch(const AP_Mission::Mission_Command& cmd)
         case WINCH_RATE_CONTROL:
             g2.winch.set_desired_rate(cmd.content.winch.release_rate);
             Log_Write_Event(DATA_WINCH_RATE_CONTROL);
+            break;
+        case 3:
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mission complete.");
+            copter.set_mode(Mode::Number::CNDN, ModeReason::MISSION_END);
             break;
         default:
             // do nothing
