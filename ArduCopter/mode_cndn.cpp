@@ -174,8 +174,13 @@ void ModeCNDN::run()
             else
             {
                 stage = PREPARE_AUTO;
-                last_yaw_cd = 23100.0f;
-                auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
+                int rd = -999;
+                if (vecRects.size() > 2)
+                {
+                    rd = degNE(vecRects[1], vecRects[0]);
+                    last_yaw_cd = rd * 100.0f;
+                    auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
+                }
                 AP::mission()->clear();
                 AP_Mission::Mission_Command cmd;
                 cmd.index = 0;
