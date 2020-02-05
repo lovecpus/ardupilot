@@ -557,7 +557,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             AP_Notify::events.waypoint_complete = 1;
 
             AP_Mission::Mission_Command cmd;
-            AP::mission()->get_next_nav_cmd(0, cmd);
+            AP::mission()->get_next_nav_cmd(1, cmd);
 
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] NAV_CMD(%d,%d)", int(cmd.content.location.alt), int(cmd.content.location.get_alt_frame()));
 
