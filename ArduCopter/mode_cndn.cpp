@@ -560,23 +560,23 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             AP::mission()->reset();
             AP_Mission::Mission_Command cmd;
 
-            cmd.index = 1;
+            cmd.index = 0;
             cmd.id = MAV_CMD_NAV_WAYPOINT;
             cmd.content.location = Location(Vector3f(vecRects[0].x, vecRects[0].y, 300.0f));
             AP::mission()->add_cmd(cmd);
 
-            cmd.index = 2;
+            cmd.index = 1;
             cmd.content.location = Location(Vector3f(vecRects[1].x, vecRects[1].y, 300.0f));
             AP::mission()->add_cmd(cmd);
 
-            cmd.index = 3;
+            cmd.index = 2;
             cmd.id = MAV_CMD_DO_SET_RELAY;
             cmd.content.location = Location(Vector3f(vecRects.front().x, vecRects.front().y, 300.0f));
             cmd.content.relay.num = 1;
             cmd.content.relay.state = 1;
             AP::mission()->add_cmd(cmd);
 
-            cmd.index = 4;
+            cmd.index = 3;
             cmd.id = MAV_CMD_DO_SET_RELAY;
             cmd.content.location = Location(Vector3f(vecRects.front().x, vecRects.front().y, 300.0f));
             cmd.content.relay.num = 1;
