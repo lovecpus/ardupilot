@@ -196,8 +196,7 @@ void ModeCNDN::run()
                 cmd.index = 2;
                 cmd.id = MAV_CMD_USER_1;
                 cmd.p1 = 1;
-                cmd.content.relay.num = 1;
-                cmd.content.relay.state = 2;
+                cmd.content.location = Location(Vector3f(vecRects.front().x, vecRects.front().y, 300.0f));
                 AP::mission()->add_cmd(cmd);
 
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to PREPARE_AUTO stage.");
