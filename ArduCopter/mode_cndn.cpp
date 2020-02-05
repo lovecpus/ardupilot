@@ -72,6 +72,11 @@ bool ModeCNDN::init(bool ignore_checks)
     }
     else
     {
+        loiter_nav->clear_pilot_desired_acceleration();
+        const Vector3f wp_dest = wp_nav->get_wp_destination();
+        loiter_nav->init_target(wp_dest);
+        if (wp_nav->origin_and_destination_are_terrain_alt())
+            copter.surface_tracking.set_target_alt_cm(wp_dest.z);
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mission complete.");
     }
 
