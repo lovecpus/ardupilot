@@ -195,7 +195,7 @@ void ModeCNDN::run()
 
                 cmd.index = 2;
                 cmd.id = MAV_CMD_USER_1;
-                cmd.pi = 1;
+                cmd.p1 = 1;
                 cmd.content.relay.num = 1;
                 cmd.content.relay.state = 2;
                 AP::mission()->add_cmd(cmd);
