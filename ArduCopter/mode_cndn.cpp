@@ -562,29 +562,24 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             AP_Notify::events.waypoint_complete = 1;
 
             AP_Mission::Mission_Command cmd;
-            AP::mission()->get_next_nav_cmd(1, cmd);
 
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] NAV_CMD(%d,%d)", int(cmd.content.location.alt), int(cmd.content.location.get_alt_frame()));
-
-            AP::mission()->clear();
             AP::mission()->reset();
+            AP::mission()->clear();
 
-            AP::mission()->write_home_to_storage();
-            cmd.index = 0;
+            cmd.id = MAV_CMD_NAV_WAYPOINT;
+            cmd.content.location = AP::ahrs().get_home();
+            AP::mission()->add_cmd(cmd);
 
-            cmd.index ++;
             cmd.id = MAV_CMD_NAV_WAYPOINT;
             cmd.content.location = Location(Vector3f(vecRects[0].x, vecRects[0].y, 300.0f));
             cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
             AP::mission()->add_cmd(cmd);
 
-            cmd.index ++;
             cmd.id = MAV_CMD_NAV_WAYPOINT;
             cmd.content.location = Location(Vector3f(vecRects[1].x, vecRects[1].y, 300.0f));
             cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
             AP::mission()->add_cmd(cmd);
 
-            cmd.index ++;
             cmd.id = MAV_CMD_DO_SET_RELAY;
             cmd.content.location = Location(Vector3f(vecRects.front().x, vecRects.front().y, 300.0f));
             cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
