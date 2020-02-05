@@ -91,7 +91,7 @@ private:
     std::deque<Vector2f> vecPoints, vecRects;
     float  wayHeight = 3.0f; // M
     float  wayWidth = 6.0f; // M
-    float  last_yaw = 0.0f;
+    float  last_yaw_cd = 0.0f;
     uint32_t last_yaw_ms = 0;
     uint16_t loiter_time_max;                // How long we should stay in Loiter Mode for mission scripting (time in seconds)
 };

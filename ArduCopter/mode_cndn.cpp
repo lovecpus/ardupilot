@@ -3,6 +3,20 @@
 
 #if MODE_CNDN_ENABLED == ENABLED
 
+int degNE(const Vector2f& pp)
+{
+    Vector2f npos = pp.normalized();
+    Vector2f nort(1, 0);
+    int rd = (int)(nort.angle(npos) * 180 / M_PI);
+    if (npos.y<0) rd = 360 - rd;
+    return rd;
+}
+
+int degNE(const Vector2f& p1, const Vector2f& p2)
+{
+    return degNE(p2-p1);
+}
+
 bool ModeCNDN::init(bool ignore_checks)
 {
     if (!copter.failsafe.radio)
@@ -78,7 +92,7 @@ void ModeCNDN::run()
         {
             stage = PREPARE_FINISH;
             last_yaw_ms = 0;
-            last_yaw = copter.initial_armed_bearing;
+            last_yaw_cd = copter.initial_armed_bearing;
             AP_Notify::events.waypoint_complete = 1;
             b_position_target_reached = false;
             b_position_target = false;
@@ -110,7 +124,7 @@ void ModeCNDN::run()
             if ((now - last_yaw_ms) > 500)
             {
                 last_yaw_ms = now;
-                float dy = last_yaw - ahrs.yaw_sensor;
+                float dy = last_yaw_cd - ahrs.yaw_sensor;
                 if (dy*dy < 1000.0f)
                 {
                     if (stage == PREPARE_FINISH)
@@ -119,7 +133,7 @@ void ModeCNDN::run()
                         auto_yaw.set_mode(AUTO_YAW_HOLD);
                         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING stages.");
                     }
-                    else
+                    else if (stage == PREPARE_AUTO)
                     {
                         stage = AUTO;
                         //auto_yaw.set_mode(AUTO_YAW_HOLD);
@@ -149,8 +163,8 @@ void ModeCNDN::run()
             else
             {
                 stage = PREPARE_AUTO;
-                last_yaw = 231.0f;
-                auto_yaw.set_fixed_yaw(last_yaw, 0.0f, 0, false);
+                last_yaw_cd = 23100.0f;
+                auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
                 AP::mission()->clear();
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to PREPARE_AUTO stage.");
             }
@@ -655,20 +669,12 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
                 if (i > 0)
                 {
-                    Vector2f npos = (pos-edge_points[i-1]).normalized();
-                    Vector2f nort(1, 0);
-
-                    int rd = (int)(nort.angle(npos) * 180 / M_PI);
-                    if (npos.y<0) rd = 360 - rd;
+                    int rd = degNE(edge_points[i-1], pos);
                     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d,%0.1f,%0.1f,%d", i, pos_neu_cm.x, pos_neu_cm.y, rd);
                 }
                 else
                 {
-                    Vector2f npos = (edge_points[edge_count-1]-pos).normalized();
-                    Vector2f nort(1, 0);
-
-                    int rd = (int)(nort.angle(npos) * 180 / M_PI);
-                    if (npos.y<0) rd = 360 - rd;
+                    int rd = degNE(pos, edge_points[edge_count-1]);
                     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d,%0.1f,%0.1f,%d", i, pos_neu_cm.x, pos_neu_cm.y, rd);
                 }
             }
