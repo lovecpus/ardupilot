@@ -329,7 +329,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                     }
                     vecPoints.push_back(vecRects[i]);
 
-                    int rd = degNE(vecRects[i], vecRects[i-]);
+                    int rd = degNE(vecRects[i], vecRects[i-1]);
                     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d,%d", i, rd);
                 }
 
