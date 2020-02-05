@@ -56,8 +56,6 @@ bool ModeCNDN::init(bool ignore_checks)
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
 
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mode %d,%d", int(copter.prev_control_mode), int(copter.control_mode_reason));
-
     if (stage != RETURN_AUTO)
     {
         // initialise waypoint state
@@ -550,25 +548,25 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             AP::mission()->add_cmd(cmd);
 
             cmd.id = MAV_CMD_NAV_WAYPOINT;
-            cmd.p1 = 3;
+            cmd.p1 = 1;
             cmd.content.location = Location(Vector3f(vecRects[0].x, vecRects[0].y, 300.0f));
             cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
             AP::mission()->add_cmd(cmd);
 
             cmd.id = MAV_CMD_NAV_WAYPOINT;
-            cmd.p1 = 3;
+            cmd.p1 = 1;
             cmd.content.location = Location(Vector3f(vecRects[1].x, vecRects[1].y, 300.0f));
             cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
             AP::mission()->add_cmd(cmd);
 
             cmd.id = MAV_CMD_NAV_WAYPOINT;
-            cmd.p1 = 3;
+            cmd.p1 = 1;
             cmd.content.location = Location(Vector3f(vecRects[2].x, vecRects[2].y, 300.0f));
             cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
             AP::mission()->add_cmd(cmd);
 
             cmd.id = MAV_CMD_NAV_WAYPOINT;
-            cmd.p1 = 3;
+            cmd.p1 = 1;
             cmd.content.location = Location(Vector3f(vecRects[3].x, vecRects[3].y, 300.0f));
             cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
             AP::mission()->add_cmd(cmd);
@@ -687,9 +685,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                         minlen = (apos-cpos).length();
                     }
                     vecPoints.push_back(vecRects[i]);
-
-                    int rd = degNE(vecRects[i], vecRects[i-1]);
-                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d,%d", i, rd);
                 }
 
                 for(int i = 0; i < (int)vecPoints.size(); i++)
