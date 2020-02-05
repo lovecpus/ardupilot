@@ -538,21 +538,14 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             AP::mission()->add_cmd(cmd);
 
             cmd.index = 1;
-            cmd.id = MAV_CMD_NAV_WAYPOINT;
-            cmd.content.location = Location(Vector3f(vecRects[0].x, vecRects[0].y, 300.0f));
-            AP::mission()->add_cmd(cmd);
-
-            cmd.index = 2;
             cmd.content.location = Location(Vector3f(vecRects[1].x, vecRects[1].y, 300.0f));
             AP::mission()->add_cmd(cmd);
 
-            cmd.index = 3;
-            cmd.id = MAV_CMD_DO_WINCH;
+            cmd.index = 2;
+            cmd.id = MAV_CMD_DO_SET_RELAY;
             cmd.content.location = Location(Vector3f(vecRects.front().x, vecRects.front().y, 300.0f));
-            cmd.content.winch.num = 255;
-            cmd.content.winch.action = 3;
-            cmd.content.winch.release_length = 0.0f;
-            cmd.content.winch.release_rate = 0.0f;
+            cmd.content.relay.num = 255;
+            cmd.content.relay.state = 3;
 
             AP::mission()->add_cmd(cmd);
         }

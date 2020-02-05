@@ -47,6 +47,9 @@ bool AP_Mission::start_command_do_servorelayevents(const AP_Mission::Mission_Com
         return true;
 
     case MAV_CMD_DO_SET_RELAY:
+        if (cmd.content.relay.num = 255 && cmd.content.relay.state == 255)
+            return _cmd_start_fn(cmd);
+
         sre->do_set_relay(cmd.content.relay.num, cmd.content.relay.state);
         return true;
 

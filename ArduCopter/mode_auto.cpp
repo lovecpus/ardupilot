@@ -1466,10 +1466,6 @@ void ModeAuto::do_winch(const AP_Mission::Mission_Command& cmd)
             g2.winch.set_desired_rate(cmd.content.winch.release_rate);
             Log_Write_Event(DATA_WINCH_RATE_CONTROL);
             break;
-        case 3:
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mission complete.");
-            copter.set_mode(Mode::Number::CNDN, ModeReason::MISSION_END);
-            break;
         default:
             // do nothing
             break;
