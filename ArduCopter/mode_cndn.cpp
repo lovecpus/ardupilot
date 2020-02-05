@@ -78,6 +78,7 @@ void ModeCNDN::run()
         {
             stage = PREPARE_FINISH;
             last_yaw_ms = 0;
+            last_yaw = copter.initial_armed_bearing;
             AP_Notify::events.waypoint_complete = 1;
             b_position_target_reached = false;
             b_position_target = false;
@@ -96,6 +97,7 @@ void ModeCNDN::run()
         }
         break;
 
+    case PREPARE_AUTO:
     case PREPARE_FINISH:
     {
         auto_control();
@@ -108,12 +110,23 @@ void ModeCNDN::run()
             if ((now - last_yaw_ms) > 500)
             {
                 last_yaw_ms = now;
-                float dy = copter.initial_armed_bearing - ahrs.yaw_sensor;
+                float dy = last_yaw - ahrs.yaw_sensor;
                 if (dy*dy < 1000.0f)
                 {
-                    stage = FINISHED;
-                    auto_yaw.set_mode(AUTO_YAW_HOLD);
-                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING stages.");
+                    if (stage == PREPARE_FINISH)
+                    {
+                        stage = FINISHED;
+                        auto_yaw.set_mode(AUTO_YAW_HOLD);
+                        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING stages.");
+                    }
+                    else
+                    {
+                        stage = AUTO;
+                        //auto_yaw.set_mode(AUTO_YAW_HOLD);
+                        copter.set_mode(Mode::Number::AUTO, ModeReason::RC_COMMAND);
+                        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to AUTO stages.");
+                    }
+                    
                 }
             }
         }
@@ -135,12 +148,11 @@ void ModeCNDN::run()
             }
             else
             {
-                stage = AUTO;
+                stage = PREPARE_AUTO;
+                last_yaw = 231.0f;
+                auto_yaw.set_fixed_yaw(last_yaw, 0.0f, 0, false);
                 AP::mission()->clear();
-
-                auto_yaw.set_fixed_yaw(23100 * 0.01f, 0.0f, 0, false);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to AUTO stage.");
-                copter.set_mode(Mode::Number::AUTO, ModeReason::RC_COMMAND);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to PREPARE_AUTO stage.");
             }
         }
         break;
@@ -336,6 +348,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     case TAKE_PICTURE:
     case EDGE_FOLLOW:
     case MOVE_TO_EDGE:
+    case PREPARE_AUTO:
     case AUTO:
     case PREPARE_FINISH:
     case FINISHED:
@@ -651,7 +664,12 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 }
                 else
                 {
-                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d,%0.1f,%0.1f", i, pos_neu_cm.x, pos_neu_cm.y);
+                    Vector2f npos = (edge_points[edge_count-1]-pos).normalized();
+                    Vector2f nort(1, 0);
+
+                    int rd = (int)(nort.angle(npos) * 180 / M_PI);
+                    if (npos.y<0) rd = 360 - rd;
+                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d,%0.1f,%0.1f,%d", i, pos_neu_cm.x, pos_neu_cm.y, rd);
                 }
             }
         }

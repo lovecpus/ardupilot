@@ -75,6 +75,7 @@ private:
         PREPARE_FOLLOW,
         MOVE_TO_EDGE,
         EDGE_FOLLOW,
+        PREPARE_AUTO,
         AUTO, // after A and B defined, pilot toggle the switch from one side to the other, vehicle flies autonomously
         PREPARE_FINISH,
         FINISHED,
@@ -90,6 +91,7 @@ private:
     std::deque<Vector2f> vecPoints, vecRects;
     float  wayHeight = 3.0f; // M
     float  wayWidth = 6.0f; // M
+    float  last_yaw = 0.0f;
     uint32_t last_yaw_ms = 0;
     uint16_t loiter_time_max;                // How long we should stay in Loiter Mode for mission scripting (time in seconds)
 };
