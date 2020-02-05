@@ -320,7 +320,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 float minlen = (vecRects.front()-cpos).length();
                 Vector2f apos = vecRects.front();
                 vecPoints.push_back(apos);
-                for (int i = 1; i < (nt)vecRects.size(); i++)
+                for (int i = 1; i < (int)vecRects.size(); i++)
                 {
                     if ((vecRects[i]-cpos).length() < minlen)
                     {
