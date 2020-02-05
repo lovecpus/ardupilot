@@ -23,7 +23,7 @@ Vector3f locNEU(float latf, float lngf, float altf)
     int32_t lat = latf * 1e7f;
     int32_t lng = lngf * 1e7f;
     const Location lc {lat,lng,(int)(altf*100),Location::AltFrame::ABSOLUTE,};
-    if (lc.check_latlng() && loc.get_vector_from_origin_NEU(pos))
+    if (lc.check_latlng() && lc.get_vector_from_origin_NEU(pos))
         return pos;
     return pos;
 }
