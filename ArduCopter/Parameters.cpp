@@ -1056,7 +1056,7 @@ ParametersG2::ParametersG2(void)
 #if MODE_AUTOROTATE_ENABLED == ENABLED
     ,arot(copter.inertial_nav)
 #endif
-#if MODE_CNDN_ENABLED == ENABLED
+#if MODE_CNDN_ENABLED == ENABLED && FALSE
     ,mode_cndn_ptr(&copter.mode_cndn)
 #endif
 {
