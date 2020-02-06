@@ -621,7 +621,7 @@ public:
     AC_Autorotation arot;
 #endif
 
-#if MODE_CNDN_ENABLED == ENABLED && FALSE
+#if MODE_CNDN_ENABLED == ENABLED && DISABLED
     // we need a pointer to the mode for the G2 table
     void *mode_cndn_ptr;
 #endif
