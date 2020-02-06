@@ -961,7 +961,7 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     AP_SUBGROUPINFO(arot, "AROT_", 37, ParametersG2, AC_Autorotation),
 #endif
 
-#if MODE_CNDN_ENABLED == ENABLED
+#if MODE_CNDN_ENABLED == ENABLED && FALSE
     // @Group: CNDN
     // @Path: mode_cndn.cpp
     AP_SUBGROUPPTR(mode_cndn_ptr, "CNDN_", 38, ParametersG2, ModeCNDN),
