@@ -58,7 +58,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Units: cm
     // @Range: 3000 8000
     // @User: Standard
-    AP_GROUPINFO("SPRAY_WIDTH", 3, ModeCNDN, _spray_width_cm, 4000),
+    AP_GROUPINFO("SPRAY_WIDTH", 3, ModeCNDN, _spray_width_cm, 400),
 
     AP_GROUPEND
 };
