@@ -27,6 +27,11 @@
 }\
 break;
 
+#define CNDN_HANDLE_MESSAGE() \
+    if (copter.flightmode == &copter.mode_cndn)\
+        copter.mode_cndn.handle_message(msg);
+
+
 class ModeCNDN : public Mode
 {
 
@@ -50,6 +55,8 @@ public:
     void return_to_manual_control(bool maintain_target);
     void handle_message(const mavlink_message_t &msg) override;
     void return_to_mode();
+
+    static const struct AP_Param::GroupInfo var_info[];
 
 protected:
     const char *name() const override { return "CNDN_ETRI"; }
@@ -96,5 +103,11 @@ private:
     float  last_yaw_cd = 0.0f;
     uint32_t last_yaw_ms = 0;
     uint16_t loiter_time_max;                // How long we should stay in Loiter Mode for mission scripting (time in seconds)
+
+    // parameters
+    AP_Int8         _method;               ///< top level enable/disable control
+    AP_Int16        _take_alt_cm;          ///< desired pump rate (expressed as a percentage of top rate) when travelling at 1m/s
+    AP_Int16        _mission_alt_cm;       ///< minimum pump rate (expressed as a percentage from 0 to 100)
+    AP_Int16        _spray_width_cm;       ///< pwm rate of spinner
 };
 #endif

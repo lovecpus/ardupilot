@@ -961,7 +961,11 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     AP_SUBGROUPINFO(arot, "AROT_", 37, ParametersG2, AC_Autorotation),
 #endif
 
-
+#if MODE_CNDN_ENABLED == ENABLED
+    // @Group: CNDN
+    // @Path: mode_cndn.cpp
+    AP_SUBGROUPPTR(mode_cndn_ptr, "CNDN", 38, ParametersG2, ModeCNDN),
+#endif
 
     AP_GROUPEND
 };
@@ -1051,6 +1055,9 @@ ParametersG2::ParametersG2(void)
 #endif
 #if MODE_AUTOROTATE_ENABLED == ENABLED
     ,arot(copter.inertial_nav)
+#endif
+#if MODE_CNDN_ENABLED == ENABLED
+    ,mode_cndn_ptr(&copter.mode_cndn)
 #endif
 {
     AP_Param::setup_object_defaults(this, var_info);

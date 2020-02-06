@@ -28,6 +28,41 @@ Vector3f locNEU(float latf, float lngf, float altf)
     return pos;
 }
 
+const AP_Param::GroupInfo ModeCNDN::var_info[] = {
+    // @Param: METHOD
+    // @DisplayName: Mode using method
+    // @Description: Mode using method of CNDN & ETRI Mission computer
+    // @Values: 0: Disable, 1: All enable, 2: Take picture only, 3: Edge follow only
+    // @User: Standard
+    AP_GROUPINFO_FLAGS("METHOD", 0, ModeCNDN, _method, 1, AP_PARAM_FLAG_ENABLE),
+
+    // @Param: TAKE_ALT
+    // @DisplayName: Take picture altitute
+    // @Description: Altitute of take picture
+    // @Units: cm
+    // @Range: 2000 4000
+    // @User: Standard
+    AP_GROUPINFO("TAKE_ALT", 1, ModeCNDN, _take_alt_cm, 2700),
+
+    // @Param: MISSION_ALT
+    // @DisplayName: Mission altitute
+    // @Description: Altitute of mission planning
+    // @Units: cm
+    // @Range: 200 1000
+    // @User: Standard
+    AP_GROUPINFO("MISSION_ALT", 2, ModeCNDN, _mission_alt_cm, 300),
+
+    // @Param: SPRAY_WIDTH
+    // @DisplayName: Spray width
+    // @Description: Mission planning width of spraying
+    // @Units: cm
+    // @Range: 3000 8000
+    // @User: Standard
+    AP_GROUPINFO("SPRAY_WIDTH", 3, ModeCNDN, _spray_width_cm, 4000),
+
+    AP_GROUPEND
+};
+
 bool ModeCNDN::init(bool ignore_checks)
 {
     if (!copter.failsafe.radio)
