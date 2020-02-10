@@ -470,7 +470,6 @@ bool inside(CNAREA& area, const Location& loc)
 {
     int cross = 0;
     std::deque<Vector2f> vp;
-    vp.reserve(4);
     vp.push_back(Vector2f(area.latitude1, area.longitude1));
     vp.push_back(Vector2f(area.latitude2, area.longitude2));
     vp.push_back(Vector2f(area.latitude3, area.longitude3));
