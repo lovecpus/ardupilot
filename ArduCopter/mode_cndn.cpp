@@ -28,17 +28,17 @@ Vector3f locNEU(float latf, float lngf, float altf)
     return pos;
 }
 
-bool inside(CNAREA& area, const Location& loc)
+bool inside(const CNAREA& area, const Location& loc)
 {
     int cross = 0;
-    std::deque<Vector2f> vp;
-    vp.push_back(Vector2f(area.latitude1, area.longitude1));
-    vp.push_back(Vector2f(area.latitude2, area.longitude2));
-    vp.push_back(Vector2f(area.latitude3, area.longitude3));
-    vp.push_back(Vector2f(area.latitude4, area.longitude4));
-    for(uint16_t i=0; i <vp.size(); i++)
+    Vector2f vp[4];
+    vp[0] = Vector2f(area.latitude1, area.longitude1);
+    vp[1] = Vector2f(area.latitude2, area.longitude2);
+    vp[2] = Vector2f(area.latitude3, area.longitude3);
+    vp[3] = Vector2f(area.latitude4, area.longitude4);
+    for(uint16_t i=0; i<4; i++)
     {
-        int j=(i+1) % vp.size();
+        int j=(i + 1) % 4;
         if ((vp[i].y > loc.lat) != (vp[j].y > loc.lat))
         {
             double aX = (vp[j].x-vp[i].x)*(loc.lng-vp[i].y)/(vp[j].y-vp[i].y)+vp[i].x;

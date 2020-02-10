@@ -49,7 +49,7 @@ struct CNAREA
 int degNE(const Vector2f& pp);
 int degNE(const Vector2f& p1, const Vector2f& p2);
 Vector3f locNEU(float latf, float lngf, float altf);
-bool inside(CNAREA& area, const Location& loc);
+bool inside(const CNAREA& area, const Location& loc);
 
 class ModeCNDN : public Mode
 {
