@@ -269,6 +269,7 @@ void ModeCNDN::run()
                     {
                         stage = FINISHED;
                         auto_yaw.set_mode(AUTO_YAW_HOLD);
+                        AP_Notify::events.mission_complete = 1;
                         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING stages.");
                     }
                     else if (stage == PREPARE_AUTO)
