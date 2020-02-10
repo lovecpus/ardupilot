@@ -31,10 +31,23 @@ break;
     if (copter.flightmode == &copter.mode_cndn)\
         copter.mode_cndn.handle_message(msg);
 
+#define SIM_LOCATION 1
+#if defined(SIM_LOCATION)
+struct CNAREA
+{
+    float latitude1;
+    float longitude1;
+    float latitude2;
+    float longitude2;
+    float latitude3;
+    float longitude3;
+    float latitude4;
+    float longitude4;
+};
+#endif
 
 class ModeCNDN : public Mode
 {
-
 public:
     // inherit constructor
     using Mode::Mode;
@@ -75,6 +88,10 @@ private:
     void set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool relative_angle);
     Vector2f dest_A; // in NEU frame in cm relative to ekf origin
     Vector2f dest_B; // in NEU frame in cm relative to ekf origin
+
+#if defined(SIM_LOCATION)
+    std::vector<CNAREA> vecAreas;
+#endif    
 
     enum cndn_state
     {

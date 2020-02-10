@@ -84,6 +84,67 @@ bool ModeCNDN::init(bool ignore_checks)
     }
     loiter_nav->init_target();
 
+#if defined(SIM_LOCATION)
+    if (vecAreas.empty())
+    {
+        CNAREA area;
+        // 안산지점
+        area.latitude1  = 37.2842096f;
+        area.longitude1 = 126.8735343f;
+        area.latitude2  = 37.2836760f;
+        area.longitude2 = 126.8727310f;
+        area.latitude3  = 37.2839001f;
+        area.longitude3 = 126.8725044f;
+        area.latitude4  = 37.2844283f;
+        area.longitude4 = 126.8733077f;
+        vecAreas.push_back(area);
+
+        // 금산1
+        area.latitude1  = 36.11120590f;
+        area.longitude1 = 127.52319350f;
+        area.latitude2  = 36.11132080f;
+        area.longitude2 = 127.52404650f;
+        area.latitude3  = 36.11107810f;
+        area.longitude3 = 127.52410140f;
+        area.latitude4  = 36.11097730f;
+        area.longitude4 = 127.52324310f;
+        vecAreas.push_back(area);
+
+        // 금산2
+        area.latitude1  = 36.11081100f;
+        area.longitude1 = 127.52324650f;
+        area.latitude2  = 36.11095240f;
+        area.longitude2 = 127.52324310f;
+        area.latitude3  = 36.11105430f;
+        area.longitude3 = 127.52410610f;
+        area.latitude4  = 36.11093720f;
+        area.longitude4 = 127.52413500f;
+        vecAreas.push_back(area);
+
+        // 금산3
+        area.latitude1  = 36.11066640f;
+        area.longitude1 = 127.52321900f;
+        area.latitude2  = 36.11079640f;
+        area.longitude2 = 127.52324310f;
+        area.latitude3  = 36.11092750f;
+        area.longitude3 = 127.52413700f;
+        area.latitude4  = 36.11080510f;
+        area.longitude4 = 127.52416310f;
+        vecAreas.push_back(area);
+
+        // 금산4
+        area.latitude1  = 36.11123250f;
+        area.longitude1 = 127.52317410f;
+        area.latitude2  = 36.11147300f;
+        area.longitude2 = 127.52311370f;
+        area.latitude3  = 36.11158780f;
+        area.longitude3 = 127.52397940f;
+        area.latitude4  = 36.11134620f;
+        area.longitude4 = 127.52403170f;
+        vecAreas.push_back(area);
+    }
+#endif
+
     // initialise position and desired velocity
     if (!pos_control->is_active_z())
     {
@@ -405,7 +466,28 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
     }
 }
 
-#define SIM_LOCATION 1
+bool inside(CNAREA& area, const Location& loc)
+{
+    int cross = 0;
+    std::vector<Vector2f> vp;
+    vp.reserve(4);
+    vp.push_back(Vector2f(area.latitude1, area.longitude1));
+    vp.push_back(Vector2f(area.latitude2, area.longitude2));
+    vp.push_back(Vector2f(area.latitude3, area.longitude3));
+    vp.push_back(Vector2f(area.latitude4, area.longitude4));
+    for(uint16_t i=0; i <vp.size(); i++)
+    {
+        int j=(i+1) % vp.size();
+        if (vp[i].y > loc.lat) != vp[j].y > loc.lat)
+        {
+            double aX = (vp[j].x-vp[i].x)*(loc.lng-vp[i].y)/(vp[j].y-vp[i].y)+vp[i].x;
+            if (loc.lat < aX)
+                cross ++;
+        }
+    }
+    return (cross % 2) > 0;
+}
+
 void ModeCNDN::handle_message(const mavlink_message_t &msg)
 {
     switch (msg.msgid)
@@ -632,6 +714,24 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             packet.longitude3 = 126.8725044f;
             packet.latitude4  = 37.2844283f;
             packet.longitude4 = 126.8733077f;
+
+            Location loc(copter.current_loc);
+            for(uint16_t i=0; i<vecAreas.size(); i++)
+            {
+                CNAREA& area = vecAreas[i];
+                if (!inside(area, loc))
+                    continue;
+                packet.latitude1  = area.latitude1 ;
+                packet.longitude1 = area.longitude1;
+                packet.latitude2  = area.latitude2 ;
+                packet.longitude2 = area.longitude2;
+                packet.latitude3  = area.latitude3 ;
+                packet.longitude3 = area.longitude3;
+                packet.latitude4  = area.latitude4 ;
+                packet.longitude4 = area.longitude4;
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Inside area %d", i);
+                break;
+            }
 #endif
 
             edge_count = packet.edge_count;
