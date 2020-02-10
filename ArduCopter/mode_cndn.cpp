@@ -28,6 +28,27 @@ Vector3f locNEU(float latf, float lngf, float altf)
     return pos;
 }
 
+bool inside(CNAREA& area, const Location& loc)
+{
+    int cross = 0;
+    std::deque<Vector2f> vp;
+    vp.push_back(Vector2f(area.latitude1, area.longitude1));
+    vp.push_back(Vector2f(area.latitude2, area.longitude2));
+    vp.push_back(Vector2f(area.latitude3, area.longitude3));
+    vp.push_back(Vector2f(area.latitude4, area.longitude4));
+    for(uint16_t i=0; i <vp.size(); i++)
+    {
+        int j=(i+1) % vp.size();
+        if (vp[i].y > loc.lat) != vp[j].y > loc.lat)
+        {
+            double aX = (vp[j].x-vp[i].x)*(loc.lng-vp[i].y)/(vp[j].y-vp[i].y)+vp[i].x;
+            if (loc.lat < aX)
+                cross ++;
+        }
+    }
+    return (cross % 2) > 0;
+}
+
 const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Param: METHOD
     // @DisplayName: Mode using method
@@ -464,27 +485,6 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
         gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Manual control");
     }
-}
-
-bool inside(CNAREA& area, const Location& loc)
-{
-    int cross = 0;
-    std::deque<Vector2f> vp;
-    vp.push_back(Vector2f(area.latitude1, area.longitude1));
-    vp.push_back(Vector2f(area.latitude2, area.longitude2));
-    vp.push_back(Vector2f(area.latitude3, area.longitude3));
-    vp.push_back(Vector2f(area.latitude4, area.longitude4));
-    for(uint16_t i=0; i <vp.size(); i++)
-    {
-        int j=(i+1) % vp.size();
-        if (vp[i].y > loc.lat) != vp[j].y > loc.lat)
-        {
-            double aX = (vp[j].x-vp[i].x)*(loc.lng-vp[i].y)/(vp[j].y-vp[i].y)+vp[i].x;
-            if (loc.lat < aX)
-                cross ++;
-        }
-    }
-    return (cross % 2) > 0;
 }
 
 void ModeCNDN::handle_message(const mavlink_message_t &msg)
