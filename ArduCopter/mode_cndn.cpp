@@ -31,11 +31,12 @@ Vector3f locNEU(float latf, float lngf, float altf)
 bool inside(const CNAREA& area, const Location& loc)
 {
     int cross = 0;
-    Vector2f vp[4];
+    Vector2f vp[4], cp(loc.lat/1e7, loc.lng/1e7);
     vp[0] = Vector2f(area.latitude1, area.longitude1);
     vp[1] = Vector2f(area.latitude2, area.longitude2);
     vp[2] = Vector2f(area.latitude3, area.longitude3);
     vp[3] = Vector2f(area.latitude4, area.longitude4);
+
     for(uint16_t i=0; i<4; i++)
     {
         int j=(i + 1) % 4;
@@ -715,7 +716,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             packet.longitude4 = 126.8733077f;
 
             Location loc(copter.current_loc);
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] TEST %0.3f,%0.3f", loc.lat, loc.lng);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] TEST %d,%d", (int)loc.lat, (int)loc.lng);
             for(uint16_t i=0; i<vecAreas.size(); i++)
             {
                 CNAREA& area = vecAreas[i];
