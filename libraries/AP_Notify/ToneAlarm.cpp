@@ -94,7 +94,7 @@ const AP_ToneAlarm::Tone AP_ToneAlarm::_tones[] {
     { "MFT200L4<B#4A#6G#6", false },
 #define AP_NOTIFY_TONE_STARTUP 29
 //    { "MFT240L8O4aO5dcO4aO5dcO4aO5dcL16dcdcdcdc", false },
-    { "MFT240L8O4fagfaggagaf", false },
+    { "MFT200L4O4CL8GAL2F", false },
 #define AP_NOTIFY_TONE_NO_SDCARD 30
     { "MNBGG", false },
 };
