@@ -40,10 +40,10 @@ bool inside(const CNAREA& area, const Location& loc)
     for(uint16_t i=0; i<4; i++)
     {
         int j=(i + 1) % 4;
-        if ((vp[i].y > loc.lat) != (vp[j].y > loc.lat))
+        if ((vp[i].y > cp.y) != (vp[j].y > cp.y))
         {
-            double aX = (vp[j].x-vp[i].x)*(loc.lng-vp[i].y)/(vp[j].y-vp[i].y)+vp[i].x;
-            if (loc.lat < aX)
+            double aX = (vp[j].x-vp[i].x)*(cp.y-vp[i].y)/(vp[j].y-vp[i].y)+vp[i].x;
+            if (cp.x < aX)
                 cross ++;
         }
     }
