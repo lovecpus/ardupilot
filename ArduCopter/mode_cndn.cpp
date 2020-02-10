@@ -39,7 +39,7 @@ bool inside(CNAREA& area, const Location& loc)
     for(uint16_t i=0; i <vp.size(); i++)
     {
         int j=(i+1) % vp.size();
-        if (vp[i].y > loc.lat) != (vp[j].y > loc.lat))
+        if ((vp[i].y > loc.lat) != (vp[j].y > loc.lat))
         {
             double aX = (vp[j].x-vp[i].x)*(loc.lng-vp[i].y)/(vp[j].y-vp[i].y)+vp[i].x;
             if (loc.lat < aX)
