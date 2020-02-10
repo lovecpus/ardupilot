@@ -90,7 +90,7 @@ private:
     Vector2f dest_B; // in NEU frame in cm relative to ekf origin
 
 #if defined(SIM_LOCATION)
-    std::vector<CNAREA> vecAreas;
+    std::deque<CNAREA> vecAreas;
 #endif    
 
     enum cndn_state
