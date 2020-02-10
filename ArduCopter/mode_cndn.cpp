@@ -715,6 +715,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             packet.longitude4 = 126.8733077f;
 
             Location loc(copter.current_loc);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] TEST %0.3f,%0.3f", loc.lat, loc.lng);
             for(uint16_t i=0; i<vecAreas.size(); i++)
             {
                 CNAREA& area = vecAreas[i];
