@@ -5,6 +5,8 @@
 /*
 * Init and run calls for CNDN flight mode
 */
+#define CNDN_TONE_STARTUP    { "MFT200L4O4CL8GAL2F", false }
+
 #define CNDN_WP_RADIUS_CM 50
 #define CASE_CNDN_MODE() case Mode::Number::CNDN: ret = &mode_cndn; break;
 #define CASE_CNDN_AUX_INIT()  case AUX_FUNC::CNDN: case AUX_FUNC::CNDN_ETRI:
