@@ -544,11 +544,9 @@ void ModeAuto::exit_mission()
     // if we are not on the ground switch to loiter or land
     if (!copter.ap.land_complete) {
         // try to enter loiter but if that fails land
-        if (copter.prev_control_mode == Number::CNDN)
-        {
+        if (copter.prev_control_mode == Number::CNDN) {
             set_mode(Mode::Number::CNDN, ModeReason::MISSION_END);
-        }
-        else if (!loiter_start()) {
+        } else if (!loiter_start()) {
             set_mode(Mode::Number::LAND, ModeReason::MISSION_END);
         }
     } else {

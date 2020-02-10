@@ -93,8 +93,7 @@ const AP_ToneAlarm::Tone AP_ToneAlarm::_tones[] {
 #define AP_NOTIFY_TONE_QUIET_NOT_READY_OR_NOT_FINISHED 28
     { "MFT200L4<B#4A#6G#6", false },
 #define AP_NOTIFY_TONE_STARTUP 29
-//    { "MFT240L8O4aO5dcO4aO5dcO4aO5dcL16dcdcdcdc", false },
-    { "MFT200L4O4CL8GAL2F", false },
+    { "MFT240L8O4aO5dcO4aO5dcO4aO5dcL16dcdcdcdc", false },
 #define AP_NOTIFY_TONE_NO_SDCARD 30
     { "MNBGG", false },
 };
@@ -287,6 +286,23 @@ void AP_ToneAlarm::update()
     if (flags.failsafe_radio != AP_Notify::flags.failsafe_radio) {
         flags.failsafe_radio = AP_Notify::flags.failsafe_radio;
         if (flags.failsafe_radio) {
+            // armed case handled by events.failsafe_mode_change
+            if (!AP_Notify::flags.armed) {
+                play_tone(AP_NOTIFY_TONE_QUIET_NEG_FEEDBACK);
+            }
+        } else {
+            if (AP_Notify::flags.armed) {
+                play_tone(AP_NOTIFY_TONE_LOUD_POS_FEEDBACK);
+            } else {
+                play_tone(AP_NOTIFY_TONE_QUIET_POS_FEEDBACK);
+            }
+        }
+    }
+
+    // notify the user when GCS failsafe is triggered
+    if (flags.failsafe_gcs != AP_Notify::flags.failsafe_gcs) {
+        flags.failsafe_gcs = AP_Notify::flags.failsafe_gcs;
+        if (flags.failsafe_gcs) {
             // armed case handled by events.failsafe_mode_change
             if (!AP_Notify::flags.armed) {
                 play_tone(AP_NOTIFY_TONE_QUIET_NEG_FEEDBACK);
