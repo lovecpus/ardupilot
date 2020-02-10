@@ -196,7 +196,7 @@ bool ModeCNDN::init(bool ignore_checks)
         b_position_target = false;
         loiter_nav->clear_pilot_desired_acceleration();
         loiter_nav->init_target();
-        auto_yaw.set_fixed_yaw(copter.initial_armed_bearing * 0.01f, 0.0f, 0, false);
+        auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
         const Vector3f tpos(vecRects.back().x, vecRects.back().y, wayHeight * 100.0f);
         wp_nav->set_wp_destination(tpos, false);
 
@@ -241,7 +241,7 @@ void ModeCNDN::run()
             b_position_target = false;
             loiter_nav->clear_pilot_desired_acceleration();
             loiter_nav->init_target();
-            auto_yaw.set_fixed_yaw(copter.initial_armed_bearing * 0.01f, 0.0f, 0, false);
+            auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to PREPARE FINISH stage.");
 
             const Vector3f tpos(vecRects.back().x, vecRects.back().y, wayHeight * 100.0f);
@@ -412,7 +412,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
         if (dest_num > 0)
         {
             pos_control_start();
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Image capture to ETRI-MC");
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Image with ETRI-MC. [%d,%d]", copter._home_bearing, copter.initial_armed_bearing);
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             // set to position control mode
             stage = TAKE_PICTURE;
