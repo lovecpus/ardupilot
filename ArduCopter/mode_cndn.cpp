@@ -198,7 +198,7 @@ bool ModeCNDN::init(bool ignore_checks)
         // auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
         // const Vector3f tpos(vecRects.back().x, vecRects.back().y, wayHeight * 100.0f);
         // wp_nav->set_wp_destination(tpos, false);
-        stage = PREPARE_FINISH;
+        // stage = PREPARE_FINISH;
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mission complete.");
     }
 
