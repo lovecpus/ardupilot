@@ -469,7 +469,7 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
 bool inside(CNAREA& area, const Location& loc)
 {
     int cross = 0;
-    std::vector<Vector2f> vp;
+    std::deque<Vector2f> vp;
     vp.reserve(4);
     vp.push_back(Vector2f(area.latitude1, area.longitude1));
     vp.push_back(Vector2f(area.latitude2, area.longitude2));
