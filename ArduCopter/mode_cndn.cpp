@@ -188,18 +188,17 @@ bool ModeCNDN::init(bool ignore_checks)
     }
     else
     {
+        // last_yaw_ms = 0;
+        // last_yaw_cd = copter.initial_armed_bearing;
+        // AP_Notify::events.waypoint_complete = 1;
+        // b_position_target_reached = false;
+        // b_position_target = false;
+        // loiter_nav->clear_pilot_desired_acceleration();
+        // loiter_nav->init_target();
+        // auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
+        // const Vector3f tpos(vecRects.back().x, vecRects.back().y, wayHeight * 100.0f);
+        // wp_nav->set_wp_destination(tpos, false);
         stage = PREPARE_FINISH;
-        last_yaw_ms = 0;
-        last_yaw_cd = copter.initial_armed_bearing;
-        AP_Notify::events.waypoint_complete = 1;
-        b_position_target_reached = false;
-        b_position_target = false;
-        loiter_nav->clear_pilot_desired_acceleration();
-        loiter_nav->init_target();
-        auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
-        const Vector3f tpos(vecRects.back().x, vecRects.back().y, wayHeight * 100.0f);
-        wp_nav->set_wp_destination(tpos, false);
-
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mission complete.");
     }
 
