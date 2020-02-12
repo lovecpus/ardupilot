@@ -411,7 +411,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
         if (dest_num > 0)
         {
             pos_control_start();
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Image with ETRI-MC. [%d,%d]", copter._home_bearing, copter.initial_armed_bearing);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Image with ETRI-MC. [%d,%d]", int(copter._home_bearing), int(copter.initial_armed_bearing));
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             // set to position control mode
             stage = TAKE_PICTURE;
@@ -618,13 +618,13 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             {
             case 0:
                 return_to_manual_control(false);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : return_to_manual_control.", packet.value);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : return_to_manual_control.", int(packet.value));
                 break;
 
             case 1:
                 stage = TAKE_PICTURE;
                 gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : IMAGE_START_CAPTURE.", packet.value);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : IMAGE_START_CAPTURE.", int(packet.value));
                 break;
 
             case 2:
@@ -717,7 +717,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             packet.longitude4 = 126.8733077f;
 
             Location loc(copter.current_loc);
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] TEST %d,%d", (int)loc.lat, (int)loc.lng);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] TEST %d,%d", int(loc.lat), int(loc.lng));
             for(uint16_t i=0; i<vecAreas.size(); i++)
             {
                 CNAREA& area = vecAreas[i];
