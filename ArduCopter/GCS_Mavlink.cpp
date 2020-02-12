@@ -1266,8 +1266,8 @@ void GCS_MAVLINK_Copter::handleMessage(const mavlink_message_t &msg)
         handle_command_long(msg);
         mavlink_command_long_t packet;
         mavlink_msg_command_long_decode(&msg, &packet);
-        if (packet.command == 519/*MAV_CMD_REQUEST_PROTOCOL_VERSION*/)
-            send_text(MAV_SEVERITY_INFO, "[CNDN] ETRI Connected.");
+        //if (packet.command == 519/*MAV_CMD_REQUEST_PROTOCOL_VERSION*/)
+        send_text(MAV_SEVERITY_INFO, "[CNDN] COMMAND_LONG(%d)", int(packet.command));
     } break;
 #endif
 
