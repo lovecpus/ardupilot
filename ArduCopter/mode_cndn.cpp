@@ -420,7 +420,6 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     break;
 
     case PREPARE_FOLLOW:
-    {
         if (dest_num == 2)
         {
             if (!vecPoints.empty())
@@ -438,8 +437,6 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 return_to_manual_control(false);
             }
         }
-    } return;
-
     case TAKE_PICTURE:
     case EDGE_FOLLOW:
     case MOVE_TO_EDGE:
