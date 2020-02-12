@@ -489,7 +489,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 {
     switch (msg.msgid)
     {
-    case COMMAND_ACK:
+    case MAVLINK_MSG_ID_COMMAND_ACK:
     {
         mavlink_command_ack_t packet;
         mavlink_msg_command_ack_decode(&msg, &packet);
