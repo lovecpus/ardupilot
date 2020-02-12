@@ -616,15 +616,16 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         {
             switch (packet.value)
             {
-            // case 0:
-            //     return_to_manual_control(false);
-            //     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : return_to_manual_control.", packet.value);
-            //     break;
+            case 0:
+                return_to_manual_control(false);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : return_to_manual_control.", packet.value);
+                break;
 
-            // case 1:
-            //     gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
-            //     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : IMAGE_START_CAPTURE.", packet.value);
-            //     break;
+            case 1:
+                stage = TAKE_PICTURE;
+                gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : IMAGE_START_CAPTURE.", packet.value);
+                break;
 
             case 2:
                 b_position_target_reached = true;
