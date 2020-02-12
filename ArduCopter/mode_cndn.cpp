@@ -489,6 +489,13 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 {
     switch (msg.msgid)
     {
+    case COMMAND_ACK:
+    {
+        mavlink_command_ack_t packet;
+        mavlink_msg_command_ack_decode(&msg, &packet);
+        gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] COMMAND_ACK(%d)", int(packet.command));
+    } break;
+
     case MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED: // MAV ID: 84
     {
         // decode packet
