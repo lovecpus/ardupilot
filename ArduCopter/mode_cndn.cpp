@@ -646,7 +646,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : VIDEO_STOP_CAPTURE.", int(packet.value));
                 break;
-            }
 
             case 5:
                 gcs().send_local_position_ned(0.0f,0.0f,0.0f,0.0f,0.0f,0.0f);
