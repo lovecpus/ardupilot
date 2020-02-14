@@ -129,9 +129,9 @@ private:
     uint16_t loiter_time_max;                // How long we should stay in Loiter Mode for mission scripting (time in seconds)
 
     // parameters
-    AP_Int8         _method;               ///< top level enable/disable control
-    AP_Int16        _take_alt_cm;          ///< desired pump rate (expressed as a percentage of top rate) when travelling at 1m/s
-    AP_Int16        _mission_alt_cm;       ///< minimum pump rate (expressed as a percentage from 0 to 100)
-    AP_Int16        _spray_width_cm;       ///< pwm rate of spinner
+    AP_Int8         _method;               ///< CNDN Method 0: Disable, 1: Take Picture, 2: Edge following and auto mission, 3: Take picture after Edge following
+    AP_Int16        _take_alt_cm;          ///< Altitute of take picture
+    AP_Int16        _mission_alt_cm;       ///< Mission altitute
+    AP_Int16        _spray_width_cm;       ///< Spray width
 };
 #endif

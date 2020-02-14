@@ -54,7 +54,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Param: METHOD
     // @DisplayName: Mode using method
     // @Description: Mode using method of CNDN & ETRI Mission computer
-    // @Values: 0: Disable, 1: All enable, 2: Take picture only, 3: Edge follow only
+    // @Values: 0: Disable, 1: All enable, 2: Take picture only, 2: Edge follow only, 3: Take picture after Edge following
     // @User: Standard
     AP_GROUPINFO_FLAGS("METHOD", 0, ModeCNDN, _method, 1, AP_PARAM_FLAG_ENABLE),
 
@@ -64,7 +64,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Units: cm
     // @Range: 2000 4000
     // @User: Standard
-    AP_GROUPINFO("TAKE_ALT", 1, ModeCNDN, _take_alt_cm, 2700),
+    AP_GROUPINFO("TAKE_ALT", 1, ModeCNDN, _take_alt_cm, 3000),
 
     // @Param: MISSION_ALT
     // @DisplayName: Mission altitute
@@ -80,7 +80,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Units: cm
     // @Range: 3000 8000
     // @User: Standard
-    AP_GROUPINFO("SPRAY_WIDTH", 3, ModeCNDN, _spray_width_cm, 400),
+    AP_GROUPINFO("SPRAY_WIDTH", 3, ModeCNDN, _spray_width_cm, 350),
 
     AP_GROUPEND
 };
@@ -404,20 +404,38 @@ void ModeCNDN::live_log(const char *fmt, ...)
 void ModeCNDN::mission_command(uint8_t dest_num)
 {
     // handle state machine changes
-    switch (stage)
-    {
-    case MANUAL:
-    {
-        if (dest_num > 0)
-        {
+    switch (stage) {
+    case MANUAL: {
+        if (_method.get() == 0)
+            break;
+
+        if (dest_num > 0) {
             pos_control_start();
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Image with ETRI-MC. [%d,%d]", int(copter._home_bearing), int(copter.initial_armed_bearing));
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             // set to position control mode
-            stage = TAKE_PICTURE;
+            if (_method.get() == 2) {
+                if (!vecRects.empty()) {
+                    vecPoints.resize(vecRects.size());
+                    std::copy(vecRects.begin(), vecRects.end(), vecPoints.begin());
+                }
+
+                if (!vecPoints.empty()) {
+                    Vector3f hpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                    wp_nav->set_wp_destination(hpos, false);
+                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to start point.");
+                    vecPoints.pop_front();
+                    stage = MOVE_TO_EDGE;
+                } else {
+                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
+                    pos_control_start();
+                    return_to_manual_control(false);
+                }
+            } else {
+                stage = TAKE_PICTURE;
+            }
         }
-    }
-    break;
+    } break;
 
     case PREPARE_FOLLOW:
         if (dest_num == 2)
@@ -513,7 +531,10 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         if (packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_LOCAL_NED)
         {
             if (packet.coordinate_frame == MAV_FRAME_BODY_NED)
+            {
+                packet.z = _take_alt_cm.get() * 0.01f;
                 packet.z += cpos.z * 0.01f;
+            }
             bTargeted = true;
         }
 
@@ -704,6 +725,24 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             cmd.content.relay.num = 255;
             cmd.content.relay.state = 1;
             AP::mission()->add_cmd(cmd);
+
+            if (_method.get() == 3)
+            {
+                if (!vecPoints.empty())
+                {
+                    Vector3f hpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                    wp_nav->set_wp_destination(hpos, false);
+                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to start point.");
+                    vecPoints.pop_front();
+                    stage = MOVE_TO_EDGE;
+                }
+                else
+                {
+                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
+                    pos_control_start();
+                    return_to_manual_control(false);
+                }
+            }
         }
         break;
 
