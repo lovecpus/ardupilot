@@ -4698,6 +4698,18 @@ void GCS::send_command_long(uint32_t msgid, uint8_t confirmation, float p1, floa
     }
 }
 
+void GCS::send_local_position_ned(float px, float py, float pz, float vx, float vy, float vz)
+{
+    for (uint8_t i=0; i<num_gcs(); i++) {
+        chan(i)->send_local_position_ned(px, py, pz, vx, vy, vz);
+    }
+}
+
+void GCS_MAVLINK::send_local_position_ned(float px, float py, float pz, float vx, float vy, float vz) const
+{
+    mavlink_msg_local_position_ned_send(chan, AP_HAL::millis(), px, py, pz, vx, vy, vz);
+}
+
 bool GCS_MAVLINK::mavlink_coordinate_frame_to_location_alt_frame(const MAV_FRAME coordinate_frame, Location::AltFrame &frame)
 {
     switch (coordinate_frame) {
