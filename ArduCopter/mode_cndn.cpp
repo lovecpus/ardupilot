@@ -176,6 +176,13 @@ bool ModeCNDN::init(bool ignore_checks)
 
     if (stage != RETURN_AUTO)
     {
+#if !CNDN_PARAMS
+        _method.set(1);
+        _take_alt_cm.set(3000);
+        _mission_alt_cm.set(300);
+        _spray_width_cm.set(350);
+#endif
+
         // initialise waypoint state
         stage = MANUAL;
         b_position_target = false;
