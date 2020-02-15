@@ -539,6 +539,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         {
             if (packet.coordinate_frame == MAV_FRAME_BODY_NED)
             {
+                packet.x = packet.y = 0.0f;
                 packet.z = _take_alt_cm.get() * -0.01f;
                 packet.z += cpos.z * 0.01f;
             }
