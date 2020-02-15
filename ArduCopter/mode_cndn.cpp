@@ -122,14 +122,14 @@ bool ModeCNDN::init(bool ignore_checks)
         vecAreas.push_back(area);
 
         // 금산1
-        area.latitude1  = 36.11118130f;
-        area.longitude1 = 127.52320970f;
-        area.latitude2  = 36.11128810f;
-        area.longitude2 = 127.52400460f;
-        area.latitude3  = 36.11109080f;
-        area.longitude3 = 127.52406520f;
-        area.latitude4  = 36.11098800f;
-        area.longitude4 = 127.52325320f;
+        area.latitude1  = 36.11115340f;
+        area.longitude1 = 127.52325450f;
+        area.latitude2  = 36.11125690f;
+        area.longitude2 = 127.52401490f;
+        area.latitude3  = 36.11105800f;
+        area.longitude3 = 127.52406860f;
+        area.latitude4  = 36.11096490f;
+        area.longitude4 = 127.52329610f;
         vecAreas.push_back(area);
 
         // 금산2
