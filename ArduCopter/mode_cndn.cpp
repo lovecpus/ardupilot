@@ -122,47 +122,47 @@ bool ModeCNDN::init(bool ignore_checks)
         vecAreas.push_back(area);
 
         // 금산1
-        area.latitude1  = 36.11120590f;
-        area.longitude1 = 127.52319350f;
-        area.latitude2  = 36.11132080f;
-        area.longitude2 = 127.52404650f;
-        area.latitude3  = 36.11107810f;
-        area.longitude3 = 127.52410140f;
-        area.latitude4  = 36.11097730f;
-        area.longitude4 = 127.52324310f;
+        area.latitude1  = 36.11118130f;
+        area.longitude1 = 127.52320970f;
+        area.latitude2  = 36.11128810f;
+        area.longitude2 = 127.52400460f;
+        area.latitude3  = 36.11109080f;
+        area.longitude3 = 127.52406520f;
+        area.latitude4  = 36.11098800f;
+        area.longitude4 = 127.52325320f;
         vecAreas.push_back(area);
 
         // 금산2
-        area.latitude1  = 36.11081100f;
-        area.longitude1 = 127.52324650f;
-        area.latitude2  = 36.11095240f;
-        area.longitude2 = 127.52324310f;
-        area.latitude3  = 36.11105430f;
-        area.longitude3 = 127.52410610f;
-        area.latitude4  = 36.11093720f;
-        area.longitude4 = 127.52413500f;
+        area.latitude1  = 36.11084080f;
+        area.longitude1 = 127.52327330f;
+        area.latitude2  = 36.11091940f;
+        area.longitude2 = 127.52327260f;
+        area.latitude3  = 36.11101960f;
+        area.longitude3 = 127.52408330f;
+        area.latitude4  = 36.11095460f;
+        area.longitude4 = 127.52409880f;
         vecAreas.push_back(area);
 
         // 금산3
-        area.latitude1  = 36.11066640f;
-        area.longitude1 = 127.52321900f;
-        area.latitude2  = 36.11079640f;
-        area.longitude2 = 127.52324310f;
-        area.latitude3  = 36.11092750f;
-        area.longitude3 = 127.52413700f;
-        area.latitude4  = 36.11080510f;
-        area.longitude4 = 127.52416310f;
+        area.latitude1  = 36.11068750f;
+        area.longitude1 = 127.52325650f;
+        area.latitude2  = 36.11077090f;
+        area.longitude2 = 127.52327000f;
+        area.latitude3  = 36.11089060f;
+        area.longitude3 = 127.52411020f;
+        area.latitude4  = 36.11081700f;
+        area.longitude4 = 127.52412890f;
         vecAreas.push_back(area);
 
         // 금산4
-        area.latitude1  = 36.11123250f;
-        area.longitude1 = 127.52317410f;
-        area.latitude2  = 36.11147300f;
-        area.longitude2 = 127.52311370f;
-        area.latitude3  = 36.11158780f;
-        area.longitude3 = 127.52397940f;
-        area.latitude4  = 36.11134620f;
-        area.longitude4 = 127.52403170f;
+        area.latitude1  = 36.11126230f;
+        area.longitude1 = 127.52319550f;
+        area.latitude2  = 36.11145240f;
+        area.longitude2 = 127.52315600f;
+        area.latitude3  = 36.11155910f;
+        area.longitude3 = 127.52395190f;
+        area.latitude4  = 36.11135820f;
+        area.longitude4 = 127.52399410f;
         vecAreas.push_back(area);
     }
 #endif
