@@ -185,7 +185,6 @@ bool ModeCNDN::init(bool ignore_checks)
     }
 #endif
 
-    //pos_control_start();
     wp_nav->wp_and_spline_init();
 
     if (stage != RETURN_AUTO)
@@ -220,8 +219,6 @@ void ModeCNDN::run()
     // initialize vertical speed and acceleration's range
     pos_control->set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
     pos_control->set_max_accel_z(g.pilot_accel_z);
-    pos_control->set_max_speed_xy(wp_nav->get_default_speed_xy());
-    pos_control->set_max_accel_xy(wp_nav->get_wp_acceleration());
 
     // get pilot desired climb rate
     float target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());
