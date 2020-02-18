@@ -187,7 +187,7 @@ bool ModeCNDN::init(bool ignore_checks)
 #if !CNDN_PARAMS
         _method.set(3);
         _take_alt_cm.set(1500);
-        _mission_alt_cm.set(300);
+        _mission_alt_cm.set(100);
         _spray_width_cm.set(400);
 #endif
 
