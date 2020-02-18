@@ -109,6 +109,13 @@ bool ModeCNDN::init(bool ignore_checks)
     }
     loiter_nav->init_target();
 
+    // initialise position and desired velocity
+    if (!pos_control->is_active_z())
+    {
+        pos_control->set_alt_target_to_current_alt();
+        pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
+    }
+
 #if defined(SIM_LOCATION)
     if (vecAreas.empty())
     {
@@ -178,13 +185,6 @@ bool ModeCNDN::init(bool ignore_checks)
     }
 #endif
 
-    // initialise position and desired velocity
-    if (!pos_control->is_active_z())
-    {
-        pos_control->set_alt_target_to_current_alt();
-        pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
-    }
-
     if (stage != RETURN_AUTO)
     {
 #if !CNDN_PARAMS
@@ -217,6 +217,8 @@ void ModeCNDN::run()
     // initialize vertical speed and acceleration's range
     pos_control->set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
     pos_control->set_max_accel_z(g.pilot_accel_z);
+    pos_control->set_max_speed_xy(wp_nav->get_default_speed_xy());
+    pos_control->set_max_accel_xy(wp_nav->get_wp_acceleration());
 
     // get pilot desired climb rate
     float target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());
@@ -246,17 +248,9 @@ void ModeCNDN::run()
             b_position_target_reached = false;
             b_position_target = false;
 
-            float target_roll, target_pitch;
-            update_simple_mode();
-            get_pilot_desired_lean_angles(target_roll, target_pitch, loiter_nav->get_angle_max_cd(), attitude_control->get_althold_lean_angle_max());
-            loiter_nav->set_pilot_desired_acceleration(target_roll, target_pitch, G_Dt);
-            pos_control->set_max_speed_xy(wp_nav->get_default_speed_xy());
-            pos_control->set_max_accel_xy(wp_nav->get_wp_acceleration());
-
             loiter_nav->init_target();
             auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH stage [%0.3f].", inertial_nav.get_speed_xy());
-//            wp_nav->set_speed_xy(500.0f);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH stage [%0.3f].", wp_nav->get_default_speed_xy());
 
             const Vector3f tpos(vecRects.back().x, vecRects.back().y, _mission_alt_cm.get() * 1.0f);
             wp_nav->set_wp_destination(tpos, false);
