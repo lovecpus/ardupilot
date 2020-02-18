@@ -708,8 +708,8 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             float ldir = vdir.length();
             vdir.normalize();
 
-            Vector2f stepLen(vdir * _spray_width_cm.get() * 1.0f);
-            float lw_cm = _spray_width.get()*1.0f;
+            float lw_cm = _spray_width_cm.get()*1.0f;
+            Vector2f stepLen(vdir * lw_cm);
 
             p1 += stepLen;
             p2 += stepLen;
