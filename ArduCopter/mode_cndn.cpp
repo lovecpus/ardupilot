@@ -703,23 +703,26 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             cmd.content.location = AP::ahrs().get_home();
             AP::mission()->add_cmd(cmd);
 
-            Vector2f vdir = (vecRects[2] - vecRects[1]); // step vector
+            Vector2f vd1 = (vecRects[0] - vecRects[3]); // step vector
+            Vector2f vd2 = (vecRects[2] - vecRects[1]); // step vector
             Vector2f p1(vecRects[0]),p2(vecRects[1]),p3,p4;
-            float ldir = vdir.length();
-            vdir.normalize();
+            float ldir = vd2.length();
+            vd1.normalize();
+            vd2.normalize();
 
             float lw_cm = _spray_width_cm.get()*1.0f;
-            Vector2f stepLen(vdir * lw_cm);
+            Vector2f step1(vd1 * lw_cm);
+            Vector2f step2(vd2 * lw_cm);
 
-            p1 += stepLen;
-            p2 += stepLen;
+            p1 += step1;
+            p2 += step2;
 
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Spray width %0.1f", lw_cm);
 
-            for (float l = 0; l < ldir-lw_cm; l += lw_cm)
+            for (float l = 0; l < ldir-lw_cm; l += lw_cm * 2)
             {
-                p3 = p2 + stepLen;
-                p4 = p1 + stepLen;
+                p4 = p1 + step1;
+                p3 = p2 + step2;
 
                 cmd.id = MAV_CMD_NAV_WAYPOINT;
                 cmd.p1 = 1;
@@ -745,10 +748,10 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
                 AP::mission()->add_cmd(cmd);
 
-                p1 = p3 + stepLen;
-                p2 = p4 + stepLen;
+                p1 = p4 + stepLen;
+                p2 = p3 + stepLen;
             }
-
+/*
             cmd.id = MAV_CMD_NAV_WAYPOINT;
             cmd.p1 = 1;
             cmd.content.location = Location(Vector3f(vecRects[0].x, vecRects[0].y, _mission_alt_cm.get()*1.0f));
@@ -772,8 +775,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             cmd.content.location = Location(Vector3f(vecRects[3].x, vecRects[3].y, _mission_alt_cm.get()*1.0f));
             cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
             AP::mission()->add_cmd(cmd);
-
-            
+*/           
             // mission finish command.
             cmd.id = MAV_CMD_DO_SET_RELAY;
             cmd.p1 = 0;
