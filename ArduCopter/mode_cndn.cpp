@@ -245,19 +245,15 @@ void ModeCNDN::run()
             AP_Notify::events.waypoint_complete = 1;
             b_position_target_reached = false;
             b_position_target = false;
-//            loiter_nav->clear_pilot_desired_acceleration();
-            loiter_nav->init_target();
 
             float target_roll, target_pitch;
-            // apply SIMPLE mode transform to pilot inputs
             update_simple_mode();
-
-            // convert pilot input to lean angles
             get_pilot_desired_lean_angles(target_roll, target_pitch, loiter_nav->get_angle_max_cd(), attitude_control->get_althold_lean_angle_max());
-
-            // process pilot's roll and pitch input
             loiter_nav->set_pilot_desired_acceleration(target_roll, target_pitch, G_Dt);
+            pos_control->set_max_speed_xy(wp_nav->get_default_speed_xy());
+            pos_control->set_max_accel_xy(wp_nav->get_wp_acceleration());
 
+            loiter_nav->init_target();
             auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH stage [%0.3f].", inertial_nav.get_speed_xy());
 //            wp_nav->set_speed_xy(500.0f);
