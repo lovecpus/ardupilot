@@ -245,7 +245,7 @@ void ModeCNDN::run()
             loiter_nav->clear_pilot_desired_acceleration();
             loiter_nav->init_target();
             auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH stage [%0.3f].", inertial_nav->get_speed_xy());
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH stage [%0.3f].", inertial_nav.get_speed_xy());
 //            wp_nav->set_speed_xy(500.0f);
 
             const Vector3f tpos(vecRects.back().x, vecRects.back().y, _mission_alt_cm.get() * 1.0f);
@@ -295,7 +295,7 @@ void ModeCNDN::run()
             if ((now - debug_logt_ms) > 500)
             {
                 debug_logt_ms = now;
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SPEED [%0.3f].", inertial_nav->get_speed_xy());
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SPEED [%0.3f].", inertial_nav.get_speed_xy());
             }
         }
     } break;
