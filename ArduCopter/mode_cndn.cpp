@@ -422,6 +422,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             break;
 
         if (dest_num > 0) {
+            pos_control_start();
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Image with ETRI-MC. [%d,%d]", int(copter._home_bearing), int(copter.initial_armed_bearing));
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             // set to position control mode
