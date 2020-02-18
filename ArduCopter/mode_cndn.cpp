@@ -64,7 +64,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Units: cm
     // @Range: 2000 4000
     // @User: Standard
-    AP_GROUPINFO("TAKE_ALT", 1, ModeCNDN, _take_alt_cm, 3000),
+    AP_GROUPINFO("TAKE_ALT", 1, ModeCNDN, _take_alt_cm, 1500),
 
     // @Param: MISSION_ALT
     // @DisplayName: Mission altitute
@@ -80,7 +80,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Units: cm
     // @Range: 3000 8000
     // @User: Standard
-    AP_GROUPINFO("SPRAY_WIDTH", 3, ModeCNDN, _spray_width_cm, 350),
+    AP_GROUPINFO("SPRAY_WIDTH", 3, ModeCNDN, _spray_width_cm, 400),
 
     AP_GROUPEND
 };
