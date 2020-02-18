@@ -1260,17 +1260,6 @@ void GCS_MAVLINK_Copter::handleMessage(const mavlink_message_t &msg)
         break;
 #endif
 
-#if MODE_CNDN_ENABLED == ENABLED
-    case MAVLINK_MSG_ID_COMMAND_LONG:
-    {
-        handle_command_long(msg);
-        mavlink_command_long_t packet;
-        mavlink_msg_command_long_decode(&msg, &packet);
-        //if (packet.command == 519/*MAV_CMD_REQUEST_PROTOCOL_VERSION*/)
-        send_text(MAV_SEVERITY_INFO, "[CNDN] COMMAND_LONG(%d)", int(packet.command));
-    } break;
-#endif
-
     default:
         handle_common_message(msg);
         break;
