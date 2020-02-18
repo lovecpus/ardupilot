@@ -693,6 +693,19 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] CAMERA_TRIGGERED, Prepare to EDGE FOLLOW.");
             AP_Notify::events.waypoint_complete = 1;
 
+#if 1
+            Vector3f fd1(-1,-1,0); fd1.normalize();
+            Location l0(Vector3f(vecRects[0].x+fd1.x, vecRects[0].y+fd1.y, _mission_alt_cm.get()*1.0f));
+            Location l1(Vector3f(vecRects[1].x+fd1.x, vecRects[1].y+fd1.y, _mission_alt_cm.get()*1.0f));
+            Location l2(Vector3f(vecRects[2].x+fd1.x, vecRects[2].y+fd1.y, _mission_alt_cm.get()*1.0f));
+            Location l3(Vector3f(vecRects[3].x+fd1.x, vecRects[3].y+fd1.y, _mission_alt_cm.get()*1.0f));
+
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 1 %0.7f, %0.7f", l0.lat/1E7, l0.lng/1E7);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 2 %0.7f, %0.7f", l1.lat/1E7, l1.lng/1E7);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 3 %0.7f, %0.7f", l2.lat/1E7, l2.lng/1E7);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 4 %0.7f, %0.7f", l3.lat/1E7, l3.lng/1E7);
+#endif            
+
             AP_Mission::Mission_Command cmd;
 
             AP::mission()->reset();
@@ -719,7 +732,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Spray width %0.1f", lw_cm);
 
-            for (float l = 0; l < ldir-lw_cm; l += lw_cm * 2)
+            for (float l = 0.0f; l < ldir-lw_cm * 2.05f; l += lw_cm * 2.0f)
             {
                 p4 = p1 + step1;
                 p3 = p2 + step2;
