@@ -748,8 +748,8 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
                 AP::mission()->add_cmd(cmd);
 
-                p1 = p4 + stepLen;
-                p2 = p3 + stepLen;
+                p1 = p4 + step1;
+                p2 = p3 + step2;
             }
 /*
             cmd.id = MAV_CMD_NAV_WAYPOINT;
