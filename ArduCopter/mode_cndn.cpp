@@ -242,7 +242,7 @@ void ModeCNDN::run()
             AP_Notify::events.waypoint_complete = 1;
             b_position_target_reached = false;
             b_position_target = false;
-            loiter_nav->clear_pilot_desired_acceleration();
+//            loiter_nav->clear_pilot_desired_acceleration();
             loiter_nav->init_target();
             auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH stage [%0.3f].", inertial_nav.get_speed_xy());
