@@ -132,22 +132,16 @@ bool ModeCNDN::init(bool ignore_checks)
         vecAreas.push_back(area);
 
         // 금산1
-        // area.latitude1  = 36.11119830f;
-        // area.longitude1 = 127.52326260f;
-        // area.latitude2  = 36.11129040f;
-        // area.longitude2 = 127.52400220f;
-        // area.latitude3  = 36.11108350f;
-        // area.longitude3 = 127.52405990f;
-        // area.latitude4  = 36.11099030f;
-        // area.longitude4 = 127.52329950f;
-        area.latitude1  = 36.1109888f;
-        area.longitude1 = 127.5233023f;
-        area.latitude2  = 36.1110848f;
-        area.longitude2 = 127.5240575f;
-        area.latitude3  = 36.1112895f;
-        area.longitude3 = 127.5240063f;
-        area.latitude4  = 36.1111999f;
-        area.longitude4 = 127.5232639f;
+        // area.latitude1  = 36.1109888f;
+        // area.longitude1 = 127.5233023f;
+        area.latitude1  = 36.1111974f;
+        area.longitude1 = 127.5232490f;
+        area.latitude2  = 36.1112895f;
+        area.longitude2 = 127.5240063f;
+        area.latitude3  = 36.1110848f;
+        area.longitude3 = 127.5240575f;
+        area.latitude4  = 36.1109903f;
+        area.longitude4 = 127.5232995f;
         vecAreas.push_back(area);
 
         // 금산2
@@ -241,7 +235,7 @@ void ModeCNDN::run()
             b_position_target_reached = false;
             b_position_target = false;
 
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH stage [%0.3f].", wp_nav->get_default_speed_xy());
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH stage.");
 
             const Vector3f tpos(vecRects.back().x, vecRects.back().y, _mission_alt_cm.get() * 1.0f);
             wp_nav->set_wp_destination(tpos, false);
@@ -252,8 +246,8 @@ void ModeCNDN::run()
     case PREPARE_AUTO:
     case PREPARE_FINISH:
     {
-        auto_control();
         uint32_t now = AP_HAL::millis();
+        auto_control();
         if (reached_destination())
         {
             if (last_yaw_ms == 0)
@@ -281,17 +275,6 @@ void ModeCNDN::run()
                     }
                     
                 }
-            }
-        }
-        else
-        {
-            if (debug_logt_ms == 0)
-                debug_logt_ms = now;
-
-            if ((now - debug_logt_ms) > 500)
-            {
-                debug_logt_ms = now;
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SPEED [%0.3f].", inertial_nav.get_speed_xy());
             }
         }
     } break;
