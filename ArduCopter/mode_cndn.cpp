@@ -367,7 +367,8 @@ void ModeCNDN::run()
 bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool yaw_relative)
 {
     // ensure we are in position control mode
-    pos_control_start();
+    if (stage != TAKE_PICTURE)
+        pos_control_start();
 
 #if AC_FENCE == ENABLED
     // reject destination if outside the fence
