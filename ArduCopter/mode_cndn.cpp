@@ -187,7 +187,7 @@ bool ModeCNDN::init(bool ignore_checks)
 #if !CNDN_PARAMS
         _method.set(3);
         _take_alt_cm.set(1500);
-        _mission_alt_cm.set(100);
+        _mission_alt_cm.set(300);
         _spray_width_cm.set(400);
 #endif
 
@@ -203,17 +203,6 @@ bool ModeCNDN::init(bool ignore_checks)
     }
     else
     {
-        // last_yaw_ms = 0;
-        // last_yaw_cd = copter.initial_armed_bearing;
-        // AP_Notify::events.waypoint_complete = 1;
-        // b_position_target_reached = false;
-        // b_position_target = false;
-        // loiter_nav->clear_pilot_desired_acceleration();
-        // loiter_nav->init_target();
-        // auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
-        // const Vector3f tpos(vecRects.back().x, vecRects.back().y, wayHeight * 100.0f);
-        // wp_nav->set_wp_destination(tpos, false);
-        // stage = PREPARE_FINISH;
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mission complete.");
     }
 
@@ -259,7 +248,7 @@ void ModeCNDN::run()
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH stage [%0.3f].", wp_nav->get_default_speed_xy());
 //            wp_nav->set_speed_xy(500.0f);
 
-            const Vector3f tpos(vecRects.back().x, vecRects.back().y, wayHeight * 100.0f);
+            const Vector3f tpos(vecRects.back().x, vecRects.back().y, _mission_alt_cm.get() * 1.0f);
             wp_nav->set_wp_destination(tpos, false);
         }
     } break;
@@ -306,7 +295,7 @@ void ModeCNDN::run()
         {
             if (!vecPoints.empty())
             {
-                const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
                 const Vector3f epos = wp_nav->get_wp_destination();
                 wp_nav->set_wp_destination(tpos, false);
                 auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
@@ -337,7 +326,7 @@ void ModeCNDN::run()
             stage = EDGE_FOLLOW;
             if (!vecPoints.empty())
             {
-                const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
                 wp_nav->set_wp_destination(tpos, false);
                 auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
                 gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
@@ -437,7 +426,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 }
 
                 if (!vecPoints.empty()) {
-                    Vector3f hpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                    Vector3f hpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
 
                     wp_nav->set_wp_destination(hpos, false);
                     last_yaw_cd = degNE(vecPoints[1], vecPoints[0]) * 100.0f;
@@ -461,7 +450,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
         {
             if (!vecPoints.empty())
             {
-                Vector3f hpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                Vector3f hpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
                 wp_nav->set_wp_destination(hpos, false);
                 last_yaw_cd = degNE(vecPoints[1], vecPoints[0]) * 100.0f;
                 auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
@@ -822,7 +811,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             {
                 if (!vecPoints.empty())
                 {
-                    Vector3f hpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+                    Vector3f hpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
                     wp_nav->set_wp_destination(hpos, false);
                     last_yaw_cd = degNE(vecPoints[1], vecPoints[0]) * 100.0f;
                     auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);

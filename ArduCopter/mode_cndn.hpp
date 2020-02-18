@@ -122,8 +122,6 @@ private:
     uint8_t edge_position = 0;
     Vector2f edge_points[10]; // in NEU frame in cm relative to ekf origin
     std::deque<Vector2f> vecPoints, vecRects;
-    float  wayHeight = 3.0f; // M
-    float  wayWidth = 6.0f; // M
     float  last_yaw_cd = 0.0f;
     uint32_t last_yaw_ms = 0;
     uint16_t loiter_time_max;                // How long we should stay in Loiter Mode for mission scripting (time in seconds)
