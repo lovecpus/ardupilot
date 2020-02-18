@@ -437,7 +437,10 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 
                 if (!vecPoints.empty()) {
                     Vector3f hpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
+
                     wp_nav->set_wp_destination(hpos, false);
+                    last_yaw_cd = degNE(vecPoints[1], vecPoints[0]) * 100.0f;
+                    auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
                     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to start point.");
                     vecPoints.pop_front();
                     stage = MOVE_TO_EDGE;
@@ -459,6 +462,8 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             {
                 Vector3f hpos(vecPoints.front().x, vecPoints.front().y, wayHeight * 100.0f);
                 wp_nav->set_wp_destination(hpos, false);
+                last_yaw_cd = degNE(vecPoints[1], vecPoints[0]) * 100.0f;
+                auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to start point.");
                 vecPoints.pop_front();
                 stage = MOVE_TO_EDGE;
