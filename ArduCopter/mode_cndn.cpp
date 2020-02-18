@@ -250,6 +250,8 @@ void ModeCNDN::run()
 
             loiter_nav->init_target();
             auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
+            pos_control->set_alt_target_to_current_alt();
+
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH stage [%0.3f].", wp_nav->get_default_speed_xy());
 
             const Vector3f tpos(vecRects.back().x, vecRects.back().y, _mission_alt_cm.get() * 1.0f);
