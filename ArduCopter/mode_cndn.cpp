@@ -185,6 +185,7 @@ bool ModeCNDN::init(bool ignore_checks)
     }
 #endif
 
+    pos_control_start();
     if (stage != RETURN_AUTO)
     {
 #if !CNDN_PARAMS
@@ -217,22 +218,14 @@ void ModeCNDN::run()
     // initialize vertical speed and acceleration's range
     pos_control->set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
     pos_control->set_max_accel_z(g.pilot_accel_z);
-    // pos_control->set_max_speed_xy(wp_nav->get_default_speed_xy());
-    // pos_control->set_max_accel_xy(wp_nav->get_wp_acceleration());
-    pos_control->set_max_speed_xy(500.0f);
-    pos_control->set_max_accel_xy(200.0f);
+    pos_control->set_max_speed_xy(wp_nav->get_default_speed_xy());
+    pos_control->set_max_accel_xy(wp_nav->get_wp_acceleration());
 
     // get pilot desired climb rate
     float target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());
     target_climb_rate = constrain_float(target_climb_rate, -get_pilot_speed_dn(), g.pilot_speed_up);
 
     motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
-
-    // if not auto armed or motors not enabled set throttle to zero and exit immediately
-    // if (is_disarmed_or_landed() || !motors->get_interlock() ) {
-    //     zero_throttle_and_relax_ac(copter.is_tradheli() && motors->get_interlock());
-    //     return;
-    // }
 
     switch (stage)
     {
@@ -250,7 +243,6 @@ void ModeCNDN::run()
             b_position_target_reached = false;
             b_position_target = false;
 
-            pos_control_start();
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH stage [%0.3f].", wp_nav->get_default_speed_xy());
 
             const Vector3f tpos(vecRects.back().x, vecRects.back().y, _mission_alt_cm.get() * 1.0f);
@@ -285,7 +277,7 @@ void ModeCNDN::run()
                     else if (stage == PREPARE_AUTO)
                     {
                         stage = AUTO;
-                        //auto_yaw.set_mode(AUTO_YAW_HOLD);
+                        //pos_control_start();
                         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to AUTO stages.");
                         copter.set_mode(Mode::Number::AUTO, ModeReason::RC_COMMAND);
                     }
@@ -313,10 +305,8 @@ void ModeCNDN::run()
             if (!vecPoints.empty())
             {
                 const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
-                const Vector3f epos = wp_nav->get_wp_destination();
                 wp_nav->set_wp_destination(tpos, false);
                 auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
-                const Vector3f rpos(tpos-epos), npos(1.0f,0.0f,0.0f);
                 vecPoints.pop_front();
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to next EDGE.");
             }
@@ -375,10 +365,7 @@ void ModeCNDN::run()
 bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool yaw_relative)
 {
     // ensure we are in position control mode
-    if (stage != TAKE_PICTURE)
-    {
-        pos_control_start();
-    }
+    pos_control_start();
 
 #if AC_FENCE == ENABLED
     // reject destination if outside the fence
@@ -453,7 +440,6 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                     stage = MOVE_TO_EDGE;
                 } else {
                     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
-                    pos_control_start();
                     return_to_manual_control(false);
                 }
             } else {
@@ -465,6 +451,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     case PREPARE_FOLLOW:
         if (dest_num == 2)
         {
+            pos_control_start();
             if (!vecPoints.empty())
             {
                 Vector3f hpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
@@ -478,7 +465,6 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             else
             {
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
-                pos_control_start();
                 return_to_manual_control(false);
             }
         }
