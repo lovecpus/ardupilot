@@ -219,7 +219,6 @@ void ModeCNDN::run()
     // initialize vertical speed and acceleration's range
     pos_control->set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
     pos_control->set_max_accel_z(g.pilot_accel_z);
-
     // get pilot desired climb rate
     float target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());
     target_climb_rate = constrain_float(target_climb_rate, -get_pilot_speed_dn(), g.pilot_speed_up);
@@ -420,6 +419,9 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 
         if (dest_num > 0) {
             pos_control_start();
+            pos_control->set_max_speed_xy(wp_nav->get_default_speed_xy());
+            pos_control->set_max_accel_xy(wp_nav->get_wp_acceleration());
+
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Image with ETRI-MC. [%d,%d]", int(copter._home_bearing), int(copter.initial_armed_bearing));
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             // set to position control mode
