@@ -98,6 +98,9 @@ bool ModeCNDN::init(bool ignore_checks)
 
         // process pilot's roll and pitch input
         loiter_nav->set_pilot_desired_acceleration(target_roll, target_pitch, G_Dt);
+
+        pos_control->set_max_speed_xy(wp_nav->get_default_speed_xy());
+        pos_control->set_max_accel_xy(wp_nav->get_wp_acceleration());
     }
     else
     {
