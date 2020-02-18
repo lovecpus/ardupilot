@@ -259,7 +259,8 @@ void ModeCNDN::run()
             const Vector3f tpos(vecRects.back().x, vecRects.back().y, _mission_alt_cm.get() * 1.0f);
             wp_nav->set_wp_destination(tpos, false);
             pos_control->init_xy_controller();
-            auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
+            //auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
+            auto_yaw.set_mode(AUTO_YAW_HOLD);
         }
     } break;
 
