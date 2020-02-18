@@ -730,9 +730,9 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             p1 += step1;
             p2 += step2;
 
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Spray width %0.1f", lw_cm);
+            float ll_cm = lw_cm;
 
-            for (float l = 0.0f; l < ldir-lw_cm * 2.05f; l += lw_cm * 2.0f)
+            for (float l = 0.0f; l < ldir - lw_cm; l += lw_cm * 2.0f)
             {
                 p4 = p1 + step1;
                 p3 = p2 + step2;
@@ -749,6 +749,11 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
                 AP::mission()->add_cmd(cmd);
 
+                ll_cm += lw_cm;
+
+                if (ll_cm > ldir - lw_cm)
+                    break;
+
                 cmd.id = MAV_CMD_NAV_WAYPOINT;
                 cmd.p1 = 1;
                 cmd.content.location = Location(Vector3f(p3.x, p3.y, _mission_alt_cm.get()*1.0f));
@@ -763,6 +768,8 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
                 p1 = p4 + step1;
                 p2 = p3 + step2;
+
+                ll_cm += lw_cm;
             }
 /*
             cmd.id = MAV_CMD_NAV_WAYPOINT;
