@@ -700,10 +700,10 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             Location l2(Vector3f(vecRects[2].x+fd1.x, vecRects[2].y+fd1.y, _mission_alt_cm.get()*1.0f));
             Location l3(Vector3f(vecRects[3].x+fd1.x, vecRects[3].y+fd1.y, _mission_alt_cm.get()*1.0f));
 
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 1 %0.7f, %0.7f", l0.lat/1E7, l0.lng/1E7);
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 2 %0.7f, %0.7f", l1.lat/1E7, l1.lng/1E7);
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 3 %0.7f, %0.7f", l2.lat/1E7, l2.lng/1E7);
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 4 %0.7f, %0.7f", l3.lat/1E7, l3.lng/1E7);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 1 %ld; %ld;", l0.lat, l0.lng);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 2 %ld; %ld;", l1.lat, l1.lng);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 3 %ld; %ld;", l2.lat, l2.lng);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 4 %ld; %ld;", l3.lat, l3.lng);
 #endif            
 
             AP_Mission::Mission_Command cmd;
