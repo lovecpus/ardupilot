@@ -703,7 +703,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             cmd.content.location = AP::ahrs().get_home();
             AP::mission()->add_cmd(cmd);
 
-            Vector2f vd1 = (vecRects[0] - vecRects[3]); // step vector
+            Vector2f vd1 = (vecRects[3] - vecRects[0]); // step vector
             Vector2f vd2 = (vecRects[2] - vecRects[1]); // step vector
             Vector2f p1(vecRects[0]),p2(vecRects[1]),p3,p4;
             float ldir = vd2.length();
