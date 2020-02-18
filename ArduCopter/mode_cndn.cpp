@@ -185,7 +185,9 @@ bool ModeCNDN::init(bool ignore_checks)
     }
 #endif
 
-    pos_control_start();
+    //pos_control_start();
+    wp_nav->wp_and_spline_init();
+
     if (stage != RETURN_AUTO)
     {
 #if !CNDN_PARAMS
@@ -419,7 +421,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             break;
 
         if (dest_num > 0) {
-            pos_control_start();
+            wp_nav->wp_and_spline_init();
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Image with ETRI-MC. [%d,%d]", int(copter._home_bearing), int(copter.initial_armed_bearing));
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             // set to position control mode
@@ -451,7 +453,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     case PREPARE_FOLLOW:
         if (dest_num == 2)
         {
-            pos_control_start();
+            wp_nav->wp_and_spline_init();
             if (!vecPoints.empty())
             {
                 Vector3f hpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
@@ -480,7 +482,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     {
         if (dest_num == 0)
         {
-            pos_control_start();
+            wp_nav->wp_and_spline_init();
             return_to_manual_control(false);
             return;
         }
@@ -812,6 +814,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
             if (_method.get() == 3)
             {
+                wp_nav->wp_and_spline_init();
                 if (!vecPoints.empty())
                 {
                     Vector3f hpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
@@ -825,7 +828,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 else
                 {
                     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
-                    pos_control_start();
                     return_to_manual_control(false);
                 }
             }
