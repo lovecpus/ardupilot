@@ -1082,6 +1082,9 @@ void ModeCNDN::auto_control()
             }else if (ferrv < 0.0f){
                 rf_lf->set_distance(50.0f);
                 rf_rt->set_distance(5.0f - fabsf(ferrv));
+            }else{
+                rf_lf->set_distance(50.0f);
+                rf_rt->set_distance(50.0f);
             }
 
             if (now - edge_time_ms > 250){   // 4Hz
