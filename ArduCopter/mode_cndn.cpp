@@ -4,8 +4,10 @@
 
 #if MODE_CNDN_ENABLED == ENABLED
 
+#if USE_EDGE_FOLLOW == ENABLED
 AP_RangeFinder_ETRI *rf_rt = nullptr;
 AP_RangeFinder_ETRI *rf_lf = nullptr;
+#endif
 
 int degNE(const Vector2f& pp)
 {
@@ -278,6 +280,7 @@ void ModeCNDN::init_speed()
 
 void ModeCNDN::run()
 {
+#if USE_EDGE_FOLLOW == ENABLED
     if (rf_rt == nullptr) rf_rt = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(1);
     if (rf_lf == nullptr) rf_lf = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(2);
     if (rf_rt != nullptr && rf_rt->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_rt = nullptr;
@@ -286,7 +289,7 @@ void ModeCNDN::run()
         rf_rt->set_distance(50.0f);
         rf_lf->set_distance(50.0f);
     }
-
+#endif
     // initialize vertical speed and acceleration's range
     pos_control->set_max_speed_z(-_spd_dn_cmss.get()*1.0f, _spd_up_cmss.get()*1.0f);
     pos_control->set_max_accel_z(g.pilot_accel_z);
@@ -1065,6 +1068,7 @@ void ModeCNDN::auto_control()
 
     // control edge following to attitute controller
 
+#if USE_EDGE_FOLLOW == ENABLED
     if (stage == EDGE_FOLLOW) {
         float fv = rc().channel(5)->norm_input();
         float ferrv = /*_dst_eg_cm.get() * 0.01f - */fv * 10.0f;
@@ -1082,13 +1086,13 @@ void ModeCNDN::auto_control()
                 rf_rt->set_distance(20.0f);
             }
         }
-    }
 
 #if AC_AVOID_ENABLED == ENABLED
-    // apply avoidance
-    copter.avoid.adjust_roll_pitch(roll_target, pitch_target, copter.aparm.angle_max);
+        // apply avoidance
+        copter.avoid.adjust_roll_pitch(roll_target, pitch_target, copter.aparm.angle_max);
 #endif
-
+    }
+#endif
     // call attitude controller
     if (auto_yaw.mode() == AUTO_YAW_HOLD) {
         // roll & pitch from waypoint controller, yaw rate from pilot
