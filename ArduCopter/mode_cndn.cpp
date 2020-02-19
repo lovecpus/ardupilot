@@ -4,6 +4,9 @@
 
 #if MODE_CNDN_ENABLED == ENABLED
 
+AP_RangeFinder_ETRI *rf_rt = nullptr;
+AP_RangeFinder_ETRI *rf_lf = nullptr;
+
 int degNE(const Vector2f& pp)
 {
     Vector2f npos = pp.normalized();
@@ -275,6 +278,15 @@ void ModeCNDN::init_speed()
 
 void ModeCNDN::run()
 {
+    if (rf_rt == nullptr) rf_rt = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(1);
+    if (rf_lf == nullptr) rf_lf = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(2);
+    if (rf_rt != nullptr && rf_rt->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_rt = nullptr;
+    if (rf_lf != nullptr && rf_lf->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_lf = nullptr;
+    if (stage != EDGE_FOLLOW && rf_rt!=nullptr && rf_lf != nullptr){
+        rf_rt->set_distance(50.0f);
+        rf_lf->set_distance(50.0f);
+    }
+
     // initialize vertical speed and acceleration's range
     pos_control->set_max_speed_z(-_spd_dn_cmss.get()*1.0f, _spd_up_cmss.get()*1.0f);
     pos_control->set_max_accel_z(g.pilot_accel_z);
@@ -1031,9 +1043,6 @@ void ModeCNDN::pos_control_start()
 
 void ModeCNDN::auto_control()
 {
-    static AP_RangeFinder_ETRI *rf_rt = nullptr;
-    static AP_RangeFinder_ETRI *rf_lf = nullptr;
-
     // process pilot's yaw input
     float target_yaw_rate = 0;
     if (!copter.failsafe.radio)
@@ -1055,10 +1064,6 @@ void ModeCNDN::auto_control()
     float pitch_target = wp_nav->get_pitch();
 
     // control edge following to attitute controller
-    if (rf_rt == nullptr) rf_rt = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(1);
-    if (rf_lf == nullptr) rf_lf = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(2);
-    if (rf_rt != nullptr && rf_rt->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_rt = nullptr;
-    if (rf_lf != nullptr && rf_lf->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_lf = nullptr;
 
     if (stage == EDGE_FOLLOW) {
 
@@ -1080,12 +1085,6 @@ void ModeCNDN::auto_control()
             }
         }
     }
-    else
-    {
-        rf_rt->set_distance(5000.0f);
-        rf_lf->set_distance(5000.0f);
-    }
-    
 
     // call attitude controller
     if (auto_yaw.mode() == AUTO_YAW_HOLD) {
