@@ -83,9 +83,7 @@ protected:
     const char *name() const override { return "CNDN_ETRI"; }
     const char *name4() const override { return "CNDN"; }
 
-#if defined(_DEBUG)
     void live_log(const char *fmt, ...);
-#endif
 
 private:
     void init_speed();

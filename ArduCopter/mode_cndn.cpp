@@ -437,7 +437,6 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
     return true;
 }
 
-#if defined(_DEBUG)
 void ModeCNDN::live_log(const char *fmt, ...)
 {
     uint32_t now = AP_HAL::millis();
@@ -456,7 +455,6 @@ void ModeCNDN::live_log(const char *fmt, ...)
     va_end(args);
     gcs().send_text(MAV_SEVERITY_INFO, "%s", buff);
 }
-#endif
 
 // save current position as A (dest_num = 0) or B (dest_num = 1).  If both A and B have been saved move to the one specified
 void ModeCNDN::mission_command(uint8_t dest_num)
@@ -1051,11 +1049,13 @@ void ModeCNDN::auto_control()
     float pitch_target = wp_nav->get_pitch();
 
     // control edge following to attitute controller
-    float fv = rc().channel(5)->norm_input();
-    float ferrv = _dst_eg_cm.get() * 0.01f - fv * 5.0f;
     if (stage == EDGE_FOLLOW)
     {
-        roll_target += ferrv * 0.001f;
+        float fv = rc().channel(5)->norm_input();
+        float ferrv = _dst_eg_cm.get() * 0.01f - fv * 5.0f;
+        roll_target += ferrv * 0.1f;
+
+        live_log("[CNDN] %0.4f, %0.4f", fv, ferrv);
     }
 
     // call attitude controller
