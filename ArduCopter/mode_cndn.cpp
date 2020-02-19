@@ -443,7 +443,7 @@ void ModeCNDN::live_log(const char *fmt, ...)
     if (reach_wp_logt_ms == 0)
         reach_wp_logt_ms = now;
 
-    if ((now - reach_wp_logt_ms) < 500)
+    if ((now - reach_wp_logt_ms) < 200)
         return;
 
     reach_wp_logt_ms = now;
