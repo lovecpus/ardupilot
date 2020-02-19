@@ -1053,8 +1053,8 @@ void ModeCNDN::auto_control()
 
     // control edge following to attitute controller
     if (stage == EDGE_FOLLOW) {
-        AP_RangeFinder_Backend *backend = AP::rangefinder()->find_instance(2);
-        AP_RangeFinder_Backend *backend = AP::rangefinder()->find_instance(6);
+        AP_RangeFinder_Backend *backend = AP::rangefinder()->find_instance(Rotation::ROTATION_YAW_90);
+        AP_RangeFinder_Backend *backend = AP::rangefinder()->find_instance(Rotation::ROTATION_YAW_270);
 
         uint32_t now = AP_HAL::millis();
         if (edge_time_ms == 0)
