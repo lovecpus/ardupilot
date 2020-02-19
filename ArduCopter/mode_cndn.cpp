@@ -260,7 +260,7 @@ void ModeCNDN::init_speed()
     wp_nav->set_speed_up(_spd_up_cmss.get()*1.0f);
     wp_nav->set_speed_down(_spd_dn_cmss.get()*1.0f);
     wp_nav->wp_and_spline_init();
-    pos_control->set_max_accel_xy(_acc_xy_cmss.get()*1.0f);
+    pos_control->set_max_accel_xy(_acc_xy_cms.get()*1.0f);
     pos_control->calc_leash_length_xy();
 }
 
