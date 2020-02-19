@@ -56,7 +56,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Description: Mode using method of CNDN & ETRI Mission computer
     // @Values: 0: Disable, 1: All enable, 2: Take picture only, 2: Edge follow only, 3: Take picture after Edge following
     // @User: Standard
-    AP_GROUPINFO_FLAGS("METHOD", 0, ModeCNDN, _method, 1, AP_PARAM_FLAG_ENABLE),
+    AP_GROUPINFO_FLAGS("METHOD", 0, ModeCNDN, _method, 3, AP_PARAM_FLAG_ENABLE),
 
     // @Param: TAKE_ALT
     // @DisplayName: Take picture altitute
@@ -82,13 +82,21 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("SPRAY_WIDTH", 3, ModeCNDN, _spray_width_cm, 400),
 
+    // @Param: ACC_XY
+    // @DisplayName: Acceleration xy
+    // @Description: ground speed acceleration
+    // @Units: cms
+    // @Range: 50 2000
+    // @User: Standard
+    AP_GROUPINFO("ACC_XY", 4, ModeCNDN, _acc_xy_cms, 200),
+
     // @Param: SPD_XY
     // @DisplayName: Speed xy
     // @Description: ground speed
     // @Units: cms
     // @Range: 50 2000
     // @User: Standard
-    AP_GROUPINFO("SPD_XY", 4, ModeCNDN, _spd_xy_cms, 500),
+    AP_GROUPINFO("SPD_XY", 5, ModeCNDN, _spd_xy_cmss, 400),
 
     // @Param: SPD_UP
     // @DisplayName: Z Speed Up
@@ -96,7 +104,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Units: cms
     // @Range: 50 1000
     // @User: Standard
-    AP_GROUPINFO("SPD_UP", 5, ModeCNDN, _spd_up_cms, 200),
+    AP_GROUPINFO("SPD_UP", 6, ModeCNDN, _spd_up_cmss, 200),
 
     // @Param: SPD_DN
     // @DisplayName: Z Speed Down
@@ -104,41 +112,33 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Units: cms
     // @Range: 30 500
     // @User: Standard
-    AP_GROUPINFO("SPD_DN", 6, ModeCNDN, _spd_dn_cms, 100),
+    AP_GROUPINFO("SPD_DN", 7, ModeCNDN, _spd_dn_cmss, 100),
+
+    // @Param: SPD_EDGE
+    // @DisplayName: Edge Speed
+    // @Description: ground Speed xy for Edge
+    // @Units: cms
+    // @Range: 50 2000
+    // @User: Standard
+    AP_GROUPINFO("SPD_EDGE", 8, ModeCNDN, _spd_eg_cmss, 300),
 
     AP_GROUPEND
 };
 
-bool ModeCNDN::init(bool ignore_checks)
+ModeCNDN::ModeCNDN()
 {
-    if (!copter.failsafe.radio)
-    {
-        float target_roll, target_pitch;
-        // apply SIMPLE mode transform to pilot inputs
-        update_simple_mode();
+    AP_Param::setup_object_defaults(this, var_info);
 
-        // convert pilot input to lean angles
-        get_pilot_desired_lean_angles(target_roll, target_pitch, loiter_nav->get_angle_max_cd(), attitude_control->get_althold_lean_angle_max());
-
-        // process pilot's roll and pitch input
-        loiter_nav->set_pilot_desired_acceleration(target_roll, target_pitch, G_Dt);
-
-        pos_control->set_max_speed_xy(wp_nav->get_default_speed_xy());
-        pos_control->set_max_accel_xy(wp_nav->get_wp_acceleration());
-    }
-    else
-    {
-        // clear out pilot desired acceleration in case radio failsafe event occurs and we do not switch to RTL for some reason
-        loiter_nav->clear_pilot_desired_acceleration();
-    }
-    loiter_nav->init_target();
-
-    // initialise position and desired velocity
-    if (!pos_control->is_active_z())
-    {
-        pos_control->set_alt_target_to_current_alt();
-        pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
-    }
+#if !CNDN_PARAMS
+        _method.set(3);
+        _take_alt_cm.set(1500);
+        _mission_alt_cm.set(300);
+        _spray_width_cm.set(400);
+        _acc_xy_cms.set(200);
+        _spd_xy_cms.set(500);
+        _spd_up_cms.set(200);
+        _spd_dn_cms.set(100);        
+#endif
 
 #if defined(SIM_LOCATION)
     if (vecAreas.empty())
@@ -201,18 +201,38 @@ bool ModeCNDN::init(bool ignore_checks)
     }
 #endif
 
+}
+
+bool ModeCNDN::init(bool ignore_checks)
+{
+    if (!copter.failsafe.radio)
+    {
+        float target_roll, target_pitch;
+        // apply SIMPLE mode transform to pilot inputs
+        update_simple_mode();
+
+        // convert pilot input to lean angles
+        get_pilot_desired_lean_angles(target_roll, target_pitch, loiter_nav->get_angle_max_cd(), attitude_control->get_althold_lean_angle_max());
+
+        // process pilot's roll and pitch input
+        loiter_nav->set_pilot_desired_acceleration(target_roll, target_pitch, G_Dt);
+    }
+    else
+    {
+        // clear out pilot desired acceleration in case radio failsafe event occurs and we do not switch to RTL for some reason
+        loiter_nav->clear_pilot_desired_acceleration();
+    }
+    loiter_nav->init_target();
+
+    // initialise position and desired velocity
+    if (!pos_control->is_active_z())
+    {
+        pos_control->set_alt_target_to_current_alt();
+        pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
+    }
+
     if (stage != RETURN_AUTO)
     {
-#if !CNDN_PARAMS
-        _method.set(3);
-        _take_alt_cm.set(1500);
-        _mission_alt_cm.set(300);
-        _spray_width_cm.set(400);
-        _spd_xy_cms.set(500);
-        _spd_up_cms.set(200);
-        _spd_dn_cms.set(100);        
-#endif
-
         // initialise waypoint state
         stage = MANUAL;
         b_position_target = false;
@@ -228,22 +248,29 @@ bool ModeCNDN::init(bool ignore_checks)
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MISSION COMPLETE.");
     }
 
-    wp_nav->set_speed_xy(_spd_xy_cms.get()*1.0f);
-    wp_nav->set_speed_up(_spd_up_cms.get()*1.0f);
-    wp_nav->set_speed_down(_spd_dn_cms.get()*1.0f);
-    wp_nav->wp_and_spline_init();
+    init_speed();
 
     return true;
+}
+
+void ModeCNDN::init_speed()
+{
+    wp_nav->set_speed_xy(_spd_xy_cmss.get()*1.0f);
+    wp_nav->set_speed_up(_spd_up_cmss.get()*1.0f);
+    wp_nav->set_speed_down(_spd_dn_cmss.get()*1.0f);
+    wp_nav->wp_and_spline_init();
+    pos_control.set_max_accel_xy(_acc_xy_cmss.get()*1.0f);
+    pos_control.calc_leash_length_xy();
 }
 
 void ModeCNDN::run()
 {
     // initialize vertical speed and acceleration's range
-    pos_control->set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
+    pos_control->set_max_speed_z(-_spd_dn_cmss.get()*1.0f, _spd_up_cmss.get()*1.0f);
     pos_control->set_max_accel_z(g.pilot_accel_z);
     // get pilot desired climb rate
     float target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());
-    target_climb_rate = constrain_float(target_climb_rate, -get_pilot_speed_dn(), g.pilot_speed_up);
+    target_climb_rate = constrain_float(target_climb_rate, -_spd_dn_cmss.get()*1.0f, _spd_up_cmss.get()*1.0f);
 
     motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 

@@ -58,6 +58,7 @@ class ModeCNDN : public Mode
 public:
     // inherit constructor
     using Mode::Mode;
+    ModeCNDN();
 
     bool init(bool ignore_checks) override;
     void run() override;
@@ -87,6 +88,7 @@ protected:
 #endif
 
 private:
+    void init_speed();
     void pos_control_start();
     void auto_control();
     void manual_control();
@@ -132,8 +134,10 @@ private:
     AP_Int16        _take_alt_cm;           ///< Altitute of take picture
     AP_Int16        _mission_alt_cm;        ///< Mission altitute
     AP_Int16        _spray_width_cm;        ///< Spray width
-    AP_Int16        _spd_up_cms;            ///< SPEED UP cms
-    AP_Int16        _spd_dn_cms;            ///< SPEED DN cms
-    AP_Int16        _spd_xy_cms;            ///< SPEED XY cms
+    AP_Int16        _acc_xy_cms;            ///< ACC_XY cms
+    AP_Int16        _spd_xy_cmss;           ///< SPD_XY cmss
+    AP_Int16        _spd_up_cmss;           ///< SPD_UP cmss
+    AP_Int16        _spd_dn_cmss;           ///< SPD_DN cmss
+    AP_Int16        _spd_eg_cmss;           ///< SPD_EDGE cmss
 };
 #endif
