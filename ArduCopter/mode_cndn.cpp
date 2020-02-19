@@ -129,16 +129,17 @@ ModeCNDN::ModeCNDN()
 {
     AP_Param::setup_object_defaults(this, var_info);
 
-#if !CNDN_PARAMS
-        _method.set(3);
-        _take_alt_cm.set(1500);
-        _mission_alt_cm.set(300);
-        _spray_width_cm.set(400);
-        _acc_xy_cms.set(200);
-        _spd_xy_cms.set(500);
-        _spd_up_cms.set(200);
-        _spd_dn_cms.set(100);        
-#endif
+// #if !CNDN_PARAMS
+//         _method.set(3);
+//         _take_alt_cm.set(1500);
+//         _mission_alt_cm.set(300);
+//         _spray_width_cm.set(400);
+//         _acc_xy_cms.set(200);
+//         _spd_xy_cmss.set(500);
+//         _spd_up_cmss.set(200);
+//         _spd_dn_cmss.set(100);        
+//         _spd_eg_cmss.set(200);
+// #endif
 
 #if defined(SIM_LOCATION)
     if (vecAreas.empty())
@@ -324,7 +325,7 @@ void ModeCNDN::run()
                     else if (stage == PREPARE_AUTO)
                     {
                         stage = AUTO;
-                        //pos_control_start();
+                        init_speed();
                         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] GO WITH MISSIONS.");
                         copter.set_mode(Mode::Number::AUTO, ModeReason::RC_COMMAND);
                     }
@@ -366,6 +367,11 @@ void ModeCNDN::run()
         if (reached_destination())
         {
             stage = EDGE_FOLLOW;
+            // speed control for edge
+            init_speed();
+            pos_control.set_max_speed_xy(_spd_eg_cmss.get()*1.0f);
+            pos_control.calc_leash_length_xy();
+
             if (!vecPoints.empty())
             {
                 const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
