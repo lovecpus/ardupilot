@@ -1066,11 +1066,6 @@ void ModeCNDN::auto_control()
     // control edge following to attitute controller
 
     if (stage == EDGE_FOLLOW) {
-
-        uint32_t now = AP_HAL::millis();
-        if (edge_time_ms == 0)
-            edge_time_ms = now;
-
         float fv = rc().channel(5)->norm_input();
         float ferrv = /*_dst_eg_cm.get() * 0.01f - */fv * 10.0f;
 
@@ -1085,11 +1080,6 @@ void ModeCNDN::auto_control()
             }else{
                 rf_lf->set_distance(20.0f);
                 rf_rt->set_distance(20.0f);
-            }
-
-            if (now - edge_time_ms > 250){   // 4Hz
-                edge_time_ms = now;
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %0.1f/%0.1f=>%0.4f", fv, ferrv, roll_target);
             }
         }
     }
