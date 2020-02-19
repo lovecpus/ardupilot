@@ -132,8 +132,6 @@ bool ModeCNDN::init(bool ignore_checks)
         vecAreas.push_back(area);
 
         // 금산1
-        // area.latitude1  = 36.1109888f;
-        // area.longitude1 = 127.5233023f;
         area.latitude1  = 36.1111974f;
         area.longitude1 = 127.5232490f;
         area.latitude2  = 36.1112895f;
@@ -167,14 +165,14 @@ bool ModeCNDN::init(bool ignore_checks)
         vecAreas.push_back(area);
 
         // 금산4
-        area.latitude1  = 36.11126660f;
-        area.longitude1 = 127.52323910f;
-        area.latitude2  = 36.11147140f;
-        area.longitude2 = 127.52319350f;
-        area.latitude3  = 36.11157210f;
-        area.longitude3 = 127.52393510f;
-        area.latitude4  = 36.11135330f;
-        area.longitude4 = 127.52398480f;
+        area.latitude1  = 36.11126150f;
+        area.longitude1 = 127.52323980f;
+        area.latitude2  = 36.11146870f;
+        area.longitude2 = 127.52319220f;
+        area.latitude3  = 36.11156560f;
+        area.longitude3 = 127.52393580f;
+        area.latitude4  = 36.11134240f;
+        area.longitude4 = 127.52398680f;
         vecAreas.push_back(area);
     }
 #endif
@@ -405,7 +403,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             pos_control->set_max_speed_xy(wp_nav->get_default_speed_xy());
             pos_control->set_max_accel_xy(wp_nav->get_wp_acceleration());
 
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Image with ETRI-MC. [%d,%d]", int(copter._home_bearing), int(copter.initial_armed_bearing));
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Image with ETRI-MC.");
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             // set to position control mode
             if (_method.get() == 2) {
@@ -684,7 +682,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] CAMERA_TRIGGERED, Prepare to EDGE FOLLOW.");
             AP_Notify::events.waypoint_complete = 1;
 
-#if 1
+#if 0
             Vector3f fd1(-1,-1,0); fd1.normalize();
             Location l0(Vector3f(vecRects[0].x+fd1.x, vecRects[0].y+fd1.y, _mission_alt_cm.get()*1.0f));
             Location l1(Vector3f(vecRects[1].x+fd1.x, vecRects[1].y+fd1.y, _mission_alt_cm.get()*1.0f));
@@ -826,17 +824,8 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             wp_nav->wp_and_spline_init();
 
 #if defined(SIM_LOCATION)
-            packet.latitude1  = 37.2842096f;
-            packet.longitude1 = 126.8735343f;
-            packet.latitude2  = 37.2836760f;
-            packet.longitude2 = 126.8727310f;
-            packet.latitude3  = 37.2839001f;
-            packet.longitude3 = 126.8725044f;
-            packet.latitude4  = 37.2844283f;
-            packet.longitude4 = 126.8733077f;
-
+            packet.edge_count = 0;
             Location loc(copter.current_loc);
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] TEST %d,%d", int(loc.lat), int(loc.lng));
             for(uint16_t i=0; i<vecAreas.size(); i++)
             {
                 CNAREA& area = vecAreas[i];
@@ -850,11 +839,10 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 packet.longitude3 = area.longitude3;
                 packet.latitude4  = area.latitude4 ;
                 packet.longitude4 = area.longitude4;
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Inside area %d", i);
+                packet.edge_count = 4;
                 break;
             }
 #endif
-
             edge_count = packet.edge_count;
 
             for (int i = 0; i < 10; i++)
