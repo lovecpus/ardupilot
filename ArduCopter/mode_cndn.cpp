@@ -1183,7 +1183,7 @@ void ModeCNDN::set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, floa
 
 void ModeCNDN::return_to_mode()
 {
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Return to CNDN mode.");
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] RELAY TO CNDN.");
     stage = RETURN_AUTO;
     copter.set_mode(Mode::Number::CNDN, ModeReason::MISSION_END);
 }
