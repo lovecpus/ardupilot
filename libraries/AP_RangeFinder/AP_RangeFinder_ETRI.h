@@ -4,7 +4,7 @@
 #include "RangeFinder_Backend.h"
 
 // Data timeout
-#define AP_RANGEFINDER_ETRI_TIMEOUT_MS 500
+#define AP_RANGEFINDER_ETRI_TIMEOUT_MS 2500
 
 class AP_RangeFinder_ETRI : public AP_RangeFinder_Backend
 {

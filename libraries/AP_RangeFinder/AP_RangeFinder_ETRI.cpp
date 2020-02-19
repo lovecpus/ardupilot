@@ -60,8 +60,8 @@ void AP_RangeFinder_ETRI::update(void)
     //Time out on incoming data; if we don't get new
     //data in 500ms, dump it
     if (AP_HAL::millis() - state.last_reading_ms > AP_RANGEFINDER_ETRI_TIMEOUT_MS) {
-        set_status(RangeFinder::RangeFinder_NoData);
-        state.distance_cm = 0;
+        set_status(RangeFinder::RangeFinder_Good);
+        state.distance_cm = 5000;
     } else {
         state.distance_cm = distance_cm;
         update_status();
