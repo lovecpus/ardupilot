@@ -1055,11 +1055,12 @@ void ModeCNDN::auto_control()
     float pitch_target = wp_nav->get_pitch();
 
     // control edge following to attitute controller
+    if (rf_rt == nullptr) rf_rt = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(1);
+    if (rf_lf == nullptr) rf_lf = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(2);
+    if (rf_rt != nullptr && rf_rt->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_rt = nullptr;
+    if (rf_lf != nullptr && rf_lf->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_lf = nullptr;
+
     if (stage == EDGE_FOLLOW) {
-        if (rf_rt == nullptr) rf_rt = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(1);
-        if (rf_lf == nullptr) rf_lf = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(2);
-        if (rf_rt != nullptr && rf_rt->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_rt = nullptr;
-        if (rf_lf != nullptr && rf_lf->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_lf = nullptr;
 
         uint32_t now = AP_HAL::millis();
         if (edge_time_ms == 0)
@@ -1071,12 +1072,21 @@ void ModeCNDN::auto_control()
 
         if (rf_rt != nullptr && rf_lf != nullptr)
         {
+            rf_rt->set_distance(5000.0f - fabsf(ferrv));
+            rt_lf->set_distance(5000.0f - fabsf(ferrv));
+
             if (now - edge_time_ms > 250){   // 4Hz
                 edge_time_ms = now;
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %0.1f/%0.1f=>%0.4f", fv, ferrv, roll_target);
             }
         }
     }
+    else
+    {
+        rf_rt->set_distance(5000.0f);
+        rt_lf->set_distance(5000.0f);
+    }
+    
 
     // call attitude controller
     if (auto_yaw.mode() == AUTO_YAW_HOLD) {
