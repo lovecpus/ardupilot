@@ -1057,6 +1057,7 @@ void ModeCNDN::auto_control()
             edge_time_ms = now;
 
         if (now - edge_time_ms > 250){   // 4Hz
+            edge_time_ms = now;
             float fv = rc().channel(5)->norm_input();
             float ferrv = /*_dst_eg_cm.get() * 0.01f - */fv * 5.0f;
             roll_target += ferrv * 200.0f;
