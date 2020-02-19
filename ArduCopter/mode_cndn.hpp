@@ -128,9 +128,12 @@ private:
     uint16_t loiter_time_max;                // How long we should stay in Loiter Mode for mission scripting (time in seconds)
 
     // parameters
-    AP_Int8         _method;               ///< CNDN Method 0: Disable, 1: Take Picture, 2: Edge following and auto mission, 3: Take picture after Edge following
-    AP_Int16        _take_alt_cm;          ///< Altitute of take picture
-    AP_Int16        _mission_alt_cm;       ///< Mission altitute
-    AP_Int16        _spray_width_cm;       ///< Spray width
+    AP_Int8         _method;                ///< CNDN Method 0: Disable, 1: Take Picture, 2: Edge following and auto mission, 3: Take picture after Edge following
+    AP_Int16        _take_alt_cm;           ///< Altitute of take picture
+    AP_Int16        _mission_alt_cm;        ///< Mission altitute
+    AP_Int16        _spray_width_cm;        ///< Spray width
+    AP_Int16        _spd_up_cms;            ///< SPEED UP cms
+    AP_Int16        _spd_dn_cms;            ///< SPEED DN cms
+    AP_Int16        _spd_xy_cms;            ///< SPEED XY cms
 };
 #endif

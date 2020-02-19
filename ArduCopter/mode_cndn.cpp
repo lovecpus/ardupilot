@@ -82,6 +82,30 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("SPRAY_WIDTH", 3, ModeCNDN, _spray_width_cm, 400),
 
+    // @Param: SPD_XY
+    // @DisplayName: Speed xy
+    // @Description: ground speed
+    // @Units: cms
+    // @Range: 50 2000
+    // @User: Standard
+    AP_GROUPINFO("SPD_XY", 4, ModeCNDN, _spd_xy_cms, 500),
+
+    // @Param: SPD_UP
+    // @DisplayName: Z Speed Up
+    // @Description: z speed for up
+    // @Units: cms
+    // @Range: 50 1000
+    // @User: Standard
+    AP_GROUPINFO("SPD_UP", 5, ModeCNDN, _spd_up_cms, 200),
+
+    // @Param: SPD_DN
+    // @DisplayName: Z Speed Down
+    // @Description: z speed for down
+    // @Units: cms
+    // @Range: 30 500
+    // @User: Standard
+    AP_GROUPINFO("SPD_DN", 6, ModeCNDN, _spd_dn_cms, 100),
+
     AP_GROUPEND
 };
 
@@ -177,8 +201,6 @@ bool ModeCNDN::init(bool ignore_checks)
     }
 #endif
 
-    wp_nav->wp_and_spline_init();
-
     if (stage != RETURN_AUTO)
     {
 #if !CNDN_PARAMS
@@ -186,6 +208,9 @@ bool ModeCNDN::init(bool ignore_checks)
         _take_alt_cm.set(1500);
         _mission_alt_cm.set(300);
         _spray_width_cm.set(400);
+        _spd_xy_cms.set(500);
+        _spd_up_cms.set(200);
+        _spd_dn_cms.set(100);        
 #endif
 
         // initialise waypoint state
@@ -196,12 +221,17 @@ bool ModeCNDN::init(bool ignore_checks)
         dest_A.zero();
         dest_B.zero();
 
-        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mode initialzied.");
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MODE INITIALIZED.");
     }
     else
     {
-        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Mission complete.");
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MISSION COMPLETE.");
     }
+
+    wp_nav->set_speed_xy(_spd_xy_cms.get()*1.0f);
+    wp_nav->set_speed_up(_spd_up_cms.get()*1.0f);
+    wp_nav->set_speed_down(_spd_dn_cms.get()*1.0f);
+    wp_nav->wp_and_spline_init();
 
     return true;
 }
@@ -233,7 +263,7 @@ void ModeCNDN::run()
             b_position_target_reached = false;
             b_position_target = false;
 
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH stage.");
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH.");
 
             const Vector3f tpos(vecRects.back().x, vecRects.back().y, _mission_alt_cm.get() * 1.0f);
             wp_nav->set_wp_destination(tpos, false);
@@ -262,13 +292,13 @@ void ModeCNDN::run()
                         stage = FINISHED;
                         auto_yaw.set_mode(AUTO_YAW_HOLD);
                         AP_Notify::events.mission_complete = 1;
-                        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING stages.");
+                        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING.");
                     }
                     else if (stage == PREPARE_AUTO)
                     {
                         stage = AUTO;
                         //pos_control_start();
-                        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to AUTO stages.");
+                        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] GO WITH MISSIONS.");
                         copter.set_mode(Mode::Number::AUTO, ModeReason::RC_COMMAND);
                     }
                     
@@ -287,7 +317,7 @@ void ModeCNDN::run()
                 wp_nav->set_wp_destination(tpos, false);
                 auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
                 vecPoints.pop_front();
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to next EDGE.");
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] GO TO NEXT EDGE.");
             }
             else
             {
@@ -300,7 +330,6 @@ void ModeCNDN::run()
                     auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
                 }
                 gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to PREPARE_AUTO stage.");
             }
         }
         break;
@@ -318,7 +347,6 @@ void ModeCNDN::run()
                 gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
                 vecPoints.pop_front();
             }
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Change to EDGE_FOLLOW.");
         }
         break;
 
@@ -403,7 +431,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             pos_control->set_max_speed_xy(wp_nav->get_default_speed_xy());
             pos_control->set_max_accel_xy(wp_nav->get_wp_acceleration());
 
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Image with ETRI-MC.");
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SIGNAL TO ETRI-MC.");
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             // set to position control mode
             if (_method.get() == 2) {
@@ -418,11 +446,11 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                     wp_nav->set_wp_destination(hpos, false);
                     last_yaw_cd = degNE(vecPoints[1], vecPoints[0]) * 100.0f;
                     auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
-                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to start point.");
+                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
                     vecPoints.pop_front();
                     stage = MOVE_TO_EDGE;
                 } else {
-                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
+                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] NO DETECTED EDGES.");
                     return_to_manual_control(false);
                 }
             } else {
@@ -441,13 +469,13 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 wp_nav->set_wp_destination(hpos, false);
                 last_yaw_cd = degNE(vecPoints[1], vecPoints[0]) * 100.0f;
                 auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to start point.");
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
                 vecPoints.pop_front();
                 stage = MOVE_TO_EDGE;
             }
             else
             {
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] NO DETECTED EDGES.");
                 return_to_manual_control(false);
             }
         }
@@ -495,7 +523,7 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
         }
         auto_yaw.set_mode(AUTO_YAW_HOLD);
         gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
-        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Manual control");
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MANUAL CONTROL");
     }
 }
 
@@ -523,7 +551,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         Vector3f cpos = inertial_nav.get_position();
 
         bool bTargeted = false;
-        gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] SPT(%d) %0.3f,%0.3f,%0.3f", packet.coordinate_frame, packet.x, packet.y, packet.z);
         if (packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_LOCAL_NED)
         {
             if (packet.coordinate_frame == MAV_FRAME_BODY_NED)
@@ -625,7 +652,8 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             if (bTargeted)
             {
                 b_position_target = true;
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SPT ON %0.3f,%0.3f,%0.3f", pos_vector.x, pos_vector.y, pos_vector.z);
+                //gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SPT ON %0.3f,%0.3f,%0.3f", pos_vector.x, pos_vector.y, pos_vector.z);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SPT ON.");
             }
         }
     } break;
