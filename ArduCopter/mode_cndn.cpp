@@ -4,6 +4,8 @@
 
 #if MODE_CNDN_ENABLED == ENABLED
 
+#define USE_EDGE_FOLLOW DISABLED
+
 #if USE_EDGE_FOLLOW == ENABLED
 AP_RangeFinder_ETRI *rf_rt = nullptr;
 AP_RangeFinder_ETRI *rf_lf = nullptr;
