@@ -38,13 +38,13 @@ AP_RangeFinder_ETRI::AP_RangeFinder_ETRI(RangeFinder::RangeFinder_State &_state,
 */
 bool AP_RangeFinder_ETRI::detect()
 {
-    // Assume that if the user set the RANGEFINDER_TYPE parameter to MAVLink,
-    // there is an attached MAVLink rangefinder
+    // Assume that if the user set the RANGEFINDER_TYPE parameter to ETRI,
+    // there is an attached ETRI rangefinder
     return true;
 }
 
 /*
-   Set the distance based on a MAVLINK message
+   Set the distance based on a FC message
 */
 void AP_RangeFinder_ETRI::set_distance(float fdist_m)
 {

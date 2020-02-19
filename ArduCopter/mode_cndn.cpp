@@ -1,5 +1,6 @@
 #include "Copter.h"
 #include <stdio.h>
+#include <../libraries/AP_RangeFinder/AP_RangeFinder_ETRI.h>
 
 #if MODE_CNDN_ENABLED == ENABLED
 
@@ -1051,7 +1052,10 @@ void ModeCNDN::auto_control()
     float pitch_target = wp_nav->get_pitch();
 
     // control edge following to attitute controller
-    if (stage == EDGE_FOLLOW){
+    if (stage == EDGE_FOLLOW) {
+        AP_RangeFinder_Backend *backend = AP::rangefinder()->find_instance(2);
+        AP_RangeFinder_Backend *backend = AP::rangefinder()->find_instance(6);
+
         uint32_t now = AP_HAL::millis();
         if (edge_time_ms == 0)
             edge_time_ms = now;

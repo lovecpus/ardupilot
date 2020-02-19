@@ -35,5 +35,5 @@ private:
     static bool start_reading(void);
     static bool get_reading(uint16_t &reading_cm);
 
-    MAV_DISTANCE_SENSOR sensor_type = MAV_DISTANCE_SENSOR_UNKNOWN;
+    MAV_DISTANCE_SENSOR sensor_type = MAV_DISTANCE_SENSOR_LASER;
 };
