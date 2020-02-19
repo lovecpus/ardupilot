@@ -1031,6 +1031,9 @@ void ModeCNDN::pos_control_start()
 
 void ModeCNDN::auto_control()
 {
+    static AP_RangeFinder_ETRI *rf_rt = nullptr;
+    static AP_RangeFinder_ETRI *rf_lf = nullptr;
+
     // process pilot's yaw input
     float target_yaw_rate = 0;
     if (!copter.failsafe.radio)
@@ -1053,8 +1056,10 @@ void ModeCNDN::auto_control()
 
     // control edge following to attitute controller
     if (stage == EDGE_FOLLOW) {
-        AP_RangeFinder_Backend *rf_rt = AP::rangefinder()->find_instance(Rotation::ROTATION_YAW_90);
-        AP_RangeFinder_Backend *rf_lf = AP::rangefinder()->find_instance(Rotation::ROTATION_YAW_270);
+        if (rf_rt == nullptr) rf_rt = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(1);
+        if (rf_lf == nullptr) rf_lf = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(2);
+        if (rf_rt && rf_rt->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_rt = nullptr;
+        if (rf_lf && rf_lf->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_lf = nullptr;
 
         uint32_t now = AP_HAL::millis();
         if (edge_time_ms == 0)
@@ -1064,9 +1069,12 @@ void ModeCNDN::auto_control()
         float ferrv = /*_dst_eg_cm.get() * 0.01f - */fv * 5.0f;
         roll_target += ferrv * 1000.0f;
 
-        if (now - edge_time_ms > 250){   // 4Hz
-            edge_time_ms = now;
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %0.1f/%0.1f=>%0.4f", fv, ferrv, roll_target);
+        if (rf_rt != nullptr && rf_lf != nullptr)
+        {
+            if (now - edge_time_ms > 250){   // 4Hz
+                edge_time_ms = now;
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %0.1f/%0.1f=>%0.4f", fv, ferrv, roll_target);
+            }
         }
     }
 
