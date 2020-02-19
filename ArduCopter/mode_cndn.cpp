@@ -1068,12 +1068,11 @@ void ModeCNDN::auto_control()
 
         float fv = rc().channel(5)->norm_input();
         float ferrv = /*_dst_eg_cm.get() * 0.01f - */fv * 5.0f;
-        roll_target += ferrv * 1000.0f;
 
         if (rf_rt != nullptr && rf_lf != nullptr)
         {
-            rf_rt->set_distance(5000.0f - fabsf(ferrv));
-            rf_lf->set_distance(5000.0f - fabsf(ferrv));
+            rf_rt->set_distance(50.0f - fabsf(ferrv));
+            rf_lf->set_distance(50.0f - fabsf(ferrv));
 
             if (now - edge_time_ms > 250){   // 4Hz
                 edge_time_ms = now;
