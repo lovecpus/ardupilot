@@ -1073,7 +1073,7 @@ void ModeCNDN::auto_control()
         if (rf_rt != nullptr && rf_lf != nullptr)
         {
             rf_rt->set_distance(5000.0f - fabsf(ferrv));
-            rt_lf->set_distance(5000.0f - fabsf(ferrv));
+            rf_lf->set_distance(5000.0f - fabsf(ferrv));
 
             if (now - edge_time_ms > 250){   // 4Hz
                 edge_time_ms = now;
