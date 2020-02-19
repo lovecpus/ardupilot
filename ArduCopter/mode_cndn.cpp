@@ -1072,19 +1072,19 @@ void ModeCNDN::auto_control()
             edge_time_ms = now;
 
         float fv = rc().channel(5)->norm_input();
-        float ferrv = /*_dst_eg_cm.get() * 0.01f - */fv * 5.0f;
+        float ferrv = /*_dst_eg_cm.get() * 0.01f - */fv * 10.0f;
 
         if (rf_rt != nullptr && rf_lf != nullptr)
         {
             if (ferrv > 0.0f){
-                rf_lf->set_distance(5.0f - fabsf(ferrv));
-                rf_rt->set_distance(50.0f);
+                rf_lf->set_distance(10.0f - fabsf(ferrv));
+                rf_rt->set_distance(20.0f);
             }else if (ferrv < 0.0f){
-                rf_lf->set_distance(50.0f);
-                rf_rt->set_distance(5.0f - fabsf(ferrv));
+                rf_lf->set_distance(20.0f);
+                rf_rt->set_distance(10.0f - fabsf(ferrv));
             }else{
-                rf_lf->set_distance(50.0f);
-                rf_rt->set_distance(50.0f);
+                rf_lf->set_distance(20.0f);
+                rf_rt->set_distance(20.0f);
             }
 
             if (now - edge_time_ms > 250){   // 4Hz
