@@ -1052,7 +1052,7 @@ void ModeCNDN::auto_control()
 
     // control edge following to attitute controller
     float fv = rc().channel(5)->norm_input();
-    float ferrv = _dst_eg_cm.get() * 1.0f - fv * 500.0f;
+    float ferrv = _dst_eg_cm.get() * 0.01f - fv * 5.0f;
     if (stage == EDGE_FOLLOW)
     {
         roll_target += ferrv * 0.001f;
