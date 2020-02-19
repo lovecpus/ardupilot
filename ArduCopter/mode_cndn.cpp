@@ -1058,8 +1058,8 @@ void ModeCNDN::auto_control()
     if (stage == EDGE_FOLLOW) {
         if (rf_rt == nullptr) rf_rt = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(1);
         if (rf_lf == nullptr) rf_lf = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(2);
-        if (rf_rt && rf_rt->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_rt = nullptr;
-        if (rf_lf && rf_lf->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_lf = nullptr;
+        if (rf_rt != nullptr && rf_rt->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_rt = nullptr;
+        if (rf_lf != nullptr && rf_lf->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_lf = nullptr;
 
         uint32_t now = AP_HAL::millis();
         if (edge_time_ms == 0)
