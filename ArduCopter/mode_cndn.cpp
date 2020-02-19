@@ -760,31 +760,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
                 ll_cm += lw_cm;
             }
-/*
-            cmd.id = MAV_CMD_NAV_WAYPOINT;
-            cmd.p1 = 1;
-            cmd.content.location = Location(Vector3f(vecRects[0].x, vecRects[0].y, _mission_alt_cm.get()*1.0f));
-            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
-            AP::mission()->add_cmd(cmd);
 
-            cmd.id = MAV_CMD_NAV_WAYPOINT;
-            cmd.p1 = 1;
-            cmd.content.location = Location(Vector3f(vecRects[1].x, vecRects[1].y, _mission_alt_cm.get()*1.0f));
-            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
-            AP::mission()->add_cmd(cmd);
-
-            cmd.id = MAV_CMD_NAV_WAYPOINT;
-            cmd.p1 = 1;
-            cmd.content.location = Location(Vector3f(vecRects[2].x, vecRects[2].y, _mission_alt_cm.get()*1.0f));
-            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
-            AP::mission()->add_cmd(cmd);
-
-            cmd.id = MAV_CMD_NAV_WAYPOINT;
-            cmd.p1 = 1;
-            cmd.content.location = Location(Vector3f(vecRects[3].x, vecRects[3].y, _mission_alt_cm.get()*1.0f));
-            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
-            AP::mission()->add_cmd(cmd);
-*/           
             // mission finish command.
             cmd.id = MAV_CMD_DO_SET_RELAY;
             cmd.p1 = 0;
