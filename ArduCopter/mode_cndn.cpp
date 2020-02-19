@@ -1055,7 +1055,7 @@ void ModeCNDN::auto_control()
         float ferrv = _dst_eg_cm.get() * 0.01f - fv * 5.0f;
         roll_target += ferrv * 0.1f;
 
-        live_log("[CNDN] %0.4f, %0.4f", fv, ferrv);
+        live_log("[CNDN] %0.1f/%0.1f=>%0.4f", fv, ferrv, roll_target);
     }
 
     // call attitude controller
