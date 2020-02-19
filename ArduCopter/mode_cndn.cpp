@@ -120,7 +120,7 @@ bool ModeCNDN::init(bool ignore_checks)
     if (vecAreas.empty())
     {
         CNAREA area;
-        // 안산지점
+        // area0
         area.latitude1  = 37.2842096f;
         area.longitude1 = 126.8735343f;
         area.latitude2  = 37.2836760f;
@@ -131,7 +131,7 @@ bool ModeCNDN::init(bool ignore_checks)
         area.longitude4 = 126.8733077f;
         vecAreas.push_back(area);
 
-        // 금산1
+        // area1
         area.latitude1  = 36.1111974f;
         area.longitude1 = 127.5232490f;
         area.latitude2  = 36.1112895f;
@@ -142,7 +142,7 @@ bool ModeCNDN::init(bool ignore_checks)
         area.longitude4 = 127.5232995f;
         vecAreas.push_back(area);
 
-        // 금산2
+        // area2
         area.latitude1  = 36.11094270f;
         area.longitude1 = 127.52330280f;
         area.latitude2  = 36.11103640f;
@@ -153,18 +153,18 @@ bool ModeCNDN::init(bool ignore_checks)
         area.longitude4 = 127.52330820f;
         vecAreas.push_back(area);
 
-        // 금산3
-        area.latitude1  = 36.11068750f;
-        area.longitude1 = 127.52325650f;
-        area.latitude2  = 36.11077090f;
-        area.longitude2 = 127.52327000f;
-        area.latitude3  = 36.11089060f;
-        area.longitude3 = 127.52411020f;
-        area.latitude4  = 36.11081700f;
-        area.longitude4 = 127.52412890f;
+        // area3
+        area.latitude1  = 36.11078770f;
+        area.longitude1 = 127.52330480f;
+        area.latitude2  = 36.11089500f;
+        area.longitude2 = 127.52409070f;
+        area.latitude3  = 36.11080720f;
+        area.longitude3 = 127.52410950f;
+        area.latitude4  = 36.11068910f;
+        area.longitude4 = 127.52329010f;
         vecAreas.push_back(area);
 
-        // 금산4
+        // area4
         area.latitude1  = 36.11126150f;
         area.longitude1 = 127.52323980f;
         area.latitude2  = 36.11146870f;
