@@ -122,6 +122,14 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("SPD_EDGE", 8, ModeCNDN, _spd_eg_cmss, 300),
 
+    // @Param: DIS_EDGE
+    // @DisplayName: Distance Edge
+    // @Description: Distance from Edge
+    // @Units: cms
+    // @Range: 100 800
+    // @User: Standard
+    AP_GROUPINFO("DIS_EDGE", 9, ModeCNDN, _dst_eg_cm, 200),
+
     AP_GROUPEND
 };
 
@@ -1039,13 +1047,24 @@ void ModeCNDN::auto_control()
     // call z-axis position controller (wp_nav should have already updated its alt target)
     pos_control->update_z_controller();
 
+    float roll_target = wp_nav->get_roll();
+    float pitch_target = wp_nav->get_pitch();
+
+    // control edge following to attitute controller
+    float fv = rc().channel(5)->norm_input();
+    float ferrv = _dst_eg_cm.get() * 1.0f - fv * 500.0f;
+    if (stage == EDGE_FOLLOW)
+    {
+        roll_target += ferrv * 0.001f;
+    }
+
     // call attitude controller
     if (auto_yaw.mode() == AUTO_YAW_HOLD) {
         // roll & pitch from waypoint controller, yaw rate from pilot
-        attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(wp_nav->get_roll(), wp_nav->get_pitch(), target_yaw_rate);
+        attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(roll_target, pitch_target, target_yaw_rate);
     }else{
         // roll, pitch from waypoint controller, yaw heading from auto_heading()
-        attitude_control->input_euler_angle_roll_pitch_yaw(wp_nav->get_roll(), wp_nav->get_pitch(), auto_yaw.yaw(), true);
+        attitude_control->input_euler_angle_roll_pitch_yaw(roll_target, pitch_target, auto_yaw.yaw(), true);
     }
 
     // if wpnav failed (because of lack of terrain data) switch back to pilot control for next iteration

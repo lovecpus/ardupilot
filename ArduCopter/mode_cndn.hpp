@@ -139,5 +139,6 @@ private:
     AP_Int16        _spd_up_cmss;           ///< SPD_UP cmss
     AP_Int16        _spd_dn_cmss;           ///< SPD_DN cmss
     AP_Int16        _spd_eg_cmss;           ///< SPD_EDGE cmss
+    AP_Int16        _dst_eg_cm;             ///< DIS_EDGE cm
 };
 #endif
