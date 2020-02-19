@@ -1084,7 +1084,7 @@ void ModeCNDN::auto_control()
     else
     {
         rf_rt->set_distance(5000.0f);
-        rt_lf->set_distance(5000.0f);
+        rf_lf->set_distance(5000.0f);
     }
     
 
