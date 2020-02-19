@@ -460,9 +460,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             break;
 
         if (dest_num > 0) {
-            pos_control_start();
-            pos_control->set_max_speed_xy(wp_nav->get_default_speed_xy());
-            pos_control->set_max_accel_xy(wp_nav->get_wp_acceleration());
+            init_speed();
 
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SIGNAL TO ETRI-MC.");
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
@@ -832,14 +830,14 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
             if (_method.get() == 3)
             {
-                wp_nav->wp_and_spline_init();
+                init_speed();
                 if (!vecPoints.empty())
                 {
                     Vector3f hpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
                     wp_nav->set_wp_destination(hpos, false);
                     last_yaw_cd = degNE(vecPoints[1], vecPoints[0]) * 100.0f;
                     auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
-                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Move to start point.");
+                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
                     vecPoints.pop_front();
                     stage = MOVE_TO_EDGE;
                 }
