@@ -82,8 +82,9 @@ public:
 protected:
     const char *name() const override { return "CNDN_ETRI"; }
     const char *name4() const override { return "CNDN"; }
-
+#if 0
     void live_log(const char *fmt, ...);
+#endif
 
 private:
     void init_speed();
@@ -116,7 +117,7 @@ private:
 
     uint32_t reach_wp_time_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
     uint32_t reach_wp_logt_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
-    uint32_t debug_logt_ms = 0;
+    uint32_t edge_time_ms = 0;
     bool b_position_target = false;
     bool b_position_target_reached = false;
     uint8_t edge_count = 0;
