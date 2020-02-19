@@ -462,6 +462,10 @@ void ModeCNDN::mission_command(uint8_t dest_num)
         if (dest_num > 0) {
             init_speed();
 
+            Vector3f stopping_point;
+            wp_nav->get_wp_stopping_point(stopping_point);
+            wp_nav->set_wp_destination(stopping_point, false);
+
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SIGNAL TO ETRI-MC.");
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             // set to position control mode
