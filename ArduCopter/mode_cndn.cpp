@@ -441,13 +441,13 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
 void ModeCNDN::live_log(const char *fmt, ...)
 {
     uint32_t now = AP_HAL::millis();
-    if (reach_wp_logt_ms == 0)
-        reach_wp_logt_ms = now;
+    if (live_logt_ms == 0)
+        live_logt_ms = now;
 
-    if ((now - reach_wp_logt_ms) < 200)
+    if ((now - live_logt_ms) < 200)
         return;
 
-    reach_wp_logt_ms = now;
+    live_logt_ms = now;
 
     va_list args;
     char buff[128];
