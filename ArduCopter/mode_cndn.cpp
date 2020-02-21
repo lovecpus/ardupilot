@@ -173,55 +173,46 @@ ModeCNDN::ModeCNDN()
         vecAreas.push_back(area);
 
         // area1
-        area.latitude1  = 36.1109888f;
-        area.longitude1 = 127.5233023f;
-        area.latitude2  = 36.1110848f;
-        area.longitude2 = 127.5240575f;
-        area.latitude3  = 36.1112895f;
-        area.longitude3 = 127.5240063f;
-        area.latitude4  = 36.1111999f;
-        area.longitude4 = 127.5232639f;
-
-        // area.latitude1  = 36.1111974f;
-        // area.longitude1 = 127.5232490f;
-        // area.latitude2  = 36.1112895f;
-        // area.longitude2 = 127.5240063f;
-        // area.latitude3  = 36.1110848f;
-        // area.longitude3 = 127.5240575f;
-        // area.latitude4  = 36.1109903f;
-        // area.longitude4 = 127.5232995f;
+        area.latitude1  = 36.11120270f;
+        area.longitude1 = 127.52324900f;
+        area.latitude2  = 36.11129479f;
+        area.longitude2 = 127.52400630f;
+        area.latitude3  = 36.11109010f;
+        area.longitude3 = 127.52405750f;
+        area.latitude4  = 36.11099559f;
+        area.longitude4 = 127.52329950f;
         vecAreas.push_back(area);
 
         // area2
-    	area.latitude1  = 36.11093940f;	
+        area.latitude1  = 36.11094470f;
         area.longitude1 = 127.52330410f;
-        area.latitude2  = 36.11103260f;	
+        area.latitude2  = 36.11103790f;
         area.longitude2 = 127.52406820f;
-        area.latitude3  = 36.11094920f;	
+        area.latitude3  = 36.11095450f;
         area.longitude3 = 127.52408800f;
-        area.latitude4  = 36.11084030f;	
+        area.latitude4  = 36.11084560f;
         area.longitude4 = 127.52330820f;
         vecAreas.push_back(area);
 
         // area3
-        area.latitude1  = 36.11078770f;
+        area.latitude1  = 36.1107930f; 
         area.longitude1 = 127.52330480f;
-        area.latitude2  = 36.11089500f;
+        area.latitude2  = 36.11090030f;
         area.longitude2 = 127.52409070f;
-        area.latitude3  = 36.11080720f;
+        area.latitude3  = 36.11081250f;
         area.longitude3 = 127.52410950f;
-        area.latitude4  = 36.11068910f;
+        area.latitude4  = 36.11069440f;
         area.longitude4 = 127.52329010f;
         vecAreas.push_back(area);
 
         // area4
-        area.latitude1  = 36.11126150f;
+        area.latitude1  = 36.11126679f;
         area.longitude1 = 127.52323980f;
-        area.latitude2  = 36.11146870f;
+        area.latitude2  = 36.11147400f;
         area.longitude2 = 127.52319220f;
-        area.latitude3  = 36.11156560f;
+        area.latitude3  = 36.11157090f;
         area.longitude3 = 127.52393580f;
-        area.latitude4  = 36.11134240f;
+        area.latitude4  = 36.11134769f;
         area.longitude4 = 127.52398680f;
         vecAreas.push_back(area);
     }
