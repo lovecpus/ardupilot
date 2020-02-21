@@ -80,7 +80,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Units: cm
     // @Range: 200 1000
     // @User: Standard
-    AP_GROUPINFO("MISSION_ALT", 2, ModeCNDN, _mission_alt_cm, 600),
+    AP_GROUPINFO("MISSION_ALT", 2, ModeCNDN, _mission_alt_cm, 300),
 
     // @Param: SPRAY_WIDTH
     // @DisplayName: Spray width
