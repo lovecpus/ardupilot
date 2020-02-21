@@ -173,14 +173,23 @@ ModeCNDN::ModeCNDN()
         vecAreas.push_back(area);
 
         // area1
-        area.latitude1  = 36.1111974f;
-        area.longitude1 = 127.5232490f;
-        area.latitude2  = 36.1112895f;
-        area.longitude2 = 127.5240063f;
-        area.latitude3  = 36.1110848f;
-        area.longitude3 = 127.5240575f;
-        area.latitude4  = 36.1109903f;
-        area.longitude4 = 127.5232995f;
+        area.latitude1  = 36.1109888f;
+        area.longitude1 = 127.5233023f;
+        area.latitude2  = 36.1110848f;
+        area.longitude2 = 127.5240575f;
+        area.latitude3  = 36.1112895f;
+        area.longitude3 = 127.5240063f;
+        area.latitude4  = 36.1111999f;
+        area.longitude4 = 127.5232639f;
+
+        // area.latitude1  = 36.1111974f;
+        // area.longitude1 = 127.5232490f;
+        // area.latitude2  = 36.1112895f;
+        // area.longitude2 = 127.5240063f;
+        // area.latitude3  = 36.1110848f;
+        // area.longitude3 = 127.5240575f;
+        // area.latitude4  = 36.1109903f;
+        // area.longitude4 = 127.5232995f;
         vecAreas.push_back(area);
 
         // area2
