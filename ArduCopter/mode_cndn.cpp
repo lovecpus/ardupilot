@@ -206,7 +206,7 @@ ModeCNDN::ModeCNDN()
         vecAreas.push_back(area);
 
         // area4
-        area.latitude1  = 36.11126679f;
+        area.latitude1  = 36.11126150f;
         area.longitude1 = 127.52323980f;
         area.latitude2  = 36.11147400f;
         area.longitude2 = 127.52319220f;
