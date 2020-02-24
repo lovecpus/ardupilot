@@ -794,30 +794,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             cmd.content.location = AP::ahrs().get_home();
             AP::mission()->add_cmd(cmd);
 
-            cmd.id = MAV_CMD_DO_SET_ROI;
-            cmd.p1 = 0;
-            cmd.content.location = Location(Vector3f(vecRects[0].x, vecRects[0].y, _mission_alt_cm.get()*1.0f));
-            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
-            AP::mission()->add_cmd(cmd);
-
-            cmd.id = MAV_CMD_DO_SET_ROI;
-            cmd.p1 = 0;
-            cmd.content.location = Location(Vector3f(vecRects[1].x, vecRects[1].y, _mission_alt_cm.get()*1.0f));
-            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
-            AP::mission()->add_cmd(cmd);
-
-            cmd.id = MAV_CMD_DO_SET_ROI;
-            cmd.p1 = 0;
-            cmd.content.location = Location(Vector3f(vecRects[2].x, vecRects[2].y, _mission_alt_cm.get()*1.0f));
-            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
-            AP::mission()->add_cmd(cmd);
-
-            cmd.id = MAV_CMD_DO_SET_ROI;
-            cmd.p1 = 0;
-            cmd.content.location = Location(Vector3f(vecRects[3].x, vecRects[3].y, _mission_alt_cm.get()*1.0f));
-            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
-            AP::mission()->add_cmd(cmd);
-
             Vector2f vd1 = (vecRects[3] - vecRects[0]); // step vector
             Vector2f vd2 = (vecRects[2] - vecRects[1]); // step vector
             Vector2f p1(vecRects[0]),p2(vecRects[1]),p3,p4;
@@ -880,6 +856,30 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             cmd.content.location = Location();
             cmd.content.relay.num = 255;
             cmd.content.relay.state = 1;
+            AP::mission()->add_cmd(cmd);
+
+            cmd.id = MAV_CMD_DO_SET_ROI;
+            cmd.p1 = 0;
+            cmd.content.location = Location(Vector3f(vecRects[0].x, vecRects[0].y, _mission_alt_cm.get()*1.0f));
+            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
+            AP::mission()->add_cmd(cmd);
+
+            cmd.id = MAV_CMD_DO_SET_ROI;
+            cmd.p1 = 0;
+            cmd.content.location = Location(Vector3f(vecRects[1].x, vecRects[1].y, _mission_alt_cm.get()*1.0f));
+            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
+            AP::mission()->add_cmd(cmd);
+
+            cmd.id = MAV_CMD_DO_SET_ROI;
+            cmd.p1 = 0;
+            cmd.content.location = Location(Vector3f(vecRects[2].x, vecRects[2].y, _mission_alt_cm.get()*1.0f));
+            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
+            AP::mission()->add_cmd(cmd);
+
+            cmd.id = MAV_CMD_DO_SET_ROI;
+            cmd.p1 = 0;
+            cmd.content.location = Location(Vector3f(vecRects[3].x, vecRects[3].y, _mission_alt_cm.get()*1.0f));
+            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_HOME);
             AP::mission()->add_cmd(cmd);
 
             if (_method.get() == 3)
