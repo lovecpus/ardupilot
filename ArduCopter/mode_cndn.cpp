@@ -995,7 +995,10 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             if (edge_count > 0) {
                 Vector3f hpos;
                 if (!ahrs.get_home().get_vector_from_origin_NEU(hpos))
+                {
+                    edge_count = 0;
                     return;
+                }
                 Vector2f cpos(hpos.x, hpos.y);
 
                 // GEO to NEU
@@ -1003,7 +1006,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 for (int i = 0; i < edge_count; i++)
                 {
                     Vector2f& pos = edge_points[i];
-                    pcm = locNEU(pos.x, pos.y, 3.0f);
+                    pcm = locNEU(pos.x, pos.y, _mission_alt_cm.get() * 0.01f);
                     vecRects.push_back(Vector2f(pcm.x, pcm.y));
                 }
 
