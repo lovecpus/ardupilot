@@ -162,68 +162,15 @@ ModeCNDN::ModeCNDN()
     {
         CNAREA area;
         // area0
-        // area.latitude1  = 37.28420960f;
-        // area.longitude1 = 126.8735343f;
-        // area.latitude2  = 37.28367600f;
-        // area.longitude2 = 126.8727310f;
-        // area.latitude3  = 37.28390010f;
-        // area.longitude3 = 126.8725044f;
-        // area.latitude4  = 37.28442830f;
-        // area.longitude4 = 126.8733077f;
-
-        area.latitude1  = 37.28421031f;
-        area.longitude1 = 126.87357650f;
-        area.latitude2  = 37.28363457f;
-        area.longitude2 = 126.87271328f;
-        area.latitude3  = 37.28391077f;
-        area.longitude3 = 126.87242739f;
-        area.latitude4  = 37.28448638f;
-        area.longitude4 = 126.87328855f;
-        vecAreas.push_back({37.28421031f,126.87357650f,37.28363457f,126.87271328f,37.28391077f,126.87242739f,37.28448638f,126.87328855f});
-
+        vecAreas.push_back({37.28421031f,126.8735765f,37.28363457f,126.8727133f,37.28391077f,126.8724274f,37.28448638f,126.8732886f});
         // area1
-        area.latitude1  = 36.11120270f;
-        area.longitude1 = 127.5232490f;
-        area.latitude2  = 36.11129479f;
-        area.longitude2 = 127.5240063f;
-        area.latitude3  = 36.11109010f;
-        area.longitude3 = 127.5240575f;
-        area.latitude4  = 36.11099559f;
-        area.longitude4 = 127.5232995f;
-        vecAreas.push_back(area);
-
+        vecAreas.push_back({36.11120270f,127.5232490f,36.11129479f,127.5240063f,36.11109010f,127.5240575f,36.11099559f,127.5232995f});
         // area2
-    	area.latitude1  = 36.11093780f;
-        area.longitude1 = 127.5233028f;
-        area.latitude2  = 36.11103150f;
-        area.longitude2 = 127.5240753f;
-        area.latitude3  = 36.11094320f;
-        area.longitude3 = 127.5240981f;
-        area.latitude4  = 36.11083540f;
-        area.longitude4 = 127.5233082f;
-        vecAreas.push_back(area);
-
+        vecAreas.push_back({36.11093780f,127.5233028f,36.11103150f,127.5240753f,36.11094320f,127.5240981f,36.11083540f,127.5233082f});
         // area3
-        area.latitude1  = 36.1107930f; 
-        area.longitude1 = 127.5233048f;
-        area.latitude2  = 36.11090030f;
-        area.longitude2 = 127.5240907f;
-        area.latitude3  = 36.11081250f;
-        area.longitude3 = 127.5241095f;
-        area.latitude4  = 36.11069440f;
-        area.longitude4 = 127.5232901f;
-        vecAreas.push_back(area);
-
+        vecAreas.push_back({36.11079300f,127.5233048f,36.11090030f,127.5240907f,36.11081250f,127.5241095f,36.11069440f,127.5232901f});
         // area4
-        area.latitude1  = 36.11125500f;	
-        area.longitude1 = 127.5232401f;
-        area.latitude2  = 36.11146870f;	
-        area.longitude2 = 127.5231922f;
-        area.latitude3  = 36.11156560f;	
-        area.longitude3 = 127.5239358f;
-        area.latitude4  = 36.11135000f;	
-        area.longitude4 = 127.5239854f;
-        vecAreas.push_back(area);
+        vecAreas.push_back({36.11125500f,127.5232401f,36.11146870f,127.5231922f,36.11156560f,127.5239358f,36.11135000f,127.5239854f});
     }
 #endif
 
