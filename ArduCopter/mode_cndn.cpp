@@ -160,7 +160,6 @@ ModeCNDN::ModeCNDN()
 #if defined(SIM_LOCATION)
     if (vecAreas.empty())
     {
-        CNAREA area;
         // area0
         vecAreas.push_back({37.28421031f,126.8735765f,37.28363457f,126.8727133f,37.28391077f,126.8724274f,37.28448638f,126.8732886f});
         // area1
