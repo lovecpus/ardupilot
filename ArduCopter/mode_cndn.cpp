@@ -136,7 +136,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Units: cms
     // @Range: 100 800
     // @User: Standard
-    AP_GROUPINFO("DIS_EDGE", 9, ModeCNDN, _dst_eg_cm, 200),
+    AP_GROUPINFO("DIS_EDGE", 9, ModeCNDN, _dst_eg_cm, 300),
 
     AP_GROUPEND
 };
@@ -162,15 +162,24 @@ ModeCNDN::ModeCNDN()
     {
         CNAREA area;
         // area0
-        area.latitude1  = 37.28420960f;
-        area.longitude1 = 126.8735343f;
-        area.latitude2  = 37.28367600f;
-        area.longitude2 = 126.8727310f;
-        area.latitude3  = 37.28390010f;
-        area.longitude3 = 126.8725044f;
-        area.latitude4  = 37.28442830f;
-        area.longitude4 = 126.8733077f;
-        vecAreas.push_back(area);
+        // area.latitude1  = 37.28420960f;
+        // area.longitude1 = 126.8735343f;
+        // area.latitude2  = 37.28367600f;
+        // area.longitude2 = 126.8727310f;
+        // area.latitude3  = 37.28390010f;
+        // area.longitude3 = 126.8725044f;
+        // area.latitude4  = 37.28442830f;
+        // area.longitude4 = 126.8733077f;
+
+        area.latitude1  = 37.28421031f;
+        area.longitude1 = 126.87357650f;
+        area.latitude2  = 37.28363457f;
+        area.longitude2 = 126.87271328f;
+        area.latitude3  = 37.28391077f;
+        area.longitude3 = 126.87242739f;
+        area.latitude4  = 37.28448638f;
+        area.longitude4 = 126.87328855f;
+        vecAreas.push_back({37.28421031f,126.87357650f,37.28363457f,126.87271328f,37.28391077f,126.87242739f,37.28448638f,126.87328855f});
 
         // area1
         area.latitude1  = 36.11120270f;
