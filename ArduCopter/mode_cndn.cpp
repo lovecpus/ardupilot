@@ -1165,8 +1165,8 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             cmd.content.location = AP::ahrs().get_home();
             AP::mission()->add_cmd(cmd);
 
-            Vector2f vd1 = (vecRects[3] - vecRects[0]); // step vector
-            Vector2f vd2 = (vecRects[2] - vecRects[1]); // step vector
+            Vector2f vd1 = (vecPoints[3] - vecPoints[0]); // step vector
+            Vector2f vd2 = (vecPoints[2] - vecPoints[1]); // step vector
             float ldir = vd2.length();
             vd1.normalize();
             vd2.normalize();
@@ -1175,7 +1175,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             Vector2f step1(vd1 * lw_cm);
             Vector2f step2(vd2 * lw_cm);
 
-            Vector2f p1(vecRects[0] + step1),p2(vecRects[1] + step2),p3,p4;
+            Vector2f p1(vecPoints[0] + step1),p2(vecPoints[1] + step2),p3,p4;
             float ll_cm = lw_cm;
 
             for (float l = 0.0f; l < ldir - lw_cm; l += lw_cm * 2.0f)
