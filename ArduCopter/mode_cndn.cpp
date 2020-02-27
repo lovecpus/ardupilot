@@ -1148,19 +1148,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] CAMERA_TRIGGERED, Prepare to EDGE FOLLOW.");
             AP_Notify::events.waypoint_complete = 1;
 
-#if 0
-            Vector3f fd1(-1,-1,0); fd1.normalize();
-            Location l0(Vector3f(vecRects[0].x+fd1.x, vecRects[0].y+fd1.y, _mission_alt_cm.get()*1.0f));
-            Location l1(Vector3f(vecRects[1].x+fd1.x, vecRects[1].y+fd1.y, _mission_alt_cm.get()*1.0f));
-            Location l2(Vector3f(vecRects[2].x+fd1.x, vecRects[2].y+fd1.y, _mission_alt_cm.get()*1.0f));
-            Location l3(Vector3f(vecRects[3].x+fd1.x, vecRects[3].y+fd1.y, _mission_alt_cm.get()*1.0f));
-
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 1 %ld; %ld;", l0.lat, l0.lng);
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 2 %ld; %ld;", l1.lat, l1.lng);
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 3 %ld; %ld;", l2.lat, l2.lng);
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 4 %ld; %ld;", l3.lat, l3.lng);
-#endif            
-
             AP_Mission::Mission_Command cmd;
 
             AP::mission()->reset();
@@ -1173,15 +1160,23 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
             Vector2f vd1 = (vecRects[3] - vecRects[0]); // step vector
             Vector2f vd2 = (vecRects[2] - vecRects[1]); // step vector
-            Vector2f p1(vecRects[0]),p2(vecRects[1]),p3,p4;
             float ldir = vd2.length();
             vd1.normalize();
             vd2.normalize();
 
-            float lw_cm = _spray_width_cm.get()*1.0f;
+            float eg_cm = _dst_eg_cm.get() * 1.0f;
+            float lw_cm = _spray_width_cm.get() * 1.0f;
+            Vector2f eg1(vd1 * eg_cm);
+            Vector2f eg2(vd2 * eg_cm);
+            vecRects[0] += eg1;
+            vecRects[1] += eg2;
+            vecRects[3] -= eg1;
+            vecRects[4] -= eg2;
+
             Vector2f step1(vd1 * lw_cm);
             Vector2f step2(vd2 * lw_cm);
 
+            Vector2f p1(vecRects[0]),p2(vecRects[1]),p3,p4;
             p1 += step1;
             p2 += step2;
 
