@@ -635,7 +635,7 @@ bool ModeCNDN::init(bool ignore_checks)
         dest_A.zero();
         dest_B.zero();
 
-        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MODE INITIALIZED.");
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MODE INITIALIZED[%d].", vecAreas.size());
     }
     else
     {
