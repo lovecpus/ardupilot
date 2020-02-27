@@ -1058,6 +1058,19 @@ void ModeCNDN::detecteEdge()
         vecPoints[1] += eg2;
         vecPoints[2] -= eg1;
         vecPoints[3] -= eg2;
+
+        vd1 = (vecPoints[1] - vecPoints[0]); // step vector
+        vd2 = (vecPoints[3] - vecPoints[2]); // step vector
+        vd1.normalize();
+        vd2.normalize();
+        eg1 = (vd1 * eg_cm);
+        eg2 = (vd2 * eg_cm);
+
+        vecPoints[0] += eg1;
+        vecPoints[1] -= eg1;
+        vecPoints[2] += eg2;
+        vecPoints[3] -= eg2;
+
         vecPoints[4] = vecPoints[0];
 
         vecRects.resize(vecPoints.size());
