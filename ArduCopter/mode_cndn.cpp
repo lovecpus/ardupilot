@@ -864,7 +864,6 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 #if USE_ETRI == DISABLED
         if (dest_num > 1) {
             processArea();
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] CREATING MISSION.");
         } else if (dest_num > 0) {
             init_speed();
 
@@ -908,8 +907,8 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             } else {
                 stage = TAKE_PICTURE;
             }
-#endif
         }
+#endif
     } break;
 
     case PREPARE_FOLLOW:
@@ -1103,7 +1102,7 @@ void ModeCNDN::processArea()
     }
 
     auto_yaw.set_mode(AUTO_YAW_HOLD);
-    gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] CAMERA_TRIGGERED, Prepare to EDGE FOLLOW.");
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] CREATING MISSION.");
     AP_Notify::events.waypoint_complete = 1;
 
     AP_Mission::Mission_Command cmd;
