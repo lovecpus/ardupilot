@@ -1291,8 +1291,36 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             //for(uint16_t i=0; i<10; i++)
             {
                 CNAREA& area = vecAreas[i];
+
+                Vector2f cp(loc.lat/1e7, loc.lng/1e7);
+                float fm = area.latitude1;
+                fm = min(fm, area.latitude2);
+                fm = min(fm, area.latitude3);
+                fm = min(fm, area.latitude4);
+                if (fm > cp.x)
+                    continue;
+                fm = area.longitude1;
+                fm = min(fm, area.longitude2);
+                fm = min(fm, area.longitude3);
+                fm = min(fm, area.longitude4);
+                if (fm > cp.y)
+                    continue;
+                fm = area.latitude1;
+                fm = max(fm, area.latitude2);
+                fm = max(fm, area.latitude3);
+                fm = max(fm, area.latitude4);
+                if (fm < cp.x)
+                    continue;
+                fm = area.longitude1;
+                fm = max(fm, area.longitude2);
+                fm = max(fm, area.longitude3);
+                fm = max(fm, area.longitude4);
+                if (fm < cp.y)
+                    continue;                    
+
                 if (!inside(area, loc))
                     continue;
+
                 packet.latitude1  = area.latitude1 ;
                 packet.longitude1 = area.longitude1;
                 packet.latitude2  = area.latitude2 ;
@@ -1410,6 +1438,19 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                     std::reverse(vecPoints.begin(), vecPoints.end());
                 vecPoints.push_front(apos);
                 vecPoints.push_back(apos);
+
+                Vector2f vd1 = (vecPoints[3] - vecPoints[0]); // step vector
+                Vector2f vd2 = (vecPoints[2] - vecPoints[1]); // step vector
+                vd1.normalize();
+                vd2.normalize();
+
+                float eg_cm = _dst_eg_cm.get() * 1.0f;
+                Vector2f eg1(vd1 * eg_cm);
+                Vector2f eg2(vd2 * eg_cm);
+                vecPoints[0] += eg1;
+                vecPoints[1] += eg2;
+                vecPoints[3] -= eg1;
+                vecPoints[4] -= eg2;
 
                 vecRects.resize(vecPoints.size());
                 std::copy(vecPoints.begin(), vecPoints.end(), vecRects.begin());
