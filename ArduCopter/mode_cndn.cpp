@@ -4,6 +4,7 @@
 
 #if MODE_CNDN_ENABLED == ENABLED
 
+#define USE_ETRI DISABLED
 #define USE_EDGE_FOLLOW DISABLED
 
 #if USE_EDGE_FOLLOW == ENABLED
@@ -591,7 +592,6 @@ ModeCNDN::ModeCNDN()
 	vecAreas.push_back({35.80420058f,126.83878750f,35.80393628f,126.83901827f,35.80335687f,126.83802374f,35.80361612f,126.83779508f});
 	vecAreas.push_back({35.80393628f,126.83901827f,35.80366173f,126.83926101f,35.80308213f,126.83826427f,35.80335687f,126.83802374f});
 	vecAreas.push_back({35.80366173f,126.83926101f,35.80348997f,126.83941293f,35.80291299f,126.83841165f,35.80308213f,126.83826427f});
-
     }
 #endif
 
@@ -862,13 +862,17 @@ void ModeCNDN::mission_command(uint8_t dest_num)
         if (_method.get() == 0)
             break;
 
-        if (dest_num > 0) {
+        if (dest_num > 1) {
+            processArea();
+        } else if (dest_num > 0) {
             init_speed();
 
             Vector3f stopping_point;
             wp_nav->get_wp_stopping_point(stopping_point);
             wp_nav->set_wp_destination(stopping_point, false);
 
+            detecteEdge();
+/*
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SIGNAL TO ETRI-MC.");
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             // set to position control mode
@@ -894,6 +898,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             } else {
                 stage = TAKE_PICTURE;
             }
+*/
         }
     } break;
 
@@ -1380,6 +1385,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
     }
     break;
 
+#if USE_ETRI == ENABLED
     case MAVLINK_MSG_ID_CAMERA_TRIGGER:
         if (stage == TAKE_PICTURE)
         {
@@ -1395,7 +1401,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             detecteEdge();
         }
         break;
-
+#endif
     case MAVLINK_MSG_ID_ETRI_PADDY_DETECT_COMMAND:
         break;
 
