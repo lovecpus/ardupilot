@@ -965,6 +965,243 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
     }
 }
 
+void ModeCNDN::detecteEdge()
+{
+    edge_count = 0;
+    CNAREA edge;
+
+    Location loc(copter.current_loc);
+    for(uint16_t i=0; i<vecAreas.size(); i++)
+    {
+        CNAREA& area = vecAreas[i];
+        if (!inside(area, loc))
+            continue;
+        edge = area;
+        edge_count = 4;
+        break;
+    }
+
+    for (int i = 0; i < 10; i++)
+        edge_points[i].zero();
+
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Detect (%d points).", edge_count);
+    if (edge_count > 0)
+    {
+        edge_points[0].x = edge.latitude1;
+        edge_points[0].y = edge.longitude1;
+    }
+    if (edge_count > 1)
+    {
+        edge_points[1].x = edge.latitude2;
+        edge_points[1].y =  edge.longitude2;
+    }
+    if (edge_count > 2)
+    {
+        edge_points[2].x = edge.latitude3;
+        edge_points[2].y = edge.longitude3;
+    }
+    if (edge_count > 3)
+    {
+        edge_points[3].x = edge.latitude4;
+        edge_points[3].y = edge.longitude4;
+    }
+
+    vecRects.clear();
+    vecPoints.clear();
+
+    if (edge_count > 0) {
+        Vector3f hpos;
+        if (!ahrs.get_home().get_vector_from_origin_NEU(hpos))
+        {
+            edge_count = 0;
+            return;
+        }
+        Vector2f cpos(hpos.x, hpos.y);
+
+        // GEO to NEU
+        Vector3f pcm; // position (North, East, Up coordinates) in centimeters
+        for (int i = 0; i < edge_count; i++)
+        {
+            Vector2f& pos = edge_points[i];
+            pcm = locNEU(pos.x, pos.y, _mission_alt_cm.get() * 0.01f);
+            vecRects.push_back(Vector2f(pcm.x, pcm.y));
+        }
+
+        float minlen = (vecRects.front()-cpos).length();
+        Vector2f apos = vecRects.front();
+        vecPoints.push_back(apos);
+        for (int i = 1; i < (int)vecRects.size(); i++)
+        {
+            if ((vecRects[i]-cpos).length() < minlen)
+            {
+                apos = vecRects[i];
+                minlen = (apos-cpos).length();
+            }
+            vecPoints.push_back(vecRects[i]);
+        }
+
+        for(int i = 0; i < (int)vecPoints.size(); i++)
+        {
+            if ((vecPoints.front()-apos).length() <= 0.001f)
+                break;
+            cpos = vecPoints.front();
+            vecPoints.pop_front();
+            vecPoints.push_back(cpos);
+        }
+
+        vecPoints.pop_front();
+        if ((vecPoints.front()-apos).length() < (vecPoints.back()-apos).length())
+            std::reverse(vecPoints.begin(), vecPoints.end());
+        vecPoints.push_front(apos);
+        vecPoints.push_back(apos);
+
+        Vector2f vd1 = (vecPoints[3] - vecPoints[0]); // step vector
+        Vector2f vd2 = (vecPoints[2] - vecPoints[1]); // step vector
+        vd1.normalize();
+        vd2.normalize();
+
+        float eg_cm = _dst_eg_cm.get() * 1.0f;
+        Vector2f eg1(vd1 * eg_cm);
+        Vector2f eg2(vd2 * eg_cm);
+        vecPoints[0] += eg1;
+        vecPoints[1] += eg2;
+        vecPoints[3] -= eg1;
+        vecPoints[4] -= eg2;
+
+        vecPoints.end() = vecPoints.front();
+
+        vecRects.resize(vecPoints.size());
+        std::copy(vecPoints.begin(), vecPoints.end(), vecRects.begin());
+    }
+}
+
+void ModeCNDN::processArea()
+{
+    if (vecPoints.empty())
+    {
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
+        return_to_manual_control(false);
+        return;
+    }
+
+    auto_yaw.set_mode(AUTO_YAW_HOLD);
+    gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] CAMERA_TRIGGERED, Prepare to EDGE FOLLOW.");
+    AP_Notify::events.waypoint_complete = 1;
+
+    AP_Mission::Mission_Command cmd;
+
+    AP::mission()->reset();
+    AP::mission()->clear();
+
+    cmd.id = MAV_CMD_NAV_WAYPOINT;
+    cmd.p1 = 0;
+    cmd.content.location = AP::ahrs().get_home();
+    AP::mission()->add_cmd(cmd);
+
+    Vector2f vd1 = (vecPoints[3] - vecPoints[0]); // step vector
+    Vector2f vd2 = (vecPoints[2] - vecPoints[1]); // step vector
+    float ldir = vd2.length();
+    vd1.normalize();
+    vd2.normalize();
+
+    float lw_cm = _spray_width_cm.get() * 1.0f;
+    Vector2f step1(vd1 * lw_cm);
+    Vector2f step2(vd2 * lw_cm);
+
+    Vector2f p1(vecPoints[0] + step1),p2(vecPoints[1] + step2),p3,p4;
+    float ll_cm = lw_cm;
+
+    for (float l = 0.0f; l < ldir - lw_cm; l += lw_cm * 2.0f)
+    {
+        p4 = p1 + step1;
+        p3 = p2 + step2;
+
+        cmd.id = MAV_CMD_NAV_WAYPOINT;
+        cmd.p1 = 1;
+        cmd.content.location = Location(Vector3f(p1.x, p1.y, _mission_alt_cm.get()*1.0f));
+        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
+        AP::mission()->add_cmd(cmd);
+
+        cmd.id = MAV_CMD_NAV_WAYPOINT;
+        cmd.p1 = 1;
+        cmd.content.location = Location(Vector3f(p2.x, p2.y, _mission_alt_cm.get()*1.0f));
+        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
+        AP::mission()->add_cmd(cmd);
+
+        ll_cm += lw_cm;
+
+        if (ll_cm > ldir - lw_cm)
+            break;
+
+        cmd.id = MAV_CMD_NAV_WAYPOINT;
+        cmd.p1 = 1;
+        cmd.content.location = Location(Vector3f(p3.x, p3.y, _mission_alt_cm.get()*1.0f));
+        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
+        AP::mission()->add_cmd(cmd);
+
+        cmd.id = MAV_CMD_NAV_WAYPOINT;
+        cmd.p1 = 1;
+        cmd.content.location = Location(Vector3f(p4.x, p4.y, _mission_alt_cm.get()*1.0f));
+        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
+        AP::mission()->add_cmd(cmd);
+
+        p1 = p4 + step1;
+        p2 = p3 + step2;
+
+        ll_cm += lw_cm;
+    }
+
+    // mission finish command.
+    cmd.id = MAV_CMD_DO_SET_RELAY;
+    cmd.p1 = 0;
+    cmd.content.location = Location();
+    cmd.content.relay.num = 255;
+    cmd.content.relay.state = 1;
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_DO_SET_ROI;
+    cmd.p1 = 0;
+    cmd.content.location = Location(int32_t(edge_points[0].x * 1e7),  int32_t(edge_points[0].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_DO_SET_ROI;
+    cmd.p1 = 0;
+    cmd.content.location = Location(int32_t(edge_points[1].x * 1e7),  int32_t(edge_points[1].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_DO_SET_ROI;
+    cmd.p1 = 0;
+    cmd.content.location = Location(int32_t(edge_points[2].x * 1e7),  int32_t(edge_points[2].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_DO_SET_ROI;
+    cmd.p1 = 0;
+    cmd.content.location = Location(int32_t(edge_points[3].x * 1e7),  int32_t(edge_points[3].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
+    AP::mission()->add_cmd(cmd);
+
+    wp_nav->wp_and_spline_init();
+    if (_method.get() == 3)
+    {
+        init_speed();
+        if (!vecPoints.empty())
+        {
+            stage = PREPARE_FOLLOW;
+            Vector3f hpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
+            wp_nav->set_wp_destination(hpos, false);
+            last_yaw_cd = degNE(vecPoints[1], vecPoints[0]) * 100.0f;
+            auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
+            vecPoints.pop_front();
+            stage = MOVE_TO_EDGE;
+        }
+        else
+        {
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
+            return_to_manual_control(false);
+        }
+    }
+}
+
 void ModeCNDN::handle_message(const mavlink_message_t &msg)
 {
     switch (msg.msgid)
@@ -1143,285 +1380,16 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_CAMERA_TRIGGER:
         if (stage == TAKE_PICTURE)
         {
-            if (vecPoints.empty())
-            {
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
-                return_to_manual_control(false);
-                break;
-            }
-
-            stage = PREPARE_FOLLOW;
-            auto_yaw.set_mode(AUTO_YAW_HOLD);
-            gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] CAMERA_TRIGGERED, Prepare to EDGE FOLLOW.");
-            AP_Notify::events.waypoint_complete = 1;
-
-            AP_Mission::Mission_Command cmd;
-
-            AP::mission()->reset();
-            AP::mission()->clear();
-
-            cmd.id = MAV_CMD_NAV_WAYPOINT;
-            cmd.p1 = 0;
-            cmd.content.location = AP::ahrs().get_home();
-            AP::mission()->add_cmd(cmd);
-
-            Vector2f vd1 = (vecPoints[3] - vecPoints[0]); // step vector
-            Vector2f vd2 = (vecPoints[2] - vecPoints[1]); // step vector
-            float ldir = vd2.length();
-            vd1.normalize();
-            vd2.normalize();
-
-            float lw_cm = _spray_width_cm.get() * 1.0f;
-            Vector2f step1(vd1 * lw_cm);
-            Vector2f step2(vd2 * lw_cm);
-
-            Vector2f p1(vecPoints[0] + step1),p2(vecPoints[1] + step2),p3,p4;
-            float ll_cm = lw_cm;
-
-            for (float l = 0.0f; l < ldir - lw_cm; l += lw_cm * 2.0f)
-            {
-                p4 = p1 + step1;
-                p3 = p2 + step2;
-
-                cmd.id = MAV_CMD_NAV_WAYPOINT;
-                cmd.p1 = 1;
-                cmd.content.location = Location(Vector3f(p1.x, p1.y, _mission_alt_cm.get()*1.0f));
-                cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
-                AP::mission()->add_cmd(cmd);
-
-                cmd.id = MAV_CMD_NAV_WAYPOINT;
-                cmd.p1 = 1;
-                cmd.content.location = Location(Vector3f(p2.x, p2.y, _mission_alt_cm.get()*1.0f));
-                cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
-                AP::mission()->add_cmd(cmd);
-
-                ll_cm += lw_cm;
-
-                if (ll_cm > ldir - lw_cm)
-                    break;
-
-                cmd.id = MAV_CMD_NAV_WAYPOINT;
-                cmd.p1 = 1;
-                cmd.content.location = Location(Vector3f(p3.x, p3.y, _mission_alt_cm.get()*1.0f));
-                cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
-                AP::mission()->add_cmd(cmd);
-
-                cmd.id = MAV_CMD_NAV_WAYPOINT;
-                cmd.p1 = 1;
-                cmd.content.location = Location(Vector3f(p4.x, p4.y, _mission_alt_cm.get()*1.0f));
-                cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
-                AP::mission()->add_cmd(cmd);
-
-                p1 = p4 + step1;
-                p2 = p3 + step2;
-
-                ll_cm += lw_cm;
-            }
-
-            // mission finish command.
-            cmd.id = MAV_CMD_DO_SET_RELAY;
-            cmd.p1 = 0;
-            cmd.content.location = Location();
-            cmd.content.relay.num = 255;
-            cmd.content.relay.state = 1;
-            AP::mission()->add_cmd(cmd);
-
-            cmd.id = MAV_CMD_DO_SET_ROI;
-            cmd.p1 = 0;
-            cmd.content.location = Location(int32_t(edge_points[0].x * 1e7),  int32_t(edge_points[0].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
-            AP::mission()->add_cmd(cmd);
-
-            cmd.id = MAV_CMD_DO_SET_ROI;
-            cmd.p1 = 0;
-            cmd.content.location = Location(int32_t(edge_points[1].x * 1e7),  int32_t(edge_points[1].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
-            AP::mission()->add_cmd(cmd);
-
-            cmd.id = MAV_CMD_DO_SET_ROI;
-            cmd.p1 = 0;
-            cmd.content.location = Location(int32_t(edge_points[2].x * 1e7),  int32_t(edge_points[2].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
-            AP::mission()->add_cmd(cmd);
-
-            cmd.id = MAV_CMD_DO_SET_ROI;
-            cmd.p1 = 0;
-            cmd.content.location = Location(int32_t(edge_points[3].x * 1e7),  int32_t(edge_points[3].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
-            AP::mission()->add_cmd(cmd);
-
-            if (_method.get() == 3)
-            {
-                init_speed();
-                if (!vecPoints.empty())
-                {
-                    Vector3f hpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
-                    wp_nav->set_wp_destination(hpos, false);
-                    last_yaw_cd = degNE(vecPoints[1], vecPoints[0]) * 100.0f;
-                    auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
-                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
-                    vecPoints.pop_front();
-                    stage = MOVE_TO_EDGE;
-                }
-                else
-                {
-                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
-                    return_to_manual_control(false);
-                }
-            }
+            processArea();
         }
         break;
 
     case MAVLINK_MSG_ID_ETRI_PADDY_EDGE_GPS_INFORMATION:
         if (stage == TAKE_PICTURE)
         {
-            mavlink_etri_paddy_edge_gps_information_t packet;
-            mavlink_msg_etri_paddy_edge_gps_information_decode(&msg, &packet);
-
-            wp_nav->wp_and_spline_init();
-
-#if defined(SIM_LOCATION)
-            packet.edge_count = 0;
-            Location loc(copter.current_loc);
-            for(uint16_t i=0; i<vecAreas.size(); i++)
-            //for(uint16_t i=0; i<10; i++)
-            {
-                CNAREA& area = vecAreas[i];
-                if (!inside(area, loc))
-                    continue;
-
-                packet.latitude1  = area.latitude1 ;
-                packet.longitude1 = area.longitude1;
-                packet.latitude2  = area.latitude2 ;
-                packet.longitude2 = area.longitude2;
-                packet.latitude3  = area.latitude3 ;
-                packet.longitude3 = area.longitude3;
-                packet.latitude4  = area.latitude4 ;
-                packet.longitude4 = area.longitude4;
-                packet.edge_count = 4;
-                break;
-            }
-#endif
-            edge_count = packet.edge_count;
-
-            for (int i = 0; i < 10; i++)
-                edge_points[i].zero();
-
-            gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] GPS_INFO(%d points) received.", packet.edge_count);
-            if (edge_count > 0)
-            {
-                edge_points[0].x = packet.latitude1;
-                edge_points[0].y = packet.longitude1;
-            }
-            if (edge_count > 1)
-            {
-                edge_points[1].x = packet.latitude2;
-                edge_points[1].y =  packet.longitude2;
-            }
-            if (edge_count > 2)
-            {
-                edge_points[2].x = packet.latitude3;
-                edge_points[2].y = packet.longitude3;
-            }
-            if (edge_count > 3)
-            {
-                edge_points[3].x = packet.latitude4;
-                edge_points[3].y = packet.longitude4;
-            }
-            if (edge_count > 4)
-            {
-                edge_points[4].x = packet.latitude5;
-                edge_points[4].y = packet.longitude5;
-            }
-            if (edge_count > 5)
-            {
-                edge_points[5].x = packet.latitude6;
-                edge_points[5].y = packet.longitude6;
-            }
-            if (edge_count > 6)
-            {
-                edge_points[6].x = packet.latitude7;
-                edge_points[6].y = packet.longitude7;
-            }
-            if (edge_count > 7)
-            {
-                edge_points[7].x = packet.latitude8;
-                edge_points[7].y = packet.longitude8;
-            }
-            if (edge_count > 8)
-            {
-                edge_points[8].x = packet.latitude9;
-                edge_points[8].y = packet.longitude9;
-            }
-            if (edge_count > 9)
-            {
-                edge_points[9].x = packet.latitude10;
-                edge_points[9].y = packet.longitude10;
-            }
-
-            vecRects.clear();
-            vecPoints.clear();
-
-            if (edge_count > 0) {
-                Vector3f hpos;
-                if (!ahrs.get_home().get_vector_from_origin_NEU(hpos))
-                {
-                    edge_count = 0;
-                    return;
-                }
-                Vector2f cpos(hpos.x, hpos.y);
-
-                // GEO to NEU
-                Vector3f pcm; // position (North, East, Up coordinates) in centimeters
-                for (int i = 0; i < edge_count; i++)
-                {
-                    Vector2f& pos = edge_points[i];
-                    pcm = locNEU(pos.x, pos.y, _mission_alt_cm.get() * 0.01f);
-                    vecRects.push_back(Vector2f(pcm.x, pcm.y));
-                }
-
-                float minlen = (vecRects.front()-cpos).length();
-                Vector2f apos = vecRects.front();
-                vecPoints.push_back(apos);
-                for (int i = 1; i < (int)vecRects.size(); i++)
-                {
-                    if ((vecRects[i]-cpos).length() < minlen)
-                    {
-                        apos = vecRects[i];
-                        minlen = (apos-cpos).length();
-                    }
-                    vecPoints.push_back(vecRects[i]);
-                }
-
-                for(int i = 0; i < (int)vecPoints.size(); i++)
-                {
-                    if ((vecPoints.front()-apos).length() <= 0.001f)
-                        break;
-                    cpos = vecPoints.front();
-                    vecPoints.pop_front();
-                    vecPoints.push_back(cpos);
-                }
-
-                vecPoints.pop_front();
-                if ((vecPoints.front()-apos).length() < (vecPoints.back()-apos).length())
-                    std::reverse(vecPoints.begin(), vecPoints.end());
-                vecPoints.push_front(apos);
-                vecPoints.push_back(apos);
-
-                Vector2f vd1 = (vecPoints[3] - vecPoints[0]); // step vector
-                Vector2f vd2 = (vecPoints[2] - vecPoints[1]); // step vector
-                vd1.normalize();
-                vd2.normalize();
-
-                float eg_cm = _dst_eg_cm.get() * 1.0f;
-                Vector2f eg1(vd1 * eg_cm);
-                Vector2f eg2(vd2 * eg_cm);
-                vecPoints[0] += eg1;
-                vecPoints[1] += eg2;
-                vecPoints[3] -= eg1;
-                vecPoints[4] -= eg2;
-
-                vecPoints.end() = vecPoints.front();
-
-                vecRects.resize(vecPoints.size());
-                std::copy(vecPoints.begin(), vecPoints.end(), vecRects.begin());
-            }
+            // mavlink_etri_paddy_edge_gps_information_t packet;
+            // mavlink_msg_etri_paddy_edge_gps_information_decode(&msg, &packet);
+            detecteEdge();
         }
         break;
 

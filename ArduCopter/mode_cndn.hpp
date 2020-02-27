@@ -95,6 +95,10 @@ private:
     bool reached_destination();
     bool calculate_next_dest(uint8_t position_num, bool use_wpnav_alt, Vector3f &next_dest, bool &terrain_alt) const;
     void set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool relative_angle);
+
+    void detecteEdge();
+    void processArea();
+
     Vector2f dest_A; // in NEU frame in cm relative to ekf origin
     Vector2f dest_B; // in NEU frame in cm relative to ekf origin
 
