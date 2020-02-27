@@ -1160,19 +1160,10 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
             Vector2f vd1 = (vecRects[3] - vecRects[0]); // step vector
             Vector2f vd2 = (vecRects[2] - vecRects[1]); // step vector
-            float ldir = vd2.length();
             vd1.normalize();
             vd2.normalize();
 
-            float eg_cm = _dst_eg_cm.get() * 1.0f;
             float lw_cm = _spray_width_cm.get() * 1.0f;
-            Vector2f eg1(vd1 * eg_cm);
-            Vector2f eg2(vd2 * eg_cm);
-            vecRects[0] += eg1;
-            vecRects[1] += eg2;
-            vecRects[3] -= eg1;
-            vecRects[4] -= eg2;
-
             Vector2f step1(vd1 * lw_cm);
             Vector2f step2(vd2 * lw_cm);
 
@@ -1451,6 +1442,8 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 vecPoints[1] += eg2;
                 vecPoints[3] -= eg1;
                 vecPoints[4] -= eg2;
+
+                vecPoints.end() = vecPoints.front();
 
                 vecRects.resize(vecPoints.size());
                 std::copy(vecPoints.begin(), vecPoints.end(), vecRects.begin());
