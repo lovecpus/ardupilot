@@ -1283,33 +1283,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             //for(uint16_t i=0; i<10; i++)
             {
                 CNAREA& area = vecAreas[i];
-
-                Vector2f cp(loc.lat/1e7, loc.lng/1e7);
-                float fm = area.latitude1;
-                fm = min(fm, area.latitude2);
-                fm = min(fm, area.latitude3);
-                fm = min(fm, area.latitude4);
-                if (fm > cp.x)
-                    continue;
-                fm = area.longitude1;
-                fm = min(fm, area.longitude2);
-                fm = min(fm, area.longitude3);
-                fm = min(fm, area.longitude4);
-                if (fm > cp.y)
-                    continue;
-                fm = area.latitude1;
-                fm = max(fm, area.latitude2);
-                fm = max(fm, area.latitude3);
-                fm = max(fm, area.latitude4);
-                if (fm < cp.x)
-                    continue;
-                fm = area.longitude1;
-                fm = max(fm, area.longitude2);
-                fm = max(fm, area.longitude3);
-                fm = max(fm, area.longitude4);
-                if (fm < cp.y)
-                    continue;                    
-
                 if (!inside(area, loc))
                     continue;
 
