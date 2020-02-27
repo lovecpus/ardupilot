@@ -1143,6 +1143,13 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_CAMERA_TRIGGER:
         if (stage == TAKE_PICTURE)
         {
+            if (vecPoints.empty())
+            {
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
+                return_to_manual_control(false);
+                break;
+            }
+
             stage = PREPARE_FOLLOW;
             auto_yaw.set_mode(AUTO_YAW_HOLD);
             gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] CAMERA_TRIGGERED, Prepare to EDGE FOLLOW.");
