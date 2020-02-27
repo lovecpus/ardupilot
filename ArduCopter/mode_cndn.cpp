@@ -635,7 +635,7 @@ bool ModeCNDN::init(bool ignore_checks)
         dest_A.zero();
         dest_B.zero();
 
-        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MODE INITIALIZED[%d].", vecAreas.size());
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MODE INITIALIZED.");
     }
     else
     {
@@ -1065,10 +1065,9 @@ void ModeCNDN::detecteEdge()
         Vector2f eg2(vd2 * eg_cm);
         vecPoints[0] += eg1;
         vecPoints[1] += eg2;
-        vecPoints[3] -= eg1;
-        vecPoints[4] -= eg2;
-
-        vecPoints.end() = vecPoints.front();
+        vecPoints[2] -= eg1;
+        vecPoints[3] -= eg2;
+        vecPoints[4] = vecPoints[0];
 
         vecRects.resize(vecPoints.size());
         std::copy(vecPoints.begin(), vecPoints.end(), vecRects.begin());
