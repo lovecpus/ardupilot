@@ -798,6 +798,10 @@ void ModeCNDN::run()
     } break;
 
     case PREPARE_FOLLOW:
+    {
+        processArea();
+    } break;
+    
     case FINISHED:
     case MANUAL:
         manual_control();
@@ -862,9 +866,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
         if (_method.get() == 0)
             break;
 #if USE_ETRI == DISABLED
-        if (dest_num > 1) {
-            processArea();
-        } else if (dest_num > 0) {
+        if (dest_num > 0) {
             init_speed();
 
             Vector3f stopping_point;
@@ -873,6 +875,8 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 
             detecteEdge();
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d DETECTED EDGES.", edge_count);
+            if (edge_count > 0)
+                stage = PREPARE_FOLLOW;
         }
 #else
         if (dest_num > 0) {
@@ -912,6 +916,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     } break;
 
     case PREPARE_FOLLOW:
+#if USE_ETRI == ENABLED    
         if (dest_num == 2)
         {
             wp_nav->wp_and_spline_init();
@@ -931,6 +936,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 return_to_manual_control(false);
             }
         }
+#endif
     case TAKE_PICTURE:
     case EDGE_FOLLOW:
     case MOVE_TO_EDGE:
@@ -981,10 +987,20 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
 
 void ModeCNDN::detecteEdge()
 {
-    edge_count = 0;
+    Vector3f hpos, pcm;
     CNAREA edge = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
-
     Location loc(copter.current_loc);
+
+    edge_count = 0;
+
+    for (int i = 0; i < 10; i++)
+        edge_points[i].zero();
+    vecRects.clear();
+    vecPoints.clear();
+
+    if (!ahrs.get_home().get_vector_from_origin_NEU(hpos))
+        return;
+
     for(uint16_t i=0; i<vecAreas.size(); i++)
     {
         CNAREA& area = vecAreas[i];
@@ -995,101 +1011,83 @@ void ModeCNDN::detecteEdge()
         break;
     }
 
-    for (int i = 0; i < 10; i++)
-        edge_points[i].zero();
+    if (edge_count < 4)
+        return;
 
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] Detect (%d points).", edge_count);
-    if (edge_count > 0)
+    edge_points[0].x = edge.latitude1;
+    edge_points[0].y = edge.longitude1;
+    edge_points[1].x = edge.latitude2;
+    edge_points[1].y = edge.longitude2;
+    edge_points[2].x = edge.latitude3;
+    edge_points[2].y = edge.longitude3;
+    edge_points[3].x = edge.latitude4;
+    edge_points[3].y = edge.longitude4;
+
+    Vector2f cpos(hpos.x, hpos.y);
+    for (int i = 0; i < edge_count; i++)
     {
-        edge_points[0].x = edge.latitude1;
-        edge_points[0].y = edge.longitude1;
-        edge_points[1].x = edge.latitude2;
-        edge_points[1].y = edge.longitude2;
-        edge_points[2].x = edge.latitude3;
-        edge_points[2].y = edge.longitude3;
-        edge_points[3].x = edge.latitude4;
-        edge_points[3].y = edge.longitude4;
+        Vector2f& pos = edge_points[i];
+        pcm = locNEU(pos.x, pos.y, _mission_alt_cm.get() * 0.01f);
+        vecRects.push_back(Vector2f(pcm.x, pcm.y));
     }
 
-    vecRects.clear();
-    vecPoints.clear();
-
-    if (edge_count > 0) {
-        Vector3f hpos;
-        if (!ahrs.get_home().get_vector_from_origin_NEU(hpos))
+    float minlen = (vecRects.front()-cpos).length();
+    Vector2f apos = vecRects.front();
+    vecPoints.push_back(apos);
+    for (int i = 1; i < (int)vecRects.size(); i++)
+    {
+        if ((vecRects[i]-cpos).length() < minlen)
         {
-            edge_count = 0;
-            return;
+            apos = vecRects[i];
+            minlen = (apos-cpos).length();
         }
-        Vector2f cpos(hpos.x, hpos.y);
+        vecPoints.push_back(vecRects[i]);
+    }
 
-        // GEO to NEU
-        Vector3f pcm; // position (North, East, Up coordinates) in centimeters
-        for (int i = 0; i < edge_count; i++)
-        {
-            Vector2f& pos = edge_points[i];
-            pcm = locNEU(pos.x, pos.y, _mission_alt_cm.get() * 0.01f);
-            vecRects.push_back(Vector2f(pcm.x, pcm.y));
-        }
-
-        float minlen = (vecRects.front()-cpos).length();
-        Vector2f apos = vecRects.front();
-        vecPoints.push_back(apos);
-        for (int i = 1; i < (int)vecRects.size(); i++)
-        {
-            if ((vecRects[i]-cpos).length() < minlen)
-            {
-                apos = vecRects[i];
-                minlen = (apos-cpos).length();
-            }
-            vecPoints.push_back(vecRects[i]);
-        }
-
-        for(int i = 0; i < (int)vecPoints.size(); i++)
-        {
-            if ((vecPoints.front()-apos).length() <= 0.001f)
-                break;
-            cpos = vecPoints.front();
-            vecPoints.pop_front();
-            vecPoints.push_back(cpos);
-        }
-
+    for(int i = 0; i < (int)vecPoints.size(); i++)
+    {
+        if ((vecPoints.front()-apos).length() <= 0.001f)
+            break;
+        cpos = vecPoints.front();
         vecPoints.pop_front();
-        if ((vecPoints.front()-apos).length() < (vecPoints.back()-apos).length())
-            std::reverse(vecPoints.begin(), vecPoints.end());
-        vecPoints.push_front(apos);
-        vecPoints.push_back(apos);
-
-        Vector2f vd1 = (vecPoints[3] - vecPoints[0]); // step vector
-        Vector2f vd2 = (vecPoints[2] - vecPoints[1]); // step vector
-        vd1.normalize();
-        vd2.normalize();
-
-        float eg_cm = _dst_eg_cm.get() * 1.0f;
-        Vector2f eg1(vd1 * eg_cm);
-        Vector2f eg2(vd2 * eg_cm);
-        vecPoints[0] += eg1;
-        vecPoints[1] += eg2;
-        vecPoints[2] -= eg1;
-        vecPoints[3] -= eg2;
-
-        vd1 = (vecPoints[1] - vecPoints[0]); // step vector
-        vd2 = (vecPoints[3] - vecPoints[2]); // step vector
-        vd1.normalize();
-        vd2.normalize();
-        eg1 = (vd1 * eg_cm);
-        eg2 = (vd2 * eg_cm);
-
-        vecPoints[0] += eg1;
-        vecPoints[1] -= eg1;
-        vecPoints[2] += eg2;
-        vecPoints[3] -= eg2;
-
-        vecPoints[4] = vecPoints[0];
-
-        vecRects.resize(vecPoints.size());
-        std::copy(vecPoints.begin(), vecPoints.end(), vecRects.begin());
+        vecPoints.push_back(cpos);
     }
+
+    vecPoints.pop_front();
+    if ((vecPoints.front()-apos).length() < (vecPoints.back()-apos).length())
+        std::reverse(vecPoints.begin(), vecPoints.end());
+    vecPoints.push_front(apos);
+    vecPoints.push_back(apos);
+
+    Vector2f vd1 = (vecPoints[3] - vecPoints[0]); // step vector
+    Vector2f vd2 = (vecPoints[2] - vecPoints[1]); // step vector
+    vd1.normalize();
+    vd2.normalize();
+
+    float eg_cm = _dst_eg_cm.get() * 1.0f;
+    Vector2f eg1(vd1 * eg_cm);
+    Vector2f eg2(vd2 * eg_cm);
+    vecPoints[0] += eg1;
+    vecPoints[1] += eg2;
+    vecPoints[2] -= eg1;
+    vecPoints[3] -= eg2;
+
+    vd1 = (vecPoints[1] - vecPoints[0]); // step vector
+    vd2 = (vecPoints[3] - vecPoints[2]); // step vector
+    vd1.normalize();
+    vd2.normalize();
+    eg1 = (vd1 * eg_cm);
+    eg2 = (vd2 * eg_cm);
+
+    vecPoints[0] += eg1;
+    vecPoints[1] -= eg1;
+    vecPoints[2] += eg2;
+    vecPoints[3] -= eg2;
+
+    vecPoints[4] = vecPoints[0];
+
+    vecRects.resize(vecPoints.size());
+    std::copy(vecPoints.begin(), vecPoints.end(), vecRects.begin());
 }
 
 void ModeCNDN::processArea()
@@ -1197,25 +1195,22 @@ void ModeCNDN::processArea()
     AP::mission()->add_cmd(cmd);
 
     wp_nav->wp_and_spline_init();
-    if (_method.get() == 3)
+    init_speed();
+
+    if (!vecPoints.empty())
     {
-        init_speed();
-        if (!vecPoints.empty())
-        {
-            stage = PREPARE_FOLLOW;
-            Vector3f hpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
-            wp_nav->set_wp_destination(hpos, false);
-            last_yaw_cd = degNE(vecPoints[1], vecPoints[0]) * 100.0f;
-            auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
-            vecPoints.pop_front();
-            stage = MOVE_TO_EDGE;
-        }
-        else
-        {
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
-            return_to_manual_control(false);
-        }
+        Vector3f hpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
+        wp_nav->set_wp_destination(hpos, false);
+        last_yaw_cd = degNE(vecPoints[1], vecPoints[0]) * 100.0f;
+        auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
+        vecPoints.pop_front();
+        stage = MOVE_TO_EDGE;
+    }
+    else
+    {
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
+        return_to_manual_control(false);
     }
 }
 
