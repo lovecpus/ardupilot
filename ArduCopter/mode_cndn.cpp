@@ -1175,10 +1175,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             Vector2f step1(vd1 * lw_cm);
             Vector2f step2(vd2 * lw_cm);
 
-            Vector2f p1(vecRects[0]),p2(vecRects[1]),p3,p4;
-            p1 += step1;
-            p2 += step2;
-
+            Vector2f p1(vecRects[0] + step1),p2(vecRects[1] + step2),p3,p4;
             float ll_cm = lw_cm;
 
             for (float l = 0.0f; l < ldir - lw_cm; l += lw_cm * 2.0f)
