@@ -968,7 +968,7 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
 void ModeCNDN::detecteEdge()
 {
     edge_count = 0;
-    CNAREA edge;
+    CNAREA edge = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
 
     Location loc(copter.current_loc);
     for(uint16_t i=0; i<vecAreas.size(); i++)
@@ -989,19 +989,10 @@ void ModeCNDN::detecteEdge()
     {
         edge_points[0].x = edge.latitude1;
         edge_points[0].y = edge.longitude1;
-    }
-    if (edge_count > 1)
-    {
         edge_points[1].x = edge.latitude2;
-        edge_points[1].y =  edge.longitude2;
-    }
-    if (edge_count > 2)
-    {
+        edge_points[1].y = edge.longitude2;
         edge_points[2].x = edge.latitude3;
         edge_points[2].y = edge.longitude3;
-    }
-    if (edge_count > 3)
-    {
         edge_points[3].x = edge.latitude4;
         edge_points[3].y = edge.longitude4;
     }
