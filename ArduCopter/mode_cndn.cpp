@@ -1228,22 +1228,22 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
             cmd.id = MAV_CMD_DO_SET_ROI;
             cmd.p1 = 0;
-            cmd.content.location = Location(int32_t(edge_points[0].x * 1e7),  int32_t(edge_points[0].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME));
+            cmd.content.location = Location(int32_t(edge_points[0].x * 1e7),  int32_t(edge_points[0].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
             AP::mission()->add_cmd(cmd);
 
             cmd.id = MAV_CMD_DO_SET_ROI;
             cmd.p1 = 0;
-            cmd.content.location = Location(int32_t(edge_points[1].x * 1e7),  int32_t(edge_points[1].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME));
+            cmd.content.location = Location(int32_t(edge_points[1].x * 1e7),  int32_t(edge_points[1].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
             AP::mission()->add_cmd(cmd);
 
             cmd.id = MAV_CMD_DO_SET_ROI;
             cmd.p1 = 0;
-            cmd.content.location = Location(int32_t(edge_points[2].x * 1e7),  int32_t(edge_points[2].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME));
+            cmd.content.location = Location(int32_t(edge_points[2].x * 1e7),  int32_t(edge_points[2].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
             AP::mission()->add_cmd(cmd);
 
             cmd.id = MAV_CMD_DO_SET_ROI;
             cmd.p1 = 0;
-            cmd.content.location = Location(int32_t(edge_points[3].x * 1e7),  int32_t(edge_points[3].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME));
+            cmd.content.location = Location(int32_t(edge_points[3].x * 1e7),  int32_t(edge_points[3].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
             AP::mission()->add_cmd(cmd);
 
             if (_method.get() == 3)
