@@ -1293,7 +1293,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             packet.edge_count = 0;
             Location loc(copter.current_loc);
             //for(uint16_t i=0; i<vecAreas.size(); i++)
-            for(uint16_t i=0; i<100; i++)
+            for(uint16_t i=0; i<20; i++)
             {
                 CNAREA& area = vecAreas[i];
                 if (!inside(area, loc))
