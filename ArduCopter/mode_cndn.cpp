@@ -1167,6 +1167,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
             Vector2f vd1 = (vecRects[3] - vecRects[0]); // step vector
             Vector2f vd2 = (vecRects[2] - vecRects[1]); // step vector
+            float ldir = vd2.length();
             vd1.normalize();
             vd2.normalize();
 
