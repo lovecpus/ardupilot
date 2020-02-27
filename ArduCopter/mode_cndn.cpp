@@ -861,9 +861,10 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     case MANUAL: {
         if (_method.get() == 0)
             break;
-
+#if USE_ETRI == DISABLED
         if (dest_num > 1) {
             processArea();
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] CREATING MISSION.");
         } else if (dest_num > 0) {
             init_speed();
 
@@ -872,7 +873,16 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             wp_nav->set_wp_destination(stopping_point, false);
 
             detecteEdge();
-/*
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d DETECTED EDGES.", edge_count);
+        }
+#else
+        if (dest_num > 0) {
+            init_speed();
+
+            Vector3f stopping_point;
+            wp_nav->get_wp_stopping_point(stopping_point);
+            wp_nav->set_wp_destination(stopping_point, false);
+
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SIGNAL TO ETRI-MC.");
             gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
             // set to position control mode
@@ -898,7 +908,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             } else {
                 stage = TAKE_PICTURE;
             }
-*/
+#endif
         }
     } break;
 
