@@ -729,25 +729,28 @@ void ModeCNDN::run()
         auto_control();
         if (reached_destination())
         {
-            if (!vecPoints.empty())
-            {
-                const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
-                wp_nav->set_wp_destination(tpos, false);
-                auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
-                vecPoints.pop_front();
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] GO TO NEXT EDGE.");
-            }
-            else
+            // if (!vecPoints.empty())
+            // {
+            //     const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
+            //     wp_nav->set_wp_destination(tpos, false);
+            //     auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
+            //     vecPoints.pop_front();
+            //     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] GO TO NEXT EDGE.");
+            // }
+            // else
             {
                 stage = PREPARE_AUTO;
                 int rd = -999;
                 if (vecRects.size() > 2)
                 {
+                    init_speed();
+                    const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
+                    wp_nav->set_wp_destination(tpos, false);
                     rd = degNE(vecRects[1], vecRects[0]);
                     last_yaw_cd = rd * 100.0f;
                     auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
                 }
-                gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
+                //gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
             }
         }
         break;
@@ -759,15 +762,13 @@ void ModeCNDN::run()
             stage = EDGE_FOLLOW;
             // speed control for edge
             init_speed();
-            pos_control->set_max_speed_xy(_spd_eg_cmss.get()*1.0f);
-            pos_control->calc_leash_length_xy();
 
             if (!vecPoints.empty())
             {
                 const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
                 wp_nav->set_wp_destination(tpos, false);
                 auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
-                gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
+                //gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
                 vecPoints.pop_front();
             }
         }
@@ -1115,6 +1116,76 @@ void ModeCNDN::processArea()
     Vector2f p1(vecPoints[0] + step1),p2(vecPoints[1] + step2),p3,p4;
     float ll_cm = lw_cm;
 
+    cmd.id = MAV_CMD_NAV_WAYPOINT;
+    cmd.p1 = 1;
+    cmd.content.location = Location(Vector3f(vecPoints[0].x, vecPoints[0].y, _mission_alt_cm.get()*1.0f));
+    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_CONDITION_YAW;
+    cmd.p1 = 1;
+    cmd.content.yaw.angle_deg = degNE(vecPoints[1], vecPoints[0]);
+    cmd.content.yaw.turn_rate_dps = 0;
+    cmd.content.yaw.direction = 0;
+    cmd.content.yaw.relative_angle = 0;
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_NAV_WAYPOINT;
+    cmd.p1 = 1;
+    cmd.content.location = Location(Vector3f(vecPoints[1].x, vecPoints[1].y, _mission_alt_cm.get()*1.0f));
+    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_CONDITION_YAW;
+    cmd.p1 = 1;
+    cmd.content.yaw.angle_deg = degNE(vecPoints[2], vecPoints[1]);
+    cmd.content.yaw.turn_rate_dps = 0;
+    cmd.content.yaw.direction = 0;
+    cmd.content.yaw.relative_angle = 0;
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_NAV_WAYPOINT;
+    cmd.p1 = 1;
+    cmd.content.location = Location(Vector3f(vecPoints[2].x, vecPoints[2].y, _mission_alt_cm.get()*1.0f));
+    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_CONDITION_YAW;
+    cmd.p1 = 1;
+    cmd.content.yaw.angle_deg = degNE(vecPoints[3], vecPoints[2]);
+    cmd.content.yaw.turn_rate_dps = 0;
+    cmd.content.yaw.direction = 0;
+    cmd.content.yaw.relative_angle = 0;
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_NAV_WAYPOINT;
+    cmd.p1 = 1;
+    cmd.content.location = Location(Vector3f(vecPoints[3].x, vecPoints[3].y, _mission_alt_cm.get()*1.0f));
+    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_CONDITION_YAW;
+    cmd.p1 = 1;
+    cmd.content.yaw.angle_deg = degNE(vecPoints[4], vecPoints[3]);
+    cmd.content.yaw.turn_rate_dps = 0;
+    cmd.content.yaw.direction = 0;
+    cmd.content.yaw.relative_angle = 0;
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_NAV_WAYPOINT;
+    cmd.p1 = 1;
+    cmd.content.location = Location(Vector3f(vecPoints[4].x, vecPoints[4].y, _mission_alt_cm.get()*1.0f));
+    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_CONDITION_YAW;
+    cmd.p1 = 1;
+    cmd.content.yaw.angle_deg = degNE(vecPoints[1], vecPoints[0]);
+    cmd.content.yaw.turn_rate_dps = 0;
+    cmd.content.yaw.direction = 0;
+    cmd.content.yaw.relative_angle = 0;
+    AP::mission()->add_cmd(cmd);
+
     for (float l = 0.0f; l < ldir - lw_cm; l += lw_cm * 2.0f)
     {
         p4 = p1 + step1;
@@ -1194,7 +1265,8 @@ void ModeCNDN::processArea()
         auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
         vecPoints.pop_front();
-        stage = MOVE_TO_EDGE;
+        //stage = MOVE_TO_EDGE;
+        stage = PREPARE_AUTO;
     }
     else
     {
