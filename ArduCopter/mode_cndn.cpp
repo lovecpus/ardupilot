@@ -1047,7 +1047,7 @@ void ModeCNDN::processArea(int _mode)
     if (_mode == 1) // auto takeoff
     {
         cmd.id = MAV_CMD_NAV_TAKEOFF;
-        cmd.p1 = 0;
+        cmd.p1 = 10;
         cmd.content.location = AP::ahrs().get_home();
         cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
         AP::mission()->add_cmd(cmd);
