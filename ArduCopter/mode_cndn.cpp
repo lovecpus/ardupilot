@@ -728,10 +728,13 @@ void ModeCNDN::run()
     case PREPARE_FOLLOW:
         processArea();
         break;
+
+    case EDGE_FOLLOW:
+        processArea(1);
+        break;
     
     case TAKE_PICTURE:
     case MOVE_TO_EDGE:
-    case EDGE_FOLLOW:
     case FINISHED:
     case MANUAL:
         manual_control();
@@ -806,7 +809,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             detecteEdge();
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d DETECTED EDGES.", edge_count);
             if (edge_count > 0)
-                stage = PREPARE_FOLLOW;
+                stage = (dest_num==2) ? EDGE_FOLLOW : PREPARE_FOLLOW;
         }
 #else
         if (dest_num > 0) {
