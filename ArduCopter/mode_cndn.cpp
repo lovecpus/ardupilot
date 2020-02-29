@@ -725,71 +725,13 @@ void ModeCNDN::run()
         }
     } break;
 
-    case EDGE_FOLLOW:
-        auto_control();
-        if (reached_destination())
-        {
-            // if (!vecPoints.empty())
-            // {
-            //     const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
-            //     wp_nav->set_wp_destination(tpos, false);
-            //     auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
-            //     vecPoints.pop_front();
-            //     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] GO TO NEXT EDGE.");
-            // }
-            // else
-            {
-                stage = PREPARE_AUTO;
-                int rd = -999;
-                if (vecRects.size() > 2)
-                {
-                    init_speed();
-                    const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
-                    wp_nav->set_wp_destination(tpos, false);
-                    rd = degNE(vecRects[1], vecRects[0]);
-                    last_yaw_cd = rd * 100.0f;
-                    auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
-                }
-                //gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
-            }
-        }
-        break;
-
-    case MOVE_TO_EDGE:
-        auto_control();
-        if (reached_destination())
-        {
-            stage = EDGE_FOLLOW;
-            // speed control for edge
-            init_speed();
-
-            if (!vecPoints.empty())
-            {
-                const Vector3f tpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
-                wp_nav->set_wp_destination(tpos, false);
-                auto_yaw.set_mode(AUTO_YAW_LOOK_AT_NEXT_WP);
-                //gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
-                vecPoints.pop_front();
-            }
-        }
-        break;
-
-    case TAKE_PICTURE:
-    {
-        auto_control();
-        bool bReach = b_position_target_reached;
-        b_position_target_reached = reached_destination();
-        if (bReach != b_position_target_reached && b_position_target_reached)
-        {
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SPT COMPLETE. TAKE PICTURE.");
-        }
-    } break;
-
     case PREPARE_FOLLOW:
-    {
         processArea();
-    } break;
+        break;
     
+    case TAKE_PICTURE:
+    case MOVE_TO_EDGE:
+    case EDGE_FOLLOW:
     case FINISHED:
     case MANUAL:
         manual_control();
@@ -1265,7 +1207,6 @@ void ModeCNDN::processArea()
         auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
         vecPoints.pop_front();
-        //stage = MOVE_TO_EDGE;
         stage = PREPARE_AUTO;
     }
     else
