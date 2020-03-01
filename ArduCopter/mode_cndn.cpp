@@ -915,7 +915,7 @@ void ModeCNDN::detecteEdge()
     }
 
     vecPoints.pop_front();
-    if (vecPoints.front().get_distance(apos) < (vecPoints.back().get_distance(apos))
+    if (vecPoints.front().get_distance(apos) < vecPoints.back().get_distance(apos))
         std::reverse(vecPoints.begin(), vecPoints.end());
     vecPoints.push_front(apos);
     vecPoints.push_back(apos);
