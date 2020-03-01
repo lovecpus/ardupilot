@@ -5,12 +5,6 @@
 #if MODE_CNDN_ENABLED == ENABLED
 
 #define USE_ETRI DISABLED
-#define USE_EDGE_FOLLOW DISABLED
-
-#if USE_EDGE_FOLLOW == ENABLED
-AP_RangeFinder_ETRI *rf_rt = nullptr;
-AP_RangeFinder_ETRI *rf_lf = nullptr;
-#endif
 
 int degNE(const Vector2f& pp)
 {
@@ -643,16 +637,6 @@ void ModeCNDN::init_speed()
 
 void ModeCNDN::run()
 {
-#if USE_EDGE_FOLLOW == ENABLED
-    if (rf_rt == nullptr) rf_rt = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(1);
-    if (rf_lf == nullptr) rf_lf = (AP_RangeFinder_ETRI *)AP::rangefinder()->get_backend(2);
-    if (rf_rt != nullptr && rf_rt->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_rt = nullptr;
-    if (rf_lf != nullptr && rf_lf->type() != RangeFinder::RangeFinder_Type::RangeFinder_TYPE_ETRI) rf_lf = nullptr;
-    if (stage != EDGE_FOLLOW && rf_rt!=nullptr && rf_lf != nullptr){
-        rf_rt->set_distance(50.0f);
-        rf_lf->set_distance(50.0f);
-    }
-#endif
     // initialize vertical speed and acceleration's range
     pos_control->set_max_speed_z(-_spd_dn_cmss.get()*1.0f, _spd_up_cmss.get()*1.0f);
     pos_control->set_max_accel_z(g.pilot_accel_z);
@@ -729,7 +713,7 @@ void ModeCNDN::run()
         processArea(1);
         break;
     
-    case TAKE_PICTURE:
+    case TAKE_AREA:
     case MOVE_TO_EDGE:
     case FINISHED:
     case MANUAL:
@@ -741,7 +725,7 @@ void ModeCNDN::run()
 bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool yaw_relative)
 {
     // ensure we are in position control mode
-    if (stage != TAKE_PICTURE)
+    if (stage != TAKE_AREA)
         pos_control_start();
 
 #if AC_FENCE == ENABLED
@@ -790,11 +774,12 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 {
     // handle state machine changes
     switch (stage) {
-    case MANUAL: {
+    case MANUAL:
         if (_method.get() == 0)
             break;
-#if USE_ETRI == DISABLED
+
         if (dest_num > 0) {
+            wp_nav->wp_and_spline_init();
             init_speed();
 
             Vector3f stopping_point;
@@ -806,66 +791,10 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             if (edge_count > 0)
                 stage = (dest_num==2) ? EDGE_FOLLOW : PREPARE_FOLLOW;
         }
-#else
-        if (dest_num > 0) {
-            init_speed();
-
-            Vector3f stopping_point;
-            wp_nav->get_wp_stopping_point(stopping_point);
-            wp_nav->set_wp_destination(stopping_point, false);
-
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SIGNAL TO ETRI-MC.");
-            gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
-            // set to position control mode
-            if (_method.get() == 2) {
-                if (!vecRects.empty()) {
-                    vecPoints.resize(vecRects.size());
-                    std::copy(vecRects.begin(), vecRects.end(), vecPoints.begin());
-                }
-
-                if (!vecPoints.empty()) {
-                    Vector3f hpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
-
-                    wp_nav->set_wp_destination(hpos, false);
-                    last_yaw_cd = degNE(vecPoints[1], vecPoints[0]) * 100.0f;
-                    auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
-                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
-                    vecPoints.pop_front();
-                    stage = MOVE_TO_EDGE;
-                } else {
-                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] NO DETECTED EDGES.");
-                    return_to_manual_control(false);
-                }
-            } else {
-                stage = TAKE_PICTURE;
-            }
-        }
-#endif
-    } break;
+        break;
 
     case PREPARE_FOLLOW:
-#if USE_ETRI == ENABLED    
-        if (dest_num == 2)
-        {
-            wp_nav->wp_and_spline_init();
-            if (!vecPoints.empty())
-            {
-                Vector3f hpos(vecPoints.front().x, vecPoints.front().y, _mission_alt_cm.get() * 1.0f);
-                wp_nav->set_wp_destination(hpos, false);
-                last_yaw_cd = degNE(vecPoints[1], vecPoints[0]) * 100.0f;
-                auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
-                vecPoints.pop_front();
-                stage = MOVE_TO_EDGE;
-            }
-            else
-            {
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] NO DETECTED EDGES.");
-                return_to_manual_control(false);
-            }
-        }
-#endif
-    case TAKE_PICTURE:
+    case TAKE_AREA:
     case EDGE_FOLLOW:
     case MOVE_TO_EDGE:
     case PREPARE_AUTO:
@@ -874,14 +803,13 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     case PREPARE_FINISH:
     case FINISHED:
     default:
-    {
         if (dest_num == 0)
         {
             wp_nav->wp_and_spline_init();
             return_to_manual_control(false);
             return;
         }
-    } break;
+        break;
     }
 }
 
@@ -1366,7 +1294,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 break;
 
             case 1:
-                stage = TAKE_PICTURE;
+                stage = TAKE_AREA;
                 gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : IMAGE_START_CAPTURE.", int(packet.value));
                 break;
@@ -1392,34 +1320,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 break;
             }
         }
-    }
-    break;
-
-#if USE_ETRI == ENABLED
-    case MAVLINK_MSG_ID_CAMERA_TRIGGER:
-        if (stage == TAKE_PICTURE)
-        {
-            processArea();
-        }
-        break;
-
-    case MAVLINK_MSG_ID_ETRI_PADDY_EDGE_GPS_INFORMATION:
-        if (stage == TAKE_PICTURE)
-        {
-            // mavlink_etri_paddy_edge_gps_information_t packet;
-            // mavlink_msg_etri_paddy_edge_gps_information_decode(&msg, &packet);
-            detecteEdge();
-        }
-        break;
-#endif
-    case MAVLINK_MSG_ID_ETRI_PADDY_DETECT_COMMAND:
-        break;
-
-    case MAVLINK_MSG_ID_ETRI_DRONE_PADDY_DISTANCE:
-    {
-        mavlink_etri_drone_paddy_distance_t packet;
-        mavlink_msg_etri_drone_paddy_distance_decode(&msg, &packet);
-        //gcs().send_text(MAV_SEVERITY_INFO, "[MAV] ETRI_DISTANCE (%0.3f)", packet.distance);
     }
     break;
     }
@@ -1462,27 +1362,6 @@ void ModeCNDN::auto_control()
 
     float roll_target = wp_nav->get_roll();
     float pitch_target = wp_nav->get_pitch();
-
-    // control edge following to attitute controller
-
-#if USE_EDGE_FOLLOW == ENABLED
-    if (stage == EDGE_FOLLOW) {
-        float fv = rc().channel(5)->norm_input();
-        float ferrv = /*_dst_eg_cm.get() * 0.01f - */fv * 10.0f;
-
-        if (rf_rt != nullptr && rf_lf != nullptr)
-        {
-            if (ferrv > 0.0f){
-                rf_lf->set_distance(10.0f - fabsf(ferrv));
-                rf_rt->set_distance(20.0f);
-            }else if (ferrv < 0.0f){
-                rf_lf->set_distance(20.0f);
-                rf_rt->set_distance(10.0f - fabsf(ferrv));
-            }else{
-                rf_lf->set_distance(20.0f);
-                rf_rt->set_distance(20.0f);
-            }
-        }
 
 #if AC_AVOID_ENABLED == ENABLED
         // apply avoidance
@@ -1527,25 +1406,6 @@ bool ModeCNDN::reached_destination()
         return false;
     }
 
-    // check height to destination
-    if (stage == TAKE_PICTURE)
-    {
-        const Vector3f cpos = inertial_nav.get_position();
-        Vector3f tpos = wp_nav->get_wp_destination() - cpos;
-        float fz = sqrtf(tpos.x*tpos.x+tpos.y*tpos.y+tpos.z*tpos.z);
-
-        if (fz > CNDN_WP_RADIUS_CM)
-        {
-            reach_wp_time_ms = 0;
-            return false;
-        }
-
-        if (!b_position_target)
-        {
-            reach_wp_time_ms = 0;
-            return false;
-        }
-    }
     // wait at least one second
     uint32_t now = AP_HAL::millis();
     if (reach_wp_time_ms == 0)

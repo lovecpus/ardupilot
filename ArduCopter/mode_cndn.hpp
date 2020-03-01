@@ -104,7 +104,7 @@ private:
     enum cndn_state
     {
         MANUAL,       // pilot toggle the switch to middle position, has manual control
-        TAKE_PICTURE, // storing points A and B, pilot has manual control
+        TAKE_AREA, // storing points A and B, pilot has manual control
         PREPARE_FOLLOW,
         MOVE_TO_EDGE,
         EDGE_FOLLOW,
