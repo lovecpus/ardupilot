@@ -683,8 +683,13 @@ void ModeCNDN::run()
 
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH.");
 
-            const Vector3f tpos(vecPoints.back().x, vecPoints.back().y, _mission_alt_cm.get() * 1.0f);
-            wp_nav->set_wp_destination(tpos, false);
+            if (!vecPoints.empty())
+            {
+                Vector3f tpos;
+                vecPoints.back().get_vector_from_origin_NEU(tpos);
+                tpos.z = _mission_alt_cm.get() * 1.0f;
+                wp_nav->set_wp_destination(tpos, false);
+            }
             auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
         }
     } break;
@@ -924,7 +929,7 @@ void ModeCNDN::detecteEdge()
     }
 
     vecPoints.pop_front();
-    if ((vecPoints.front()-apos).length() < (vecPoints.back()-apos).length())
+    if ((vecPoints.front().get_distance(apos) < (vecPoints.back().get_distance(apos))
         std::reverse(vecPoints.begin(), vecPoints.end());
     vecPoints.push_front(apos);
     vecPoints.push_back(apos);
