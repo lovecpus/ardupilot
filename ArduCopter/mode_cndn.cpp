@@ -606,20 +606,20 @@ bool ModeCNDN::init(bool ignore_checks)
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
 
+    AP_Mission *_mission = AP::mission();
     if (stage != RETURN_AUTO)
     {
         // initialise waypoint state
         stage = MANUAL;
         b_position_target = false;
         last_yaw_ms = 0;
-        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MODE INITIALIZED.");
+        AP_Mission::mission_state mstate = _mission->state();
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MODE INITIALIZED[%d].", int(mstate));
     }
     else
     {
-        AP_Mission *_mission = AP::mission();
         if (vecRects.empty() && _mission->contains_item(MAV_CMD_DO_SET_ROI))
         {
-            AP_Mission::mission_state mstate = _mission-state();
             uint16_t nCmds = _mission->num_commands();
             for (uint16_t i=0; i < nCmds; i++)
             {
