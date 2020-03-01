@@ -619,8 +619,7 @@ bool ModeCNDN::init(bool ignore_checks)
     }
     else
     {
-        if (vecRects.empty())
-        {/*
+        if (vecRects.empty()) {
             uint16_t nCmds = _mission->num_commands();
             for (uint16_t i=0; i < nCmds; i++)
             {
@@ -633,7 +632,7 @@ bool ModeCNDN::init(bool ignore_checks)
                     vecRects.push_back(Vector2f(pcm.x, pcm.y));
                 }
             }
-
+/*
             if (!vecRects.empty())
             {
                 vecRects.push_back(vecRects.front());
