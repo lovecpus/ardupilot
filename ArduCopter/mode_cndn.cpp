@@ -972,14 +972,16 @@ void ModeCNDN::processArea(int _mode)
 
     vr1.z = vr2.z = vr3.z = vr4.z = 0;
 
+    vr1.normalize();
     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] DEBUG.");
     return;
-
-    vr1.normalize();
     vr2.normalize();
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] DEBUG.");
+    return;
     vr3.normalize();
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] DEBUG.");
+    return;
     vr4.normalize();
-
     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] DEBUG.");
     return;
 
