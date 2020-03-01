@@ -888,7 +888,7 @@ void ModeCNDN::detecteEdge()
 
     std::deque<Location> vecRects;
     for (int i = 0; i < 4; i++) {
-        vecRects.push_back(Location(int32_t(edge.pos[i].x*1e7), int32_t(edge.pos[i].y*1e7), 300, Location::AltFrame::ABSOLUTE)));
+        vecRects.push_back(Location(int32_t(edge.pos[i].x*1e7), int32_t(edge.pos[i].y*1e7), 300, Location::AltFrame::ABSOLUTE));
     }
     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 1: %u,%u,%u,%u", vecRects[0].lat,vecRects[1].lat,vecRects[2].lat,vecRects[3].lat);
 
