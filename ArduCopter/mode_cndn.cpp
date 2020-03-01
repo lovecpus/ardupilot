@@ -37,7 +37,7 @@ bool inside(const CNAREA& area, const Vector2f& cp)
     const Vector2f *vp;
     vp = (const Vector2f *)area.pos;
 
-    for(uint16_t i=0; i<4; i++)
+    for (uint16_t i=0; i<4; i++)
     {
         int j=(i + 1) % 4;
         if ((vp[i].y > cp.y) != (vp[j].y > cp.y))
@@ -872,7 +872,7 @@ void ModeCNDN::detecteEdge()
     CNAREA edge;
     Location loc(copter.current_loc);
     bool bFound = false;
-    for(uint16_t i=0; i<vecAreas.size(); i++) {
+    for (uint16_t i=0; i<vecAreas.size(); i++) {
         CNAREA& area = vecAreas[i];
         if (!inside(area, loc))
             continue;
@@ -906,7 +906,7 @@ void ModeCNDN::detecteEdge()
         vecPoints.push_back(vecRects[i]);
     }
 
-    for(int i = 0; i < (int)vecPoints.size(); i++) {
+    for (int i = 0; i < (int)vecPoints.size(); i++) {
         if (vecPoints.front().get_distance(apos) <= 1e-8f)
             break;
         Location lpo = vecPoints.front();
@@ -922,13 +922,17 @@ void ModeCNDN::detecteEdge()
 }
 
 bool lineIntersection(const Vector3f& a,const Vector3f& b,const Vector3f& c,const Vector3f& d, Vector2f &o){
-	Vector3f bma(b - a);
 	Vector3f dmc(d - c);
-	float det = bma % dmc;
-	if(fabsf(det) < 1e-9f)
+
+	Vector3f bma(b - a);
+	float det = bma.x*dmc.y - bma.y*dmc.x;
+	if (fabsf(det) < 1e-9f)
 		return false;
+
 	Vector3f cma(c-a);
-    Vector3f oo(a +  (bma * (cma * dmc)/det));
+	float cdt = cma.x*dmc.y - cma.y*dmc.x;
+
+    Vector3f oo(a + (bma * cdt/det));
     o.x = oo.x;
     o.y = oo.y;
     return true;
