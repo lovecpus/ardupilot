@@ -980,9 +980,6 @@ void ModeCNDN::processArea(int _mode)
     vr3.rotate(Rotation::ROTATION_YAW_90);
     vr4.rotate(Rotation::ROTATION_YAW_90);
 
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d clear.", __LINE__);
-    return;
-
     float eg_cm = _dst_eg_cm.get() * 1.0f;
     Vector3f vp00 = vp0 + vr1 * eg_cm;
     Vector3f vp01 = vp1 + vr1 * eg_cm;
@@ -1026,6 +1023,7 @@ void ModeCNDN::processArea(int _mode)
 
     vp0.z = vp1.z = vp2.z = vp3.z = alt_cm;
 
+    // gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d clear.", __LINE__);
     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] CREATING MISSION.");
     AP_Notify::events.waypoint_complete = 1;
 
