@@ -897,15 +897,13 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
 
 void ModeCNDN::detecteEdge()
 {
-    Vector3f hpos, pcm;
-    CNAREA edge;
-    Location loc(copter.current_loc);
-
+    Vector3f hpos;
     vecPoints.clear();
-
     if (!ahrs.get_home().get_vector_from_origin_NEU(hpos))
         return;
 
+    CNAREA edge;
+    Location loc(copter.current_loc);
     bool bFound = false;
     for(uint16_t i=0; i<vecAreas.size(); i++)
     {
@@ -1020,8 +1018,8 @@ void ModeCNDN::processArea(int _mode)
         AP::mission()->add_cmd(cmd);
     }
 
-    Vector2f vd1 = (vecPoints[3] - vecPoints[0]); // step vector
-    Vector2f vd2 = (vecPoints[2] - vecPoints[1]); // step vector
+    vd1 = (vecPoints[3] - vecPoints[0]); // step vector
+    vd2 = (vecPoints[2] - vecPoints[1]); // step vector
     float ldir = vd2.length();
     vd1.normalize();
     vd2.normalize();
