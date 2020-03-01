@@ -69,7 +69,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Units: cm
     // @Range: 2000 4000
     // @User: Standard
-    AP_GROUPINFO("TAKE_ALT", 1, ModeCNDN, _take_alt_cm, 1500),
+    AP_GROUPINFO("TAKE_ALT", 1, ModeCNDN, _take_alt_cm, 300),
 
     // @Param: MISSION_ALT
     // @DisplayName: Mission altitute
