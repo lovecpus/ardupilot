@@ -605,6 +605,24 @@ bool ModeCNDN::init(bool ignore_checks)
     init_speed();
 
     AP_Mission *_mission = AP::mission();
+    if (vecPoints.empty()) {
+        uint16_t nCmds = _mission->num_commands();
+        for (uint16_t i=0; i < nCmds; i++) {
+            AP_Mission::Mission_Command cmd;
+            if (_mission->read_cmd_from_storage(i, cmd)) {
+                if (cmd.id != MAV_CMD_DO_SET_ROI) continue;
+                vecPoints.push_back(Vector2f(cmd.content.location.lat*1e-7f, cmd.content.location.lng*1e-7f));
+            }
+        }
+
+        if (!vecPoints.empty()) {
+            vecPoints.push_back(vecPoints.front());
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FROM MISSION.");
+        } else {
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FAILED.");
+        }
+    }
+
     if (stage != RETURN_AUTO)
     {
         // initialise waypoint state
@@ -612,60 +630,10 @@ bool ModeCNDN::init(bool ignore_checks)
         b_position_target = false;
         last_yaw_ms = 0;
         AP_Mission::mission_state mstate = _mission->state();
-        uint16_t nCmds = _mission->num_commands();
-
-        if (vecPoints.empty()) {
-            for (uint16_t i=0; i < nCmds; i++)
-            {
-                AP_Mission::Mission_Command cmd;
-                if (_mission->read_cmd_from_storage(i, cmd))
-                {
-                    if (cmd.id != MAV_CMD_DO_SET_ROI) continue;
-                    vecPoints.push_back(Vector2f(cmd.content.location.lat*1e-7f, cmd.content.location.lng*1e-7f));
-                }
-            }
-
-            if (!vecPoints.empty())
-            {
-                vecPoints.push_back(vecPoints.front());
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FROM MISSION.");
-            }
-            else
-            {
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FAILED[%d].", int(nCmds));
-            }
-        }
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MODE INITIALIZED[%d].", int(mstate));
     }
     else
     {
-        if (vecPoints.empty()) {
-            uint16_t nCmds = _mission->num_commands();
-            /*
-            for (uint16_t i=0; i < nCmds; i++)
-            {
-                AP_Mission::Mission_Command cmd;
-                if (_mission->read_cmd_from_storage(i, cmd))
-                {
-                    if (cmd.id != MAV_CMD_DO_SET_ROI) continue;
-
-                    Vector3f pcm = locNEU(cmd.content.location.lat, cmd.content.location.lng, _mission_alt_cm.get() * 0.01f);
-                    vecPoints.push_back(Vector2f(pcm.x, pcm.y));
-                }
-            }
-            */
-/*
-            if (!vecPoints.empty())
-            {
-                vecPoints.push_back(vecPoints.front());
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FROM MISSION.");
-            }
-            else*/
-            {
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FAILED[%d].", int(nCmds));
-                stage = MANUAL;
-            }
-        }
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MISSION COMPLETE.");
     }
 
