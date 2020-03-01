@@ -979,7 +979,6 @@ void ModeCNDN::processArea(int _mode)
     Vector3f nm(t1 % t2);
     nm.normalize();
     Rotation rtYaw = (nm.z >= 0) ? Rotation::ROTATION_YAW_90 : Rotation::ROTATION_YAW_270;
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] CW: %f,%f,%f", nm.x,nm.y,nm.z);
 
     Vector3f vr1(vp1 - vp0);
     Vector3f vr2(vp2 - vp1);
@@ -987,10 +986,14 @@ void ModeCNDN::processArea(int _mode)
     Vector3f vr4(vp0 - vp3);
     vr1.z = vr2.z = vr3.z = vr4.z = 0;
 
+    float vdl = MAX(vr1.length(), MAX(vr2.length(), MAX(vr3.length(), vr4.length()));
+
     vr1.normalize();
     vr2.normalize();
     vr3.normalize();
     vr4.normalize();
+
+    Vector3f vdn = vr1;
 
     vr1.rotate(rtYaw);
     vr2.rotate(rtYaw);
@@ -1032,11 +1035,12 @@ void ModeCNDN::processArea(int _mode)
         vp31 = vp00;
     }
 
+    // mission area
     float alt_cm = _mission_alt_cm.get()*1.0f;
-    vp0 = vp00;
-    vp1 = vp10;
-    vp2 = vp20;
-    vp3 = vp30;
+    vp0 = vp01 = vp00;
+    vp1 = vp11 = vp10;
+    vp2 = vp21 = vp20;
+    vp3 = vp31 = vp30;
     vp0.z = vp1.z = vp2.z = vp3.z = alt_cm;
 
     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] CREATING MISSION.");
@@ -1058,6 +1062,7 @@ void ModeCNDN::processArea(int _mode)
     cmd.content.location.set_alt_cm(_take_alt_cm.get(), Location::AltFrame::ABSOLUTE);
     AP::mission()->add_cmd(cmd);
 
+    // create edge navigation
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 1;
     cmd.content.location = Location(vp0);
@@ -1140,8 +1145,8 @@ void ModeCNDN::processArea(int _mode)
         if (!inside(area,Vector2f(vp01.x,vp01.y)) && !inside(area,Vector2f(vp11.x,vp11.y)))
             break;
 
-        p1 = vp0 + step * l;
-        p2 = vp1 + step * l;
+        p1 = vp0 + step * l + vdn * vdl;
+        p2 = vp1 + step * l - vdn * vdl;
         p1.z = p2.z = alt_cm;
 
         cmd.id = MAV_CMD_NAV_WAYPOINT;
@@ -1160,8 +1165,8 @@ void ModeCNDN::processArea(int _mode)
         if (!inside(area,Vector2f(vp01.x,vp01.y)) && !inside(area,Vector2f(vp11.x,vp11.y)))
             break;
 
-        p4 = vp0 + step * (l + 1.0f);
-        p3 = vp1 + step * (l + 1.0f);
+        p4 = vp0 + step * (l + 1.0f) - vdn * vdl;
+        p3 = vp1 + step * (l + 1.0f) + vdn * vdl;
         p3.z = p4.z = alt_cm;
 
         cmd.id = MAV_CMD_NAV_WAYPOINT;
