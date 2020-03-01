@@ -730,10 +730,14 @@ void ModeCNDN::run()
 
     case PREPARE_FOLLOW:
         processArea();
+        if (stage == PREPARE_FOLLOW)
+            return_to_manual_control(false);
         break;
 
     case EDGE_FOLLOW:
         processArea(1);
+        if (stage == EDGE_FOLLOW)
+            return_to_manual_control(false);
         break;
     
     case TAKE_AREA:
@@ -940,11 +944,15 @@ void ModeCNDN::processArea(int _mode)
         return;
     }
 
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 0.");
+
     Vector3f vp0, vp1, vp2, vp3;
     if (!vecPoints[0].get_vector_from_origin_NEU(vp0)) return;
     if (!vecPoints[1].get_vector_from_origin_NEU(vp1)) return;
     if (!vecPoints[2].get_vector_from_origin_NEU(vp2)) return;
     if (!vecPoints[3].get_vector_from_origin_NEU(vp3)) return;
+
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 1.");
 
     Vector3f vr1(vp1 - vp0); vr1.z = 0;
     Vector3f vr2(vp2 - vp1); vr2.z = 0;
