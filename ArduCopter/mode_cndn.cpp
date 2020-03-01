@@ -52,8 +52,7 @@ bool inside(const CNAREA& area, const Vector2f& cp)
 
 bool inside(const CNAREA& area, const Location& loc)
 {
-    const Vector2f cp(loc.lat*1e-7, loc.lng*1e-7);
-    return inside(area, cp);
+    return inside(area, Vector2f(loc.lat*1e-7, loc.lng*1e-7));
 }
 
 const AP_Param::GroupInfo ModeCNDN::var_info[] = {
