@@ -986,7 +986,8 @@ void ModeCNDN::processArea(int _mode)
     Vector3f vr4(vp0 - vp3);
     vr1.z = vr2.z = vr3.z = vr4.z = 0;
 
-    float vdl = MAX(vr1.length(), MAX(vr2.length(), MAX(vr3.length(), vr4.length())));
+    float l1 = vr1.length(), l2 = vr2.length(), l3 = vr3.length(), l4 = vr4.length();
+    float vdl = MAX(l1, MAX(l2, MAX(l3, l4)));
 
     vr1.normalize();
     vr2.normalize();
