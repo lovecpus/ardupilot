@@ -1020,7 +1020,6 @@ void ModeCNDN::processArea(int _mode)
     vp1 = vp10;
     vp2 = vp20;
     vp3 = vp30;
-
     vp0.z = vp1.z = vp2.z = vp3.z = alt_cm;
 
     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] CREATING MISSION.");
@@ -1118,14 +1117,18 @@ void ModeCNDN::processArea(int _mode)
     area.pos[3] = Vector2f(vp3.x,vp3.y);
 
     for (float l = 1.0f; l < 100.0f; l += 2.0f) {
+        // check spray area
+        vp01 = vp0 + step * (l + 0.5f);
+        vp11 = vp1 + step * (l + 0.5f);
+        if (!inside(area,Vector2f(vp01.x,vp01.y)) && !inside(area,Vector2f(vp11.x,vp11.y)))
+            break;
+
         p1 = vp0 + step * l;
         p2 = vp1 + step * l;
-        if (!inside(area,Vector2f(p1.x,p1.y)) && !inside(area,Vector2f(p2.x,p2.y)))
-            break;
+        p1.z = p2.z = alt_cm;
 
         cmd.id = MAV_CMD_NAV_WAYPOINT;
         cmd.p1 = 1;
-        p1.z = p2.z = alt_cm;
         cmd.content.location = Location(p1);
         AP::mission()->add_cmd(cmd);
 
@@ -1134,12 +1137,15 @@ void ModeCNDN::processArea(int _mode)
         cmd.content.location = Location(p2);
         AP::mission()->add_cmd(cmd);
 
+        // check spray area
+        vp01 = vp0 + step * (l + 1.5f);
+        vp11 = vp1 + step * (l + 1.5f);
+        if (!inside(area,Vector2f(vp01.x,vp01.y)) && !inside(area,Vector2f(vp11.x,vp11.y)))
+            break;
+
         p4 = vp0 + step * (l + 1.0f);
         p3 = vp1 + step * (l + 1.0f);
         p3.z = p4.z = alt_cm;
-
-        if (!inside(area,Vector2f(p3.x,p3.y)) && !inside(area,Vector2f(p4.x,p4.y)))
-            break;
 
         cmd.id = MAV_CMD_NAV_WAYPOINT;
         cmd.p1 = 1;
