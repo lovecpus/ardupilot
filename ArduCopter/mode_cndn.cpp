@@ -34,11 +34,8 @@ Vector3f locNEU(float latf, float lngf, float altf)
 bool inside(const CNAREA& area, const Location& loc)
 {
     int cross = 0;
-    Vector2f vp[4], cp(loc.lat/1e7, loc.lng/1e7);
-    vp[0] = Vector2f(area.latitude1, area.longitude1);
-    vp[1] = Vector2f(area.latitude2, area.longitude2);
-    vp[2] = Vector2f(area.latitude3, area.longitude3);
-    vp[3] = Vector2f(area.latitude4, area.longitude4);
+    Vector2f *vp, cp(loc.lat/1e7, loc.lng/1e7);
+    vp = area.pos;
 
     for(uint16_t i=0; i<4; i++)
     {
