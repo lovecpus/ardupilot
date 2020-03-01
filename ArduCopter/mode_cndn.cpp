@@ -1146,8 +1146,8 @@ void ModeCNDN::processArea(int _mode)
         if (!inside(area,Vector2f(vp01.x,vp01.y)) && !inside(area,Vector2f(vp11.x,vp11.y)))
             break;
 
-        p1 = vp0 + step * l + vdn * vdl;
-        p2 = vp1 + step * l - vdn * vdl;
+        p1 = vp0 + step * l - vdn * vdl;
+        p2 = vp1 + step * l + vdn * vdl;
         p1.z = p2.z = alt_cm;
 
         cmd.id = MAV_CMD_NAV_WAYPOINT;
