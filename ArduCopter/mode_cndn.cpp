@@ -623,7 +623,7 @@ bool ModeCNDN::init(bool ignore_checks)
             uint16_t nCmds = _mission->num_commands();
             for (uint16_t i=0; i < nCmds; i++)
             {
-                Mission_Command cmd;
+                AP_Mission::Mission_Command cmd;
                 if (_mission->read_cmd_from_storage(i, cmd))
                 {
                     if (cmd.id == MAV_CMD_DO_SET_ROI)
