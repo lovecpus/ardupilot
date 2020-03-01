@@ -618,7 +618,6 @@ bool ModeCNDN::init(bool ignore_checks)
         uint16_t nCmds = _mission->num_commands();
 
         if (vecRects.empty()) {
-            /*
             for (uint16_t i=0; i < nCmds; i++)
             {
                 AP_Mission::Mission_Command cmd;
@@ -630,7 +629,6 @@ bool ModeCNDN::init(bool ignore_checks)
                     vecRects.push_back(Vector2f(pcm.x, pcm.y));
                 }
             }
-            */
 /*
             if (!vecRects.empty())
             {
