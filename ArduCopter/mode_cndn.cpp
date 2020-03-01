@@ -938,13 +938,15 @@ bool lineIntersection(const Vector3f& a,const Vector3f& b,const Vector3f& c,cons
 
 void ModeCNDN::processArea(int _mode)
 {
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 0.");
+
     if (!AP::ahrs().home_is_set() || vecPoints.empty()) {
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] CAN NOT PROCESS AREA.");
         return_to_manual_control(false);
         return;
     }
 
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 0.");
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 1.");
 
     Vector3f vp0, vp1, vp2, vp3;
     if (!vecPoints[0].get_vector_from_origin_NEU(vp0)) return;
@@ -952,7 +954,7 @@ void ModeCNDN::processArea(int _mode)
     if (!vecPoints[2].get_vector_from_origin_NEU(vp2)) return;
     if (!vecPoints[3].get_vector_from_origin_NEU(vp3)) return;
 
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 1.");
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 2.");
 
     Vector3f vr1(vp1 - vp0); vr1.z = 0;
     Vector3f vr2(vp2 - vp1); vr2.z = 0;
