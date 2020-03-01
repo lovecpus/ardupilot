@@ -683,10 +683,8 @@ void ModeCNDN::run()
 
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH.");
 
-            if (!vecPoints.empty())
-            {
-                Vector3f tpos;
-                vecPoints.back().get_vector_from_origin_NEU(tpos);
+            Vector3f tpos;
+            if (!vecPoints.empty() && vecPoints.back().get_vector_from_origin_NEU(tpos)) {
                 tpos.z = _mission_alt_cm.get() * 1.0f;
                 wp_nav->set_wp_destination(tpos, false);
             }
