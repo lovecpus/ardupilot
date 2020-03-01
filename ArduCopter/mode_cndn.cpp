@@ -1023,7 +1023,6 @@ void ModeCNDN::processArea(int _mode)
 
     vp0.z = vp1.z = vp2.z = vp3.z = alt_cm;
 
-    // gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d clear.", __LINE__);
     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] CREATING MISSION.");
     AP_Notify::events.waypoint_complete = 1;
 
@@ -1040,7 +1039,7 @@ void ModeCNDN::processArea(int _mode)
     cmd.id = MAV_CMD_NAV_TAKEOFF;
     cmd.p1 = 10;
     cmd.content.location = AP::ahrs().get_home();
-    cmd.content.location.set_alt_cm(_take_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
+    cmd.content.location.set_alt_cm(_take_alt_cm.get(), Location::AltFrame::ABSOLUTE);
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_NAV_WAYPOINT;
