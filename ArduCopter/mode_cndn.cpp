@@ -1058,9 +1058,9 @@ void ModeCNDN::processArea(int _mode)
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_NAV_TAKEOFF;
-    cmd.p1 = 10;
+    cmd.p1 = 0;
     cmd.content.location = AP::ahrs().get_home();
-    cmd.content.location.set_alt_cm(_take_alt_cm.get(), Location::AltFrame::ABSOLUTE);
+    cmd.content.location.set_alt_cm(_take_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
     AP::mission()->add_cmd(cmd);
 
     // create edge navigation
