@@ -1180,13 +1180,13 @@ void ModeCNDN::processArea(int _mode)
         p1 = vp0 + step * l - vdn * vdl;
         p2 = vp1 + step * l + vdn * vdl;
         p1.z = p2.z = alt_cm;
-        if (lineIntersection(p3,p4,vp3,vp0,eg)) {
-            p4.x = eg.x;
-            p4.y = eg.y;
-        }
-        if (lineIntersection(p3,p4,vp1,vp2,eg)) {
+        if (lineIntersection(p4,p3,vp1,vp2,eg)) {
             p3.x = eg.x;
             p3.y = eg.y;
+        }
+        if (lineIntersection(p4,p3,vp3,vp0,eg)) {
+            p4.x = eg.x;
+            p4.y = eg.y;
         }
 
         cmd.id = MAV_CMD_NAV_WAYPOINT;
