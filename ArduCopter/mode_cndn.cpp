@@ -924,7 +924,7 @@ void ModeCNDN::detecteEdge()
     std::deque<Vector2f> vecRects;
     for (int i = 0; i < 4; i++)
     {
-        Vector2f& pos = area.pos[i];
+        Vector2f& pos = edge.pos[i];
         pcm = locNEU(pos.x, pos.y, _mission_alt_cm.get() * 0.01f);
         vecRects.push_back(Vector2f(pcm.x, pcm.y));
     }
