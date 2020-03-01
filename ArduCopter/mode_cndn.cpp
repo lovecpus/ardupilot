@@ -890,6 +890,7 @@ void ModeCNDN::detecteEdge()
     for (int i = 0; i < 4; i++) {
         Vector2f& pos = edge.pos[i];
         vecRects.push_back(Location(Vector3f(pos.x, pos.y, 0)));
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %ud,%ud", vecRects.back().lat,vecRects.back().lng);
     }
 
     float minlen = vecRects.front().get_distance(loc);
