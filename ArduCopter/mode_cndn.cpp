@@ -686,7 +686,7 @@ void ModeCNDN::run()
             Vector3f tpos;
             AP_Mission *_mission = AP::mission();
             uint16_t nCmds = _mission->num_commands();
-            for (uint16_t i=0; i < nCmds; i++) {
+            for (uint16_t i=1; i < nCmds; i++) {
                 AP_Mission::Mission_Command cmd;
                 if (_mission->read_cmd_from_storage(i, cmd)) {
                     if (cmd.id != MAV_CMD_NAV_WAYPOINT) continue;
