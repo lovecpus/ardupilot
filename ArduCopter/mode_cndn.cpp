@@ -965,9 +965,6 @@ void ModeCNDN::processArea(int _mode)
         return;
     }
 
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 2.");
-    return;
-
     Vector3f vr1(vp1 - vp0); vr1.z = 0;
     Vector3f vr2(vp2 - vp1); vr2.z = 0;
     Vector3f vr3(vp3 - vp2); vr3.z = 0;
@@ -978,12 +975,16 @@ void ModeCNDN::processArea(int _mode)
     vr3.normalize();
     vr4.normalize();
 
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] DEBUG.");
     return;
 
     vr1.rotate(Rotation::ROTATION_YAW_90);
     vr2.rotate(Rotation::ROTATION_YAW_90);
     vr3.rotate(Rotation::ROTATION_YAW_90);
     vr4.rotate(Rotation::ROTATION_YAW_90);
+
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] DEBUG.");
+    return;
 
     float eg_cm = _dst_eg_cm.get() * 1.0f;
     Vector3f vp00 = vp0 + vr1 * eg_cm;
