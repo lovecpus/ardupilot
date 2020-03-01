@@ -684,9 +684,20 @@ void ModeCNDN::run()
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH.");
 
             Vector3f tpos;
-            if (!vecPoints.empty() && vecPoints.back().get_vector_from_origin_NEU(tpos)) {
-                tpos.z = _mission_alt_cm.get() * 1.0f;
-                wp_nav->set_wp_destination(tpos, false);
+            AP_Mission *_mission = AP::mission();
+            uint16_t nCmds = _mission->num_commands();
+            for (uint16_t i=0; i < nCmds; i++) {
+                AP_Mission::Mission_Command cmd;
+                if (_mission->read_cmd_from_storage(i, cmd)) {
+                    if (cmd.id != MAV_CMD_NAV_WAYPOINT) continue;
+                    if (cmd.content.location.get_vector_from_origin_NEU(tpos)) {
+                        tpos.z = _mission_alt_cm.get() * 1.0f;
+                        wp_nav->set_wp_destination(tpos, false);
+                    } else {
+                        return_to_manual_control(false);
+                    }
+                    break;
+                }
             }
             auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
         }
