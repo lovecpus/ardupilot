@@ -619,9 +619,6 @@ bool ModeCNDN::init(bool ignore_checks)
         b_position_target = false;
         last_yaw_ms = 0;
 
-        dest_A.zero();
-        dest_B.zero();
-
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MODE INITIALIZED.");
     }
     else
@@ -678,7 +675,6 @@ void ModeCNDN::run()
             last_yaw_ms = 0;
             last_yaw_cd = copter.initial_armed_bearing;
             AP_Notify::events.waypoint_complete = 1;
-            b_position_target_reached = false;
             b_position_target = false;
 
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH.");
@@ -764,7 +760,6 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
 
     // no need to check return status because terrain data is not used
     wp_nav->set_wp_destination(destination, false);
-    b_position_target_reached = false;
 
     return true;
 }
@@ -897,7 +892,6 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
     {
         stage = MANUAL;
         b_position_target = false;
-        b_position_target_reached = false;
         loiter_nav->clear_pilot_desired_acceleration();
         if (maintain_target)
         {
@@ -1378,7 +1372,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 break;
 
             case 2:
-                b_position_target_reached = true;
                 gcs().send_message(MSG_POSITION_TARGET_LOCAL_NED);
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : POSITION_TARGET_LOCAL_NED.", int(packet.value));
                 break;
@@ -1559,74 +1552,6 @@ bool ModeCNDN::reached_destination()
         reach_wp_time_ms = now;
 
     return ((now - reach_wp_time_ms) > 1000);
-}
-
-bool ModeCNDN::calculate_next_dest(uint8_t position_num, bool use_wpnav_alt, Vector3f &next_dest, bool &terrain_alt) const
-{
-    // sanity check position_num
-    if (position_num > 1)
-    {
-        return false;
-    }
-
-    // define start_pos as either A or B depending upon position_num
-    Vector2f start_pos = position_num == 0 ? dest_A : dest_B;
-
-    // calculate vector from A to B
-    Vector2f AB_diff = dest_B - dest_A;
-
-    // check distance between A and B
-    if (!is_positive(AB_diff.length_squared()))
-    {
-        return false;
-    }
-
-    // get distance from vehicle to start_pos
-    const Vector3f curr_pos = inertial_nav.get_position();
-    const Vector2f curr_pos2d = Vector2f(curr_pos.x, curr_pos.y);
-    Vector2f veh_to_start_pos = curr_pos2d - start_pos;
-
-    // lengthen AB_diff so that it is at least as long as vehicle is from start point
-    // we need to ensure that the lines perpendicular to AB are long enough to reach the vehicle
-    float scalar = 1.0f;
-    if (veh_to_start_pos.length_squared() > AB_diff.length_squared())
-    {
-        scalar = veh_to_start_pos.length() / AB_diff.length();
-    }
-
-    // create a line perpendicular to AB but originating at start_pos
-    Vector2f perp1 = start_pos + Vector2f(-AB_diff[1] * scalar, AB_diff[0] * scalar);
-    Vector2f perp2 = start_pos + Vector2f(AB_diff[1] * scalar, -AB_diff[0] * scalar);
-
-    // find the closest point on the perpendicular line
-    const Vector2f closest2d = Vector2f::closest_point(curr_pos2d, perp1, perp2);
-    next_dest.x = closest2d.x;
-    next_dest.y = closest2d.y;
-
-    if (use_wpnav_alt)
-    {
-        // get altitude target from waypoint controller
-        terrain_alt = wp_nav->origin_and_destination_are_terrain_alt();
-        next_dest.z = wp_nav->get_wp_destination().z;
-    }
-    else
-    {
-        // if we have a downward facing range finder then use terrain altitude targets
-        terrain_alt = copter.rangefinder_alt_ok() && wp_nav->rangefinder_used();
-        if (terrain_alt)
-        {
-            if (!copter.surface_tracking.get_target_alt_cm(next_dest.z))
-            {
-                next_dest.z = copter.rangefinder_state.alt_cm_filt.get();
-            }
-        }
-        else
-        {
-            next_dest.z = pos_control->is_active_z() ? pos_control->get_alt_target() : curr_pos.z;
-        }
-    }
-
-    return true;
 }
 
 void ModeCNDN::set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool relative_angle)

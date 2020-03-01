@@ -69,7 +69,6 @@ public:
     bool is_autopilot() const override { return true; }
     bool has_user_takeoff(bool must_navigate) const override { return true; }
     bool in_guided_mode() const override { return true; }
-    bool is_position_target_reached() override { return b_position_target_reached; }
     bool set_destination(const Vector3f &destination, bool use_yaw = false, float yaw_cd = 0.0, bool use_yaw_rate = false, float yaw_rate_cds = 0.0, bool yaw_relative = false);
     // save current position as A (dest_num = 0) or B (dest_num = 1).  If both A and B have been saved move to the one specified
     void mission_command(uint8_t dest_num);
@@ -93,14 +92,10 @@ private:
     void auto_control();
     void manual_control();
     bool reached_destination();
-    bool calculate_next_dest(uint8_t position_num, bool use_wpnav_alt, Vector3f &next_dest, bool &terrain_alt) const;
     void set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool relative_angle);
 
     void detecteEdge();
     void processArea(int _mode = 0);
-
-    Vector2f dest_A; // in NEU frame in cm relative to ekf origin
-    Vector2f dest_B; // in NEU frame in cm relative to ekf origin
 
 #if defined(SIM_LOCATION)
     std::deque<CNAREA> vecAreas;
@@ -123,7 +118,6 @@ private:
     uint32_t reach_wp_time_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
     uint32_t edge_time_ms = 0;
     bool b_position_target = false;
-    bool b_position_target_reached = false;
     uint8_t edge_count = 0;
     uint8_t edge_position = 0;
     Vector2f edge_points[10]; // in NEU frame in cm relative to ekf origin
