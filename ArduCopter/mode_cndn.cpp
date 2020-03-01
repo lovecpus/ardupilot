@@ -1368,7 +1368,7 @@ void ModeCNDN::auto_control()
         copter.avoid.adjust_roll_pitch(roll_target, pitch_target, copter.aparm.angle_max);
 #endif
     }
-#endif
+
     // call attitude controller
     if (auto_yaw.mode() == AUTO_YAW_HOLD) {
         // roll & pitch from waypoint controller, yaw rate from pilot
