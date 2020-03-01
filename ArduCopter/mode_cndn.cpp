@@ -605,6 +605,7 @@ bool ModeCNDN::init(bool ignore_checks)
         pos_control->set_alt_target_to_current_alt();
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
+    init_speed();
 
     AP_Mission *_mission = AP::mission();
     if (stage != RETURN_AUTO)
@@ -618,7 +619,7 @@ bool ModeCNDN::init(bool ignore_checks)
     }
     else
     {
-        if (vecRects.empty() && _mission->contains_item(MAV_CMD_DO_SET_ROI))
+        if (vecRects.empty())
         {
             uint16_t nCmds = _mission->num_commands();
             for (uint16_t i=0; i < nCmds; i++)
@@ -626,22 +627,28 @@ bool ModeCNDN::init(bool ignore_checks)
                 AP_Mission::Mission_Command cmd;
                 if (_mission->read_cmd_from_storage(i, cmd))
                 {
-                    if (cmd.id == MAV_CMD_DO_SET_ROI)
-                    {
-                        Vector3f pcm = locNEU(cmd.content.location.lat, cmd.content.location.lng, _mission_alt_cm.get() * 0.01f);
-                        vecRects.push_back(Vector2f(pcm.x, pcm.y));
-                    }
-                    vecRects.push_back(vecRects.front());
-                    vecPoints.resize(vecRects.size());
-                    std::copy(vecRects.begin(), vecRects.end(), vecPoints.begin());
-                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FROM MISSION.");
+                    if (cmd.id != MAV_CMD_DO_SET_ROI) continue;
+
+                    Vector3f pcm = locNEU(cmd.content.location.lat, cmd.content.location.lng, _mission_alt_cm.get() * 0.01f);
+                    vecRects.push_back(Vector2f(pcm.x, pcm.y));
                 }
+            }
+
+            if (!vecRects.empty())
+            {
+                vecRects.push_back(vecRects.front());
+                vecPoints.resize(vecRects.size());
+                std::copy(vecRects.begin(), vecRects.end(), vecPoints.begin());
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FROM MISSION.");
+            }
+            else
+            {
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FAILED.");
+                stage = MANUAL;
             }
         }
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MISSION COMPLETE.");
     }
-
-    init_speed();
 
     return true;
 }
