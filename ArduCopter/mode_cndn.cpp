@@ -52,7 +52,7 @@ bool inside(const CNAREA& area, const Vector2f& cp)
 
 bool inside(const CNAREA& area, const Location& loc)
 {
-    const cp(loc.lat*1e-7, loc.lng*1e-7);
+    const Vector2f cp(loc.lat*1e-7, loc.lng*1e-7);
     return inside(area, cp);
 }
 
