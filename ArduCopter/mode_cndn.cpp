@@ -949,10 +949,25 @@ void ModeCNDN::processArea(int _mode)
     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 1.");
 
     Vector3f vp0, vp1, vp2, vp3;
-    if (!vecPoints[0].get_vector_from_origin_NEU(vp0)) return;
-    if (!vecPoints[1].get_vector_from_origin_NEU(vp1)) return;
-    if (!vecPoints[2].get_vector_from_origin_NEU(vp2)) return;
-    if (!vecPoints[3].get_vector_from_origin_NEU(vp3)) return;
+    if (!vecPoints[0].get_vector_from_origin_NEU(vp0)) {
+        return_to_manual_control(false);
+        return;
+    }
+
+    if (!vecPoints[1].get_vector_from_origin_NEU(vp1)) {
+        return_to_manual_control(false);
+        return;
+    }
+
+    if (!vecPoints[2].get_vector_from_origin_NEU(vp2)) {
+        return_to_manual_control(false);
+        return;
+    }
+
+    if (!vecPoints[3].get_vector_from_origin_NEU(vp3)) {
+        return_to_manual_control(false);
+        return;
+    }
 
     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 2.");
 
