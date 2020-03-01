@@ -620,7 +620,7 @@ bool ModeCNDN::init(bool ignore_checks)
     else
     {
         if (vecRects.empty())
-        {
+        {/*
             uint16_t nCmds = _mission->num_commands();
             for (uint16_t i=0; i < nCmds; i++)
             {
@@ -641,7 +641,7 @@ bool ModeCNDN::init(bool ignore_checks)
                 std::copy(vecRects.begin(), vecRects.end(), vecPoints.begin());
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FROM MISSION.");
             }
-            else
+            else*/
             {
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FAILED.");
                 stage = MANUAL;
