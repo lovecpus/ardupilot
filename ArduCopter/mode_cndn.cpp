@@ -621,22 +621,20 @@ bool ModeCNDN::init(bool ignore_checks)
                 if (_mission->read_cmd_from_storage(i, cmd))
                 {
                     if (cmd.id != MAV_CMD_DO_SET_ROI) continue;
-
-//                    Vector3f pcm = locNEU(cmd.content.location.lat, cmd.content.location.lng, _mission_alt_cm.get() * 0.01f);
-//                    vecPoints.push_back(Vector2f(pcm.x, pcm.y));
+                    vecPoints.push_back(Vector2f(cmd.content.location.lat, cmd.content.location.lng));
                 }
             }
-/*
+
             if (!vecPoints.empty())
             {
                 vecPoints.push_back(vecPoints.front());
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FROM MISSION.");
             }
-            else*/
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FAILED[%d].", int(nCmds));
+            else
+            {
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FAILED[%d].", int(nCmds));
+            }
         }
-
-
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MODE INITIALIZED[%d].", int(mstate));
     }
     else
