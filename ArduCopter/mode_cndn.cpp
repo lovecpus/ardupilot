@@ -621,6 +621,7 @@ bool ModeCNDN::init(bool ignore_checks)
     {
         if (vecRects.empty()) {
             uint16_t nCmds = _mission->num_commands();
+            /*
             for (uint16_t i=0; i < nCmds; i++)
             {
                 AP_Mission::Mission_Command cmd;
@@ -632,6 +633,7 @@ bool ModeCNDN::init(bool ignore_checks)
                     vecRects.push_back(Vector2f(pcm.x, pcm.y));
                 }
             }
+            */
 /*
             if (!vecRects.empty())
             {
@@ -642,7 +644,7 @@ bool ModeCNDN::init(bool ignore_checks)
             }
             else*/
             {
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FAILED.");
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FAILED[%d].", int(nCmds));
                 stage = MANUAL;
             }
         }
