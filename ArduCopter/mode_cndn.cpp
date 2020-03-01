@@ -965,10 +965,15 @@ void ModeCNDN::processArea(int _mode)
         return;
     }
 
-    Vector3f vr1(vp1 - vp0); vr1.z = 0;
-    Vector3f vr2(vp2 - vp1); vr2.z = 0;
-    Vector3f vr3(vp3 - vp2); vr3.z = 0;
-    Vector3f vr4(vp0 - vp3); vr4.z = 0;
+    Vector3f vr1(vp1 - vp0);
+    Vector3f vr2(vp2 - vp1);
+    Vector3f vr3(vp3 - vp2);
+    Vector3f vr4(vp0 - vp3);
+
+    vr1.z = vr2.z = vr3.z = vr4.z = 0;
+
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] DEBUG.");
+    return;
 
     vr1.normalize();
     vr2.normalize();
