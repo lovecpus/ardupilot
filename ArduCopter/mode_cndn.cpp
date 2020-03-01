@@ -612,16 +612,32 @@ bool ModeCNDN::init(bool ignore_checks)
         stage = MANUAL;
         b_position_target = false;
         last_yaw_ms = 0;
-
-        if (vecRects.empty() && AP::mission()->contains_item(MAV_CMD_DO_SET_ROI))
-        {
-
-        }
-
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MODE INITIALIZED.");
     }
     else
     {
+        AP_Mission *_mission = AP::mission();
+        if (vecRects.empty() && _mission->contains_item(MAV_CMD_DO_SET_ROI))
+        {
+            AP_Mission::mission_state mstate = _mission-state();
+            uint16_t nCmds = _mission->num_commands();
+            for (uint16_t i=0; i < nCmds; i++)
+            {
+                Mission_Command cmd;
+                if (_mission->read_cmd_from_storage(i, cmd))
+                {
+                    if (cmd.id == MAV_CMD_DO_SET_ROI)
+                    {
+                        Vector3f pcm = locNEU(cmd.content.location.lat, cmd.content.location.lng, _mission_alt_cm.get() * 0.01f);
+                        vecRects.push_back(Vector2f(pcm.x, pcm.y));
+                    }
+                    vecRects.push_back(vecRects.front());
+                    vecPoints.resize(vecRects.size());
+                    std::copy(vecRects.begin(), vecRects.end(), vecPoints.begin());
+                    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FROM MISSION.");
+                }
+            }
+        }
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MISSION COMPLETE.");
     }
 
