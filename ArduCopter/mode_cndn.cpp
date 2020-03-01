@@ -621,7 +621,7 @@ bool ModeCNDN::init(bool ignore_checks)
                 if (_mission->read_cmd_from_storage(i, cmd))
                 {
                     if (cmd.id != MAV_CMD_DO_SET_ROI) continue;
-                    vecPoints.push_back(Vector2f(cmd.content.location.lat, cmd.content.location.lng));
+                    vecPoints.push_back(Vector2f(cmd.content.location.lat*1e-7f, cmd.content.location.lng*1e-7f));
                 }
             }
 
