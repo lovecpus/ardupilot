@@ -964,6 +964,11 @@ void ModeCNDN::processArea(int _mode)
         return;
     }
 
+    Vector3f t1(vp1-vp0),t2(vp2-vp0);
+    Vector3f nm(t1 % t2);
+    nm.normalize();
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] CW: %f,%f,%f", nm.x,nm.y,nm.z);
+
     Vector3f vr1(vp1 - vp0);
     Vector3f vr2(vp2 - vp1);
     Vector3f vr3(vp3 - vp2);
