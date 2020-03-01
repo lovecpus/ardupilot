@@ -944,9 +944,6 @@ void ModeCNDN::processArea(int _mode)
         return;
     }
 
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 1.");
-    return;
-
     Vector3f vp0, vp1, vp2, vp3;
     if (!vecPoints[0].get_vector_from_origin_NEU(vp0)) {
         return_to_manual_control(false);
