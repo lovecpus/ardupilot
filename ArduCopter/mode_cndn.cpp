@@ -967,6 +967,7 @@ void ModeCNDN::processArea(int _mode)
     Vector3f t1(vp1-vp0),t2(vp2-vp0);
     Vector3f nm(t1 % t2);
     nm.normalize();
+    Rotation rtYaw = (nm.z >= 0) ? Rotation::ROTATION_YAW_90 : Rotation::ROTATION_YAW_270;
     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] CW: %f,%f,%f", nm.x,nm.y,nm.z);
 
     Vector3f vr1(vp1 - vp0);
@@ -980,10 +981,10 @@ void ModeCNDN::processArea(int _mode)
     vr3.normalize();
     vr4.normalize();
 
-    vr1.rotate(Rotation::ROTATION_YAW_90);
-    vr2.rotate(Rotation::ROTATION_YAW_90);
-    vr3.rotate(Rotation::ROTATION_YAW_90);
-    vr4.rotate(Rotation::ROTATION_YAW_90);
+    vr1.rotate(rtYaw);
+    vr2.rotate(rtYaw);
+    vr3.rotate(rtYaw);
+    vr4.rotate(rtYaw);
 
     float eg_cm = _dst_eg_cm.get() * 1.0f;
     Vector3f vp00 = vp0 + vr1 * eg_cm;
