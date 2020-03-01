@@ -1149,6 +1149,14 @@ void ModeCNDN::processArea(int _mode)
         p1 = vp0 + step * l - vdn * vdl;
         p2 = vp1 + step * l + vdn * vdl;
         p1.z = p2.z = alt_cm;
+        if (lineIntersection(p1,p2,vp3,vp0,eg)) {
+            p1.x = eg.x;
+            p1.y = eg.y;
+        }
+        if (lineIntersection(p1,p2,vp2,vp3,eg)) {
+            p2.x = eg.x;
+            p2.y = eg.y;
+        }
 
         cmd.id = MAV_CMD_NAV_WAYPOINT;
         cmd.p1 = 1;
@@ -1169,6 +1177,17 @@ void ModeCNDN::processArea(int _mode)
         p4 = vp0 + step * (l + 1.0f) - vdn * vdl;
         p3 = vp1 + step * (l + 1.0f) + vdn * vdl;
         p3.z = p4.z = alt_cm;
+        p1 = vp0 + step * l - vdn * vdl;
+        p2 = vp1 + step * l + vdn * vdl;
+        p1.z = p2.z = alt_cm;
+        if (lineIntersection(p3,p4,vp3,vp0,eg)) {
+            p4.x = eg.x;
+            p4.y = eg.y;
+        }
+        if (lineIntersection(p3,p4,vp2,vp3,eg)) {
+            p3.x = eg.x;
+            p3.y = eg.y;
+        }
 
         cmd.id = MAV_CMD_NAV_WAYPOINT;
         cmd.p1 = 1;
