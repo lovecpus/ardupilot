@@ -1067,6 +1067,7 @@ void ModeCNDN::processArea(int _mode)
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 1;
     cmd.content.location = Location(vp0);
+    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_CONDITION_YAW;
@@ -1080,6 +1081,7 @@ void ModeCNDN::processArea(int _mode)
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 1;
     cmd.content.location = Location(vp1);
+    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_CONDITION_YAW;
@@ -1093,6 +1095,7 @@ void ModeCNDN::processArea(int _mode)
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 1;
     cmd.content.location = Location(vp2);
+    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_CONDITION_YAW;
@@ -1106,6 +1109,7 @@ void ModeCNDN::processArea(int _mode)
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 1;
     cmd.content.location = Location(vp3);
+    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_CONDITION_YAW;
@@ -1119,6 +1123,7 @@ void ModeCNDN::processArea(int _mode)
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 1;
     cmd.content.location = Location(vp0);
+    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_CONDITION_YAW;
@@ -1161,11 +1166,13 @@ void ModeCNDN::processArea(int _mode)
         cmd.id = MAV_CMD_NAV_WAYPOINT;
         cmd.p1 = 1;
         cmd.content.location = Location(p1);
+        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
         AP::mission()->add_cmd(cmd);
 
         cmd.id = MAV_CMD_NAV_WAYPOINT;
         cmd.p1 = 1;
         cmd.content.location = Location(p2);
+        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
         AP::mission()->add_cmd(cmd);
 
         // check spray area
@@ -1192,11 +1199,13 @@ void ModeCNDN::processArea(int _mode)
         cmd.id = MAV_CMD_NAV_WAYPOINT;
         cmd.p1 = 1;
         cmd.content.location = Location(p3);
+        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
         AP::mission()->add_cmd(cmd);
 
         cmd.id = MAV_CMD_NAV_WAYPOINT;
         cmd.p1 = 1;
         cmd.content.location = Location(p4);
+        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
         AP::mission()->add_cmd(cmd);
     }
 
