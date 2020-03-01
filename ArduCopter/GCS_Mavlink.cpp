@@ -113,39 +113,26 @@ void GCS_MAVLINK_Copter::send_position_target_global_int()
 void GCS_MAVLINK_Copter::send_position_target_local_ned()
 {
 #if MODE_GUIDED_ENABLED == ENABLED
-    if (!copter.flightmode->in_guided_mode() || !copter.flightmode->is_position_target_reached()) {
+    if (!copter.flightmode->in_guided_mode()) {
         return;
     }
 
+    const GuidedMode guided_mode = copter.mode_guided.mode();
     Vector3f target_pos;
     Vector3f target_vel;
     uint16_t type_mask;
 
-    if (copter.flightmode == &copter.mode_cndn)
-    {
-        type_mask = 0x0FF8;                                       // ignore everything except position
-        target_pos = copter.wp_nav->get_wp_destination() * 0.01f; // convert to metres
-    }
-    else
-    {
-        const GuidedMode guided_mode = copter.mode_guided.mode();
-        if (guided_mode == Guided_WP)
-        {
+    if (guided_mode == Guided_WP) {
             type_mask = 0x0FF8;                                       // ignore everything except position
             target_pos = copter.wp_nav->get_wp_destination() * 0.01f; // convert to metres
-        }
-        else if (guided_mode == Guided_Velocity)
-        {
+    } else if (guided_mode == Guided_Velocity) {
             type_mask = 0x0FC7;                                             // ignore everything except velocity
             target_vel = copter.flightmode->get_desired_velocity() * 0.01f; // convert to m/s
-        }
-        else
-        {
+    } else {
             type_mask = 0x0FC0; // ignore everything except position & velocity
             target_pos = copter.wp_nav->get_wp_destination() * 0.01f;
             target_vel = copter.flightmode->get_desired_velocity() * 0.01f;
         }
-    }
 
     mavlink_msg_position_target_local_ned_send(
         chan,
