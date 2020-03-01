@@ -899,9 +899,9 @@ void ModeCNDN::detecteEdge()
 
     vecPoints.push_back(apos);
     for (int i = 1; i < (int)vecRects.size(); i++) {
-        if (vecRects[i].get_distance(cpos) < minlen) {
+        if (vecRects[i].get_distance(loc) < minlen) {
             apos = vecRects[i];
-            minlen = apos.get_distance(cpos);
+            minlen = apos.get_distance(loc);
         }
         vecPoints.push_back(vecRects[i]);
     }
@@ -909,9 +909,9 @@ void ModeCNDN::detecteEdge()
     for(int i = 0; i < (int)vecPoints.size(); i++) {
         if (vecPoints.front().get_distance(apos) <= 1e-8f)
             break;
-        cpos = vecPoints.front();
+        Location lpo = vecPoints.front();
         vecPoints.pop_front();
-        vecPoints.push_back(cpos);
+        vecPoints.push_back(lpo);
     }
 
     vecPoints.pop_front();
