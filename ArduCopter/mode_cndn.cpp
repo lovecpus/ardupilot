@@ -899,7 +899,7 @@ void ModeCNDN::detecteEdge()
     for (int i = 0; i < 4; i++)
     {
         Vector2f& pos = edge.pos[i];
-        vecRects.push_back(Location(Vector3f(pos.x, pos.y, 300));
+        vecRects.push_back(Location(Vector3f(pos.x, pos.y, 300)));
     }
 
     vecPoints.resize(vecRects.size());
