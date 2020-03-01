@@ -946,7 +946,7 @@ void ModeCNDN::processArea(int _mode)
         return;
     }
 
-    Vector3f vp0, vp1, vp2, vp3, eg;
+    Vector3f vp0, vp1, vp2, vp3;
     vecPoints[0].get_vector_from_origin_NEU(vp0);
     vecPoints[1].get_vector_from_origin_NEU(vp1);
     vecPoints[2].get_vector_from_origin_NEU(vp2);
@@ -976,6 +976,7 @@ void ModeCNDN::processArea(int _mode)
     Vector3f vp30 = vp3 + vr4 * eg_cm;
     Vector3f vp31 = vp0 + vr4 * eg_cm;
 
+    Vector2f eg;
     if (lineIntersection(vp00,vp01,vp10,vp11,eg)) {
         vp10.x = eg.x;
         vp10.y = eg.y;
