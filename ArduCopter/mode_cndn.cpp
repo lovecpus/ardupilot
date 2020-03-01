@@ -898,7 +898,7 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
 void ModeCNDN::detecteEdge()
 {
     Vector3f hpos, pcm;
-    CNAREA edge = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    CNAREA edge;
     Location loc(copter.current_loc);
 
     vecPoints.clear();
