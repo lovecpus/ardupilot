@@ -890,7 +890,6 @@ void ModeCNDN::detecteEdge()
     for (int i = 0; i < 4; i++) {
         vecRects.push_back(Location(int32_t(edge.pos[i].x*1e7), int32_t(edge.pos[i].y*1e7), 300, Location::AltFrame::ABSOLUTE));
     }
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 1: %u,%u,%u,%u", vecRects[0].lat,vecRects[1].lat,vecRects[2].lat,vecRects[3].lat);
 
     float minlen = vecRects.front().get_distance(loc);
     Location apos = vecRects.front();
@@ -917,8 +916,6 @@ void ModeCNDN::detecteEdge()
         std::reverse(vecPoints.begin(), vecPoints.end());
     vecPoints.push_front(apos);
     vecPoints.push_back(apos);
-
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 2: %u,%u,%u,%u", vecPoints[0].lat,vecPoints[1].lat,vecPoints[2].lat,vecPoints[3].lat);
 }
 
 bool lineIntersection(const Vector3f& a,const Vector3f& b,const Vector3f& c,const Vector3f& d, Vector2f &o){
@@ -972,8 +969,6 @@ void ModeCNDN::processArea(int _mode)
     Vector3f vr3(vp3 - vp2);
     Vector3f vr4(vp0 - vp3);
     vr1.z = vr2.z = vr3.z = vr4.z = 0;
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %f,%f %f,%f.", vp0.x,vp0.y, vp1.x,vp1.y);
-    return;
 
     vr1.normalize();
     vr2.normalize();
@@ -985,7 +980,7 @@ void ModeCNDN::processArea(int _mode)
     vr3.rotate(Rotation::ROTATION_YAW_90);
     vr4.rotate(Rotation::ROTATION_YAW_90);
 
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] DEBUG.");
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d clear.", __LINE__);
     return;
 
     float eg_cm = _dst_eg_cm.get() * 1.0f;
