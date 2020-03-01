@@ -615,6 +615,35 @@ bool ModeCNDN::init(bool ignore_checks)
         b_position_target = false;
         last_yaw_ms = 0;
         AP_Mission::mission_state mstate = _mission->state();
+        uint16_t nCmds = _mission->num_commands();
+
+        if (vecRects.empty()) {
+            /*
+            for (uint16_t i=0; i < nCmds; i++)
+            {
+                AP_Mission::Mission_Command cmd;
+                if (_mission->read_cmd_from_storage(i, cmd))
+                {
+                    if (cmd.id != MAV_CMD_DO_SET_ROI) continue;
+
+                    Vector3f pcm = locNEU(cmd.content.location.lat, cmd.content.location.lng, _mission_alt_cm.get() * 0.01f);
+                    vecRects.push_back(Vector2f(pcm.x, pcm.y));
+                }
+            }
+            */
+/*
+            if (!vecRects.empty())
+            {
+                vecRects.push_back(vecRects.front());
+                vecPoints.resize(vecRects.size());
+                std::copy(vecRects.begin(), vecRects.end(), vecPoints.begin());
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FROM MISSION.");
+            }
+            else*/
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FAILED[%d].", int(nCmds));
+        }
+
+
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MODE INITIALIZED[%d].", int(mstate));
     }
     else
