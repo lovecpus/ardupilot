@@ -824,7 +824,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             wp_nav->get_wp_stopping_point(stopping_point);
             wp_nav->set_wp_destination(stopping_point, false);
 
-            detecteEdge();
+            detectEdge();
             if (!vecPoints.empty()) {
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d DETECTED EDGES.", int(vecPoints.size()));
                 stage = (dest_num==2) ? EDGE_FOLLOW : PREPARE_FOLLOW;
@@ -875,7 +875,7 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
     }
 }
 
-void ModeCNDN::detecteEdge()
+void ModeCNDN::detectEdge()
 {
     Vector3f hpos;
     vecPoints.clear();
@@ -902,9 +902,11 @@ void ModeCNDN::detecteEdge()
         vecRects.push_back(Location(int32_t(edge.pos[i].x*1e7), int32_t(edge.pos[i].y*1e7), 300, Location::AltFrame::ABSOLUTE));
     }
 
+    // from home position
+    loc = Location(hpos);
+
     float minlen = vecRects.front().get_distance(loc);
     Location apos = vecRects.front();
-
     vecPoints.push_back(apos);
     for (int i = 1; i < (int)vecRects.size(); i++) {
         if (vecRects[i].get_distance(loc) < minlen) {

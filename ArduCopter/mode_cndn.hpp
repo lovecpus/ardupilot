@@ -88,7 +88,7 @@ private:
     bool reached_destination();
     void set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool relative_angle);
 
-    void detecteEdge();
+    void detectEdge();
     void processArea(int _mode = 0);
 
 #if defined(SIM_LOCATION)
