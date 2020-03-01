@@ -836,9 +836,9 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             wp_nav->set_wp_destination(stopping_point, false);
 
             detecteEdge();
-            if (edge_count > 0)
+            if (!vecPoints.empty())
             {
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d DETECTED EDGES.", edge_count);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d DETECTED EDGES.", int(vecPoints.size()));
                 stage = (dest_num==2) ? EDGE_FOLLOW : PREPARE_FOLLOW;
             }
             else
