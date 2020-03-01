@@ -891,7 +891,7 @@ void ModeCNDN::detecteEdge()
         Vector2f& pos = edge.pos[i];
         vecRects.push_back(Location(Vector3f(pos.x, pos.y, 300)));
     }
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %u,%u,%u,%u", vecRects[0].lat,vecRects[1].lat,vecRects[2].lat,vecRects[3].lat);
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 1: %u,%u,%u,%u", vecRects[0].lat,vecRects[1].lat,vecRects[2].lat,vecRects[3].lat);
 
     float minlen = vecRects.front().get_distance(loc);
     Location apos = vecRects.front();
@@ -919,7 +919,7 @@ void ModeCNDN::detecteEdge()
     vecPoints.push_front(apos);
     vecPoints.push_back(apos);
 
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %u,%u,%u,%u", vecPoints[0].lat,vecPoints[1].lat,vecPoints[2].lat,vecPoints[3].lat);
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 2: %u,%u,%u,%u", vecPoints[0].lat,vecPoints[1].lat,vecPoints[2].lat,vecPoints[3].lat);
 }
 
 bool lineIntersection(const Vector3f& a,const Vector3f& b,const Vector3f& c,const Vector3f& d, Vector2f &o){
