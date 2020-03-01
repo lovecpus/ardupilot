@@ -613,6 +613,11 @@ bool ModeCNDN::init(bool ignore_checks)
         b_position_target = false;
         last_yaw_ms = 0;
 
+        if (vecRects.empty() && AP::mission()->contains_item(MAV_CMD_DO_SET_ROI))
+        {
+
+        }
+
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MODE INITIALIZED.");
     }
     else
@@ -994,7 +999,7 @@ void ModeCNDN::processArea(int _mode)
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 1;
     cmd.content.location = Location(Vector3f(vecPoints[0].x, vecPoints[0].y, _mission_alt_cm.get()*1.0f));
-    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_TERRAIN);
+    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_CONDITION_YAW;
@@ -1008,7 +1013,7 @@ void ModeCNDN::processArea(int _mode)
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 1;
     cmd.content.location = Location(Vector3f(vecPoints[1].x, vecPoints[1].y, _mission_alt_cm.get()*1.0f));
-    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_TERRAIN);
+    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_CONDITION_YAW;
@@ -1022,7 +1027,7 @@ void ModeCNDN::processArea(int _mode)
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 1;
     cmd.content.location = Location(Vector3f(vecPoints[2].x, vecPoints[2].y, _mission_alt_cm.get()*1.0f));
-    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_TERRAIN);
+    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_CONDITION_YAW;
@@ -1036,7 +1041,7 @@ void ModeCNDN::processArea(int _mode)
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 1;
     cmd.content.location = Location(Vector3f(vecPoints[3].x, vecPoints[3].y, _mission_alt_cm.get()*1.0f));
-    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_TERRAIN);
+    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_CONDITION_YAW;
@@ -1050,7 +1055,7 @@ void ModeCNDN::processArea(int _mode)
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 1;
     cmd.content.location = Location(Vector3f(vecPoints[4].x, vecPoints[4].y, _mission_alt_cm.get()*1.0f));
-    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_TERRAIN);
+    cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_CONDITION_YAW;
@@ -1069,13 +1074,13 @@ void ModeCNDN::processArea(int _mode)
         cmd.id = MAV_CMD_NAV_WAYPOINT;
         cmd.p1 = 1;
         cmd.content.location = Location(Vector3f(p1.x, p1.y, _mission_alt_cm.get()*1.0f));
-        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_TERRAIN);
+//        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
         AP::mission()->add_cmd(cmd);
 
         cmd.id = MAV_CMD_NAV_WAYPOINT;
         cmd.p1 = 1;
         cmd.content.location = Location(Vector3f(p2.x, p2.y, _mission_alt_cm.get()*1.0f));
-        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_TERRAIN);
+//        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
         AP::mission()->add_cmd(cmd);
 
         ll_cm += lw_cm;
@@ -1086,13 +1091,13 @@ void ModeCNDN::processArea(int _mode)
         cmd.id = MAV_CMD_NAV_WAYPOINT;
         cmd.p1 = 1;
         cmd.content.location = Location(Vector3f(p3.x, p3.y, _mission_alt_cm.get()*1.0f));
-        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_TERRAIN);
+//        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
         AP::mission()->add_cmd(cmd);
 
         cmd.id = MAV_CMD_NAV_WAYPOINT;
         cmd.p1 = 1;
         cmd.content.location = Location(Vector3f(p4.x, p4.y, _mission_alt_cm.get()*1.0f));
-        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_TERRAIN);
+//        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
         AP::mission()->add_cmd(cmd);
 
         p1 = p4 + step1;
