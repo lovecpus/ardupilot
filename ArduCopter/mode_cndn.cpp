@@ -920,13 +920,12 @@ void ModeCNDN::detecteEdge()
     if (!bFound)
         return;
 
-    Vector2f cpos(hpos.x, hpos.y);
+    Vector2f cpos(loc.lat, loc.lng);
     std::deque<Vector2f> vecRects;
     for (int i = 0; i < 4; i++)
     {
         Vector2f& pos = edge.pos[i];
-        pcm = locNEU(pos.x, pos.y, _mission_alt_cm.get() * 0.01f);
-        vecRects.push_back(Vector2f(pcm.x, pcm.y));
+        vecRects.push_back(pos);
     }
 
     vecPoints.resize(vecRects.size());
@@ -948,7 +947,7 @@ void ModeCNDN::detecteEdge()
 
     for(int i = 0; i < (int)vecPoints.size(); i++)
     {
-        if ((vecPoints.front()-apos).length() <= 0.001f)
+        if ((vecPoints.front()-apos).length() <= 1e-8f)
             break;
         cpos = vecPoints.front();
         vecPoints.pop_front();
@@ -960,6 +959,16 @@ void ModeCNDN::detecteEdge()
         std::reverse(vecPoints.begin(), vecPoints.end());
     vecPoints.push_front(apos);
     vecPoints.push_back(apos);
+}
+
+void ModeCNDN::processArea(int _mode)
+{
+    if (vecPoints.empty())
+    {
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
+        return_to_manual_control(false);
+        return;
+    }
 
     Vector2f vd1, vd2, eg1, eg2;
     float eg_cm = _dst_eg_cm.get() * 1.0f;
@@ -971,10 +980,10 @@ void ModeCNDN::detecteEdge()
 
     eg1 = (vd1 * eg_cm);
     eg2 = (vd2 * eg_cm);
-    vecPoints[0] += eg1;
-    vecPoints[1] += eg2;
-    vecPoints[2] -= eg1;
-    vecPoints[3] -= eg2;
+    // vecPoints[0] += eg1;
+    // vecPoints[1] += eg2;
+    // vecPoints[2] -= eg1;
+    // vecPoints[3] -= eg2;
 
     vd1 = (vecPoints[1] - vecPoints[0]); // step vector
     vd2 = (vecPoints[3] - vecPoints[2]); // step vector
@@ -983,22 +992,11 @@ void ModeCNDN::detecteEdge()
 
     eg1 = (vd1 * eg_cm);
     eg2 = (vd2 * eg_cm);
-    vecPoints[0] += eg1;
-    vecPoints[1] -= eg1;
-    vecPoints[2] += eg2;
-    vecPoints[3] -= eg2;
-
-    vecPoints[4] = vecPoints[0];
-}
-
-void ModeCNDN::processArea(int _mode)
-{
-    if (vecPoints.empty())
-    {
-        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
-        return_to_manual_control(false);
-        return;
-    }
+    // vecPoints[0] += eg1;
+    // vecPoints[1] -= eg1;
+    // vecPoints[2] += eg2;
+    // vecPoints[3] -= eg2;
+    // vecPoints[4] = vecPoints[0];
 
     gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] CREATING MISSION.");
     AP_Notify::events.waypoint_complete = 1;
