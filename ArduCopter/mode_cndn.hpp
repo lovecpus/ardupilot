@@ -44,6 +44,7 @@ struct CNAREA
 int degNE(const Vector2f& pp);
 int degNE(const Vector2f& p1, const Vector2f& p2);
 Vector3f locNEU(float latf, float lngf, float altf);
+bool inside(const CNAREA& area, const Vector2f& cp);
 bool inside(const CNAREA& area, const Location& loc);
 
 class ModeCNDN : public Mode
@@ -111,7 +112,7 @@ private:
     uint32_t reach_wp_time_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
     uint32_t edge_time_ms = 0;
     bool b_position_target = false;
-    std::deque<Vector2f> vecPoints;
+    std::deque<Location> vecPoints;
     float  last_yaw_cd = 0.0f;
     uint32_t last_yaw_ms = 0;
     uint16_t loiter_time_max;                // How long we should stay in Loiter Mode for mission scripting (time in seconds)
