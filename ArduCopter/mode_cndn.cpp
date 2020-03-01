@@ -882,15 +882,11 @@ void ModeCNDN::detecteEdge()
     if (!bFound)
         return;
 
-    Vector2f cpos(loc.lat, loc.lng);
     std::deque<Location> vecRects;
     for (int i = 0; i < 4; i++) {
         Vector2f& pos = edge.pos[i];
-        vecRects.push_back(Location(Vector3f(pos.x, pos.y, 300)));
+        vecRects.push_back(Location(Vector3f(pos.x, pos.y, 0)));
     }
-
-    vecPoints.resize(vecRects.size());
-    std::copy(vecRects.begin(), vecRects.end(), vecPoints.begin());
 
     float minlen = vecRects.front().get_distance(loc);
     Location apos = vecRects.front();
