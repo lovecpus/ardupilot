@@ -952,10 +952,10 @@ void ModeCNDN::processArea(int _mode)
     vecPoints[2].get_vector_from_origin_NEU(vp2);
     vecPoints[3].get_vector_from_origin_NEU(vp3);
 
-    Vector3f vr1(vp1 - vp0); ve1.z = 0;
-    Vector3f vr2(vp2 - vp1); ve2.z = 0;
-    Vector3f vr3(vp3 - vp2); ve3.z = 0;
-    Vector3f vr4(vp0 - vp3); ve4.z = 0;
+    Vector3f vr1(vp1 - vp0); vr1.z = 0;
+    Vector3f vr2(vp2 - vp1); vr2.z = 0;
+    Vector3f vr3(vp3 - vp2); vr3.z = 0;
+    Vector3f vr4(vp0 - vp3); vr4.z = 0;
 
     vr1.normalize();
     vr2.normalize();
