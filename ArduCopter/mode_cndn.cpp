@@ -625,8 +625,8 @@ bool ModeCNDN::init(bool ignore_checks)
                 {
                     if (cmd.id != MAV_CMD_DO_SET_ROI) continue;
 
-                    Vector3f pcm = locNEU(cmd.content.location.lat, cmd.content.location.lng, _mission_alt_cm.get() * 0.01f);
-                    vecRects.push_back(Vector2f(pcm.x, pcm.y));
+//                    Vector3f pcm = locNEU(cmd.content.location.lat, cmd.content.location.lng, _mission_alt_cm.get() * 0.01f);
+//                    vecRects.push_back(Vector2f(pcm.x, pcm.y));
                 }
             }
 /*
