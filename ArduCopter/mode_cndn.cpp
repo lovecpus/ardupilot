@@ -938,9 +938,6 @@ bool lineIntersection(const Vector3f& a,const Vector3f& b,const Vector3f& c,cons
 
 void ModeCNDN::processArea(int _mode)
 {
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 0.");
-    return;
-
     if (!AP::ahrs().home_is_set() || vecPoints.empty()) {
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] CAN NOT PROCESS AREA.");
         return_to_manual_control(false);
