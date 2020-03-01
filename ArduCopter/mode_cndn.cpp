@@ -1009,14 +1009,11 @@ void ModeCNDN::processArea(int _mode)
     cmd.content.location = AP::ahrs().get_home();
     AP::mission()->add_cmd(cmd);
 
-    if (_mode == 1) // auto takeoff
-    {
-        cmd.id = MAV_CMD_NAV_TAKEOFF;
-        cmd.p1 = 10;
-        cmd.content.location = AP::ahrs().get_home();
-//        cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
-        AP::mission()->add_cmd(cmd);
-    }
+    cmd.id = MAV_CMD_NAV_TAKEOFF;
+    cmd.p1 = 10;
+    cmd.content.location = AP::ahrs().get_home();
+    cmd.content.location.set_alt_cm(_take_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
+    AP::mission()->add_cmd(cmd);
 
     vd1 = (vecPoints[3] - vecPoints[0]); // step vector
     vd2 = (vecPoints[2] - vecPoints[1]); // step vector
