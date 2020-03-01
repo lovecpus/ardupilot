@@ -888,10 +888,9 @@ void ModeCNDN::detecteEdge()
 
     std::deque<Location> vecRects;
     for (int i = 0; i < 4; i++) {
-        Vector2f& pos = edge.pos[i];
-        vecRects.push_back(Location(Vector3f(pos.x, pos.y, 300)));
+        vecRects.push_back(Location(Vector3f(edge.pos[i].x, edge.pos[i].y, 300)));
     }
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 1: %f,%f,%f,%f", edge.pos[0].x,edge.pos[1].x,edge.pos[2].x,edge.pos[3].x);
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] 1: %u,%u,%u,%u", vecRects[0].lat,vecRects[1].lat,vecRects[2].lat,vecRects[3].lat);
 
     float minlen = vecRects.front().get_distance(loc);
     Location apos = vecRects.front();
