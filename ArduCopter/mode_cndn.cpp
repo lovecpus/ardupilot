@@ -980,6 +980,9 @@ void ModeCNDN::processArea(int _mode)
     vr2.normalize();
     vr3.normalize();
     vr4.normalize();
+
+    return;
+
     vr1.rotate(Rotation::ROTATION_YAW_90);
     vr2.rotate(Rotation::ROTATION_YAW_90);
     vr3.rotate(Rotation::ROTATION_YAW_90);
