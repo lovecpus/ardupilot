@@ -812,13 +812,10 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             wp_nav->set_wp_destination(stopping_point, false);
 
             detecteEdge();
-            if (!vecPoints.empty())
-            {
+            if (!vecPoints.empty()) {
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %d DETECTED EDGES.", int(vecPoints.size()));
                 stage = (dest_num==2) ? EDGE_FOLLOW : PREPARE_FOLLOW;
-            }
-            else
-            {
+            } else {
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] NOT REGISTERED AREA.");
             }
         }
@@ -834,8 +831,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
     case PREPARE_FINISH:
     case FINISHED:
     default:
-        if (dest_num == 0)
-        {
+        if (dest_num == 0) {
             wp_nav->wp_and_spline_init();
             return_to_manual_control(false);
             return;
@@ -847,22 +843,17 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 // return manual control to the pilot
 void ModeCNDN::return_to_manual_control(bool maintain_target)
 {
-    if (stage != MANUAL)
-    {
+    if (stage != MANUAL) {
         stage = MANUAL;
         b_position_target = false;
         loiter_nav->clear_pilot_desired_acceleration();
-        if (maintain_target)
-        {
+        if (maintain_target) {
             const Vector3f wp_dest = wp_nav->get_wp_destination();
             loiter_nav->init_target(wp_dest);
-            if (wp_nav->origin_and_destination_are_terrain_alt())
-            {
+            if (wp_nav->origin_and_destination_are_terrain_alt()) {
                 copter.surface_tracking.set_target_alt_cm(wp_dest.z);
             }
-        }
-        else
-        {
+        } else {
             loiter_nav->init_target();
         }
         auto_yaw.set_mode(AUTO_YAW_HOLD);
@@ -881,8 +872,7 @@ void ModeCNDN::detecteEdge()
     CNAREA edge;
     Location loc(copter.current_loc);
     bool bFound = false;
-    for(uint16_t i=0; i<vecAreas.size(); i++)
-    {
+    for(uint16_t i=0; i<vecAreas.size(); i++) {
         CNAREA& area = vecAreas[i];
         if (!inside(area, loc))
             continue;
@@ -896,8 +886,7 @@ void ModeCNDN::detecteEdge()
 
     Vector2f cpos(loc.lat, loc.lng);
     std::deque<Location> vecRects;
-    for (int i = 0; i < 4; i++)
-    {
+    for (int i = 0; i < 4; i++) {
         Vector2f& pos = edge.pos[i];
         vecRects.push_back(Location(Vector3f(pos.x, pos.y, 300)));
     }
@@ -905,23 +894,20 @@ void ModeCNDN::detecteEdge()
     vecPoints.resize(vecRects.size());
     std::copy(vecRects.begin(), vecRects.end(), vecPoints.begin());
 
-    float minlen = (vecRects.front().get_distance(loc);
+    float minlen = vecRects.front().get_distance(loc);
     Location apos = vecRects.front();
 
     vecPoints.push_back(apos);
-    for (int i = 1; i < (int)vecRects.size(); i++)
-    {
-        if ((vecRects[i].get_distance(cpos) < minlen)
-        {
+    for (int i = 1; i < (int)vecRects.size(); i++) {
+        if (vecRects[i].get_distance(cpos) < minlen) {
             apos = vecRects[i];
             minlen = apos.get_distance(cpos);
         }
         vecPoints.push_back(vecRects[i]);
     }
 
-    for(int i = 0; i < (int)vecPoints.size(); i++)
-    {
-        if ((vecPoints.front().get_distance(apos) <= 1e-8f)
+    for(int i = 0; i < (int)vecPoints.size(); i++) {
+        if (vecPoints.front().get_distance(apos) <= 1e-8f)
             break;
         cpos = vecPoints.front();
         vecPoints.pop_front();
@@ -929,7 +915,7 @@ void ModeCNDN::detecteEdge()
     }
 
     vecPoints.pop_front();
-    if ((vecPoints.front().get_distance(apos) < (vecPoints.back().get_distance(apos))
+    if (vecPoints.front().get_distance(apos) < (vecPoints.back().get_distance(apos))
         std::reverse(vecPoints.begin(), vecPoints.end());
     vecPoints.push_front(apos);
     vecPoints.push_back(apos);
@@ -950,8 +936,7 @@ bool lineIntersection(const Vector3f& a,const Vector3f& b,const Vector3f& c,cons
 
 void ModeCNDN::processArea(int _mode)
 {
-    if (!AP::ahrs().home_is_set() || vecPoints.empty())
-    {
+    if (!AP::ahrs().home_is_set() || vecPoints.empty()) {
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] CAN NOT PROCESS AREA.");
         return_to_manual_control(false);
         return;
@@ -987,29 +972,25 @@ void ModeCNDN::processArea(int _mode)
     Vector3f vp30 = vp3 + vr4 * eg_cm;
     Vector3f vp31 = vp0 + vr4 * eg_cm;
 
-    if (lineIntersection(vp00,vp01,vp10,vp11,eg))
-    {
+    if (lineIntersection(vp00,vp01,vp10,vp11,eg)) {
         vp10.x = eg.x;
         vp10.y = eg.y;
         vp01 = vp10;
     }
 
-    if (lineIntersection(vp10,vp11,vp20,vp21,eg))
-    {
+    if (lineIntersection(vp10,vp11,vp20,vp21,eg)) {
         vp20.x = eg.x;
         vp20.y = eg.y;
         vp11 = vp20;
     }
 
-    if (lineIntersection(vp20,vp21,vp30,vp31,eg))
-    {
+    if (lineIntersection(vp20,vp21,vp30,vp31,eg)) {
         vp30.x = eg.x;
         vp30.y = eg.y;
         vp21 = vp30;
     }
 
-    if (lineIntersection(vp30,vp31,vp00,vp01,eg))
-    {
+    if (lineIntersection(vp30,vp31,vp00,vp01,eg)) {
         vp00.x = eg.x;
         vp00.y = eg.y;
         vp31 = vp00;
@@ -1117,8 +1098,7 @@ void ModeCNDN::processArea(int _mode)
     area.pos[2] = Vector2f(vp2.x,vp2.y);
     area.pos[3] = Vector2f(vp3.x,vp3.y);
 
-    for (float l = 1.0f; l < 100.0f; l += 2.0f)
-    {
+    for (float l = 1.0f; l < 100.0f; l += 2.0f) {
         p1 = vp0 + step * l;
         p2 = vp1 + step * l;
         if (!inside(area,Vector2f(p1.x,p1.y)) && !inside(area,Vector2f(p2.x,p2.y)))
@@ -1183,17 +1163,14 @@ void ModeCNDN::processArea(int _mode)
 
     wp_nav->wp_and_spline_init();
 
-    if (!vecPoints.empty())
-    {
+    if (!vecPoints.empty()) {
         Vector3f hpos(vp0.x, vp0.y, _mission_alt_cm.get() * 1.0f);
         wp_nav->set_wp_destination(hpos, false);
         last_yaw_cd = degNE(Vector2f(vp1.x,vp1.y), Vector2f(vp0.x,vp0.y)) * 100.0f;
         auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
         stage = PREPARE_AUTO;
-    }
-    else
-    {
+    } else {
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected.");
         return_to_manual_control(false);
     }
@@ -1201,17 +1178,14 @@ void ModeCNDN::processArea(int _mode)
 
 void ModeCNDN::handle_message(const mavlink_message_t &msg)
 {
-    switch (msg.msgid)
-    {
-    case MAVLINK_MSG_ID_COMMAND_ACK:
-    {
+    switch (msg.msgid) {
+    case MAVLINK_MSG_ID_COMMAND_ACK: {
         mavlink_command_ack_t packet;
         mavlink_msg_command_ack_decode(&msg, &packet);
         gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] COMMAND_ACK(%d)", int(packet.command));
     } break;
 
-    case MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED: // MAV ID: 84
-    {
+    case MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED: { // MAV ID: 84
         // decode packet
         mavlink_set_position_target_local_ned_t packet;
         mavlink_msg_set_position_target_local_ned_decode(&msg, &packet);
@@ -1223,10 +1197,8 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         Vector3f cpos = inertial_nav.get_position();
 
         bool bTargeted = false;
-        if (packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_LOCAL_NED)
-        {
-            if (packet.coordinate_frame == MAV_FRAME_BODY_NED)
-            {
+        if (packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_LOCAL_NED) {
+            if (packet.coordinate_frame == MAV_FRAME_BODY_NED) {
                 packet.x = packet.y = 0.0f;
                 packet.z = _take_alt_cm.get() * -0.01f;
                 packet.z += cpos.z * 0.01f;
@@ -1238,8 +1210,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         if (packet.coordinate_frame != MAV_FRAME_LOCAL_NED &&
             packet.coordinate_frame != MAV_FRAME_LOCAL_OFFSET_NED &&
             packet.coordinate_frame != MAV_FRAME_BODY_NED &&
-            packet.coordinate_frame != MAV_FRAME_BODY_OFFSET_NED)
-        {
+            packet.coordinate_frame != MAV_FRAME_BODY_OFFSET_NED) {
             break;
         }
 
@@ -1256,34 +1227,26 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
         // prepare position
         Vector3f pos_vector;
-        if (!pos_ignore)
-        {
+        if (!pos_ignore) {
             // convert to cm
             pos_vector = Vector3f(packet.x * 100.0f, packet.y * 100.0f, -packet.z * 100.0f);
             // rotate to body-frame if necessary
-            if (packet.coordinate_frame == MAV_FRAME_BODY_NED ||
-                packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED)
-            {
+            if (packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED) {
                 copter.rotate_body_frame_to_NE(pos_vector.x, pos_vector.y);
             }
             // add body offset if necessary
             if (packet.coordinate_frame == MAV_FRAME_LOCAL_OFFSET_NED ||
                 packet.coordinate_frame == MAV_FRAME_BODY_NED ||
-                packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED)
-            {
+                packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED) {
                 pos_vector += cpos;
-            }
-            else
-            {
+            } else {
                 // convert from alt-above-home to alt-above-ekf-origin
-                if (!AP::ahrs().home_is_set())
-                {
+                if (!AP::ahrs().home_is_set()) {
                     break;
                 }
                 Location origin;
                 pos_vector.z += AP::ahrs().get_home().alt;
-                if (copter.ahrs.get_origin(origin))
-                {
+                if (copter.ahrs.get_origin(origin)) {
                     pos_vector.z -= origin.alt;
                 }
             }
@@ -1291,13 +1254,11 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
         // prepare velocity
         Vector3f vel_vector;
-        if (!vel_ignore)
-        {
+        if (!vel_ignore) {
             // convert to cm
             vel_vector = Vector3f(packet.vx * 100.0f, packet.vy * 100.0f, -packet.vz * 100.0f);
             // rotate to body-frame if necessary
-            if (packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED)
-            {
+            if (packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED) {
                 copter.rotate_body_frame_to_NE(vel_vector.x, vel_vector.y);
             }
         }
@@ -1306,23 +1267,19 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         float yaw_cd = 0.0f;
         bool yaw_relative = false;
         float yaw_rate_cds = 0.0f;
-        if (!yaw_ignore)
-        {
+        if (!yaw_ignore) {
             yaw_cd = ToDeg(packet.yaw) * 100.0f;
             yaw_relative = packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED;
         }
-        if (!yaw_rate_ignore)
-        {
+        if (!yaw_rate_ignore) {
             yaw_rate_cds = ToDeg(packet.yaw_rate) * 100.0f;
         }
 
         // send request
-        if (!pos_ignore && vel_ignore && acc_ignore)
-        {
+        if (!pos_ignore && vel_ignore && acc_ignore) {
             auto_yaw.set_mode(AUTO_YAW_HOLD);
             set_destination(pos_vector, !yaw_ignore, yaw_cd, !yaw_rate_ignore, yaw_rate_cds, yaw_relative);
-            if (bTargeted)
-            {
+            if (bTargeted) {
                 b_position_target = true;
                 //gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SPT ON %0.3f,%0.3f,%0.3f", pos_vector.x, pos_vector.y, pos_vector.z);
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SPT ON.");
@@ -1330,14 +1287,11 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         }
     } break;
 
-    case MAVLINK_MSG_ID_NAMED_VALUE_INT:
-    {
+    case MAVLINK_MSG_ID_NAMED_VALUE_INT: {
         mavlink_named_value_int_t packet;
         mavlink_msg_named_value_int_decode(&msg, &packet);
-        if (strncasecmp(packet.name, "CNDN_VALUE", 10) == 0)
-        {
-            switch (packet.value)
-            {
+        if (strncasecmp(packet.name, "CNDN_VALUE", 10) == 0) {
+            switch (packet.value) {
             case 0:
                 return_to_manual_control(false);
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : return_to_manual_control.", int(packet.value));
@@ -1370,8 +1324,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 break;
             }
         }
-    }
-    break;
+    } break;
     }
 }
 
@@ -1395,8 +1348,7 @@ void ModeCNDN::auto_control()
 {
     // process pilot's yaw input
     float target_yaw_rate = 0;
-    if (!copter.failsafe.radio)
-    {
+    if (!copter.failsafe.radio) {
         // get pilot's desired yaw rate
         target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
     }
@@ -1422,14 +1374,13 @@ void ModeCNDN::auto_control()
     if (auto_yaw.mode() == AUTO_YAW_HOLD) {
         // roll & pitch from waypoint controller, yaw rate from pilot
         attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(roll_target, pitch_target, target_yaw_rate);
-    }else{
+    } else {
         // roll, pitch from waypoint controller, yaw heading from auto_heading()
         attitude_control->input_euler_angle_roll_pitch_yaw(roll_target, pitch_target, auto_yaw.yaw(), true);
     }
 
     // if wpnav failed (because of lack of terrain data) switch back to pilot control for next iteration
-    if (!wpnav_ok)
-    {
+    if (!wpnav_ok) {
         return_to_manual_control(false);
     }
 }
@@ -1442,15 +1393,13 @@ void ModeCNDN::manual_control()
 bool ModeCNDN::reached_destination()
 {
     // check if wp_nav believes it has reached the destination
-    if (!wp_nav->reached_wp_destination())
-    {
+    if (!wp_nav->reached_wp_destination()) {
         reach_wp_time_ms = 0;
         return false;
     }
 
     // check distance to destination
-    if (wp_nav->get_wp_distance_to_destination() > CNDN_WP_RADIUS_CM)
-    {
+    if (wp_nav->get_wp_distance_to_destination() > CNDN_WP_RADIUS_CM) {
         reach_wp_time_ms = 0;
         return false;
     }
@@ -1465,12 +1414,9 @@ bool ModeCNDN::reached_destination()
 
 void ModeCNDN::set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool relative_angle)
 {
-    if (use_yaw)
-    {
+    if (use_yaw) {
         auto_yaw.set_fixed_yaw(yaw_cd * 0.01f, 0.0f, 0, relative_angle);
-    }
-    else if (use_yaw_rate)
-    {
+    } else if (use_yaw_rate) {
         auto_yaw.set_rate(yaw_rate_cds);
     }
 }
