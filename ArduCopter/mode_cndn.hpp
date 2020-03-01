@@ -37,14 +37,7 @@ break;
 #if defined(SIM_LOCATION)
 struct CNAREA
 {
-    float latitude1;
-    float longitude1;
-    float latitude2;
-    float longitude2;
-    float latitude3;
-    float longitude3;
-    float latitude4;
-    float longitude4;
+    Vector2f pos[4];
 };
 #endif
 
@@ -118,10 +111,7 @@ private:
     uint32_t reach_wp_time_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
     uint32_t edge_time_ms = 0;
     bool b_position_target = false;
-    uint8_t edge_count = 0;
-    uint8_t edge_position = 0;
-    Vector2f edge_points[10]; // in NEU frame in cm relative to ekf origin
-    std::deque<Vector2f> vecPoints, vecRects;
+    std::deque<Vector2f> vecPoints;
     float  last_yaw_cd = 0.0f;
     uint32_t last_yaw_ms = 0;
     uint16_t loiter_time_max;                // How long we should stay in Loiter Mode for mission scripting (time in seconds)

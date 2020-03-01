@@ -617,7 +617,7 @@ bool ModeCNDN::init(bool ignore_checks)
         AP_Mission::mission_state mstate = _mission->state();
         uint16_t nCmds = _mission->num_commands();
 
-        if (vecRects.empty()) {
+        if (vecPoints.empty()) {
             for (uint16_t i=0; i < nCmds; i++)
             {
                 AP_Mission::Mission_Command cmd;
@@ -626,15 +626,13 @@ bool ModeCNDN::init(bool ignore_checks)
                     if (cmd.id != MAV_CMD_DO_SET_ROI) continue;
 
 //                    Vector3f pcm = locNEU(cmd.content.location.lat, cmd.content.location.lng, _mission_alt_cm.get() * 0.01f);
-//                    vecRects.push_back(Vector2f(pcm.x, pcm.y));
+//                    vecPoints.push_back(Vector2f(pcm.x, pcm.y));
                 }
             }
 /*
-            if (!vecRects.empty())
+            if (!vecPoints.empty())
             {
-                vecRects.push_back(vecRects.front());
-                vecPoints.resize(vecRects.size());
-                std::copy(vecRects.begin(), vecRects.end(), vecPoints.begin());
+                vecPoints.push_back(vecPoints.front());
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FROM MISSION.");
             }
             else*/
@@ -646,7 +644,7 @@ bool ModeCNDN::init(bool ignore_checks)
     }
     else
     {
-        if (vecRects.empty()) {
+        if (vecPoints.empty()) {
             uint16_t nCmds = _mission->num_commands();
             /*
             for (uint16_t i=0; i < nCmds; i++)
@@ -657,16 +655,14 @@ bool ModeCNDN::init(bool ignore_checks)
                     if (cmd.id != MAV_CMD_DO_SET_ROI) continue;
 
                     Vector3f pcm = locNEU(cmd.content.location.lat, cmd.content.location.lng, _mission_alt_cm.get() * 0.01f);
-                    vecRects.push_back(Vector2f(pcm.x, pcm.y));
+                    vecPoints.push_back(Vector2f(pcm.x, pcm.y));
                 }
             }
             */
 /*
-            if (!vecRects.empty())
+            if (!vecPoints.empty())
             {
-                vecRects.push_back(vecRects.front());
-                vecPoints.resize(vecRects.size());
-                std::copy(vecRects.begin(), vecRects.end(), vecPoints.begin());
+                vecPoints.push_back(vecPoints.front());
                 gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA RECOVER FROM MISSION.");
             }
             else*/
@@ -719,7 +715,7 @@ void ModeCNDN::run()
 
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH.");
 
-            const Vector3f tpos(vecRects.back().x, vecRects.back().y, _mission_alt_cm.get() * 1.0f);
+            const Vector3f tpos(vecPoints.back().x, vecPoints.back().y, _mission_alt_cm.get() * 1.0f);
             wp_nav->set_wp_destination(tpos, false);
             auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
         }
@@ -908,48 +904,40 @@ void ModeCNDN::detecteEdge()
     CNAREA edge = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
     Location loc(copter.current_loc);
 
-    edge_count = 0;
-
-    for (int i = 0; i < 10; i++)
-        edge_points[i].zero();
-    vecRects.clear();
     vecPoints.clear();
 
     if (!ahrs.get_home().get_vector_from_origin_NEU(hpos))
         return;
 
+    bool bFound = false;
     for(uint16_t i=0; i<vecAreas.size(); i++)
     {
         CNAREA& area = vecAreas[i];
         if (!inside(area, loc))
             continue;
         edge = area;
-        edge_count = 4;
+        bFound = true;
         break;
     }
 
-    if (edge_count < 4)
+    if (!bFound)
         return;
 
-    edge_points[0].x = edge.latitude1;
-    edge_points[0].y = edge.longitude1;
-    edge_points[1].x = edge.latitude2;
-    edge_points[1].y = edge.longitude2;
-    edge_points[2].x = edge.latitude3;
-    edge_points[2].y = edge.longitude3;
-    edge_points[3].x = edge.latitude4;
-    edge_points[3].y = edge.longitude4;
-
     Vector2f cpos(hpos.x, hpos.y);
-    for (int i = 0; i < edge_count; i++)
+    std::deque<Vector2f> vecRects;
+    for (int i = 0; i < 4; i++)
     {
-        Vector2f& pos = edge_points[i];
+        Vector2f& pos = area.pos[i];
         pcm = locNEU(pos.x, pos.y, _mission_alt_cm.get() * 0.01f);
         vecRects.push_back(Vector2f(pcm.x, pcm.y));
     }
 
+    vecPoints.resize(vecRects.size());
+    std::copy(vecRects.begin(), vecRects.end(), vecPoints.begin());
+
     float minlen = (vecRects.front()-cpos).length();
     Vector2f apos = vecRects.front();
+
     vecPoints.push_back(apos);
     for (int i = 1; i < (int)vecRects.size(); i++)
     {
@@ -1004,9 +992,6 @@ void ModeCNDN::detecteEdge()
     vecPoints[3] -= eg2;
 
     vecPoints[4] = vecPoints[0];
-
-    vecRects.resize(vecPoints.size());
-    std::copy(vecPoints.begin(), vecPoints.end(), vecRects.begin());
 }
 
 void ModeCNDN::processArea(int _mode)
@@ -1173,22 +1158,22 @@ void ModeCNDN::processArea(int _mode)
 
     cmd.id = MAV_CMD_DO_SET_ROI;
     cmd.p1 = 0;
-    cmd.content.location = Location(int32_t(edge_points[0].x * 1e7),  int32_t(edge_points[0].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
+    cmd.content.location = Location(int32_t(vecPoints[0].x * 1e7),  int32_t(vecPoints[0].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_DO_SET_ROI;
     cmd.p1 = 0;
-    cmd.content.location = Location(int32_t(edge_points[1].x * 1e7),  int32_t(edge_points[1].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
+    cmd.content.location = Location(int32_t(vecPoints[1].x * 1e7),  int32_t(vecPoints[1].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_DO_SET_ROI;
     cmd.p1 = 0;
-    cmd.content.location = Location(int32_t(edge_points[2].x * 1e7),  int32_t(edge_points[2].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
+    cmd.content.location = Location(int32_t(vecPoints[2].x * 1e7),  int32_t(vecPoints[2].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_DO_SET_ROI;
     cmd.p1 = 0;
-    cmd.content.location = Location(int32_t(edge_points[3].x * 1e7),  int32_t(edge_points[3].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
+    cmd.content.location = Location(int32_t(vecPoints[3].x * 1e7),  int32_t(vecPoints[3].y * 1e7), int32_t(_mission_alt_cm.get()), Location::AltFrame::ABOVE_HOME);
     AP::mission()->add_cmd(cmd);
 
     wp_nav->wp_and_spline_init();
@@ -1201,7 +1186,6 @@ void ModeCNDN::processArea(int _mode)
         last_yaw_cd = degNE(vecPoints[1], vecPoints[0]) * 100.0f;
         auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
-        vecPoints.pop_front();
         stage = PREPARE_AUTO;
     }
     else
