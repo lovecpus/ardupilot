@@ -1153,7 +1153,7 @@ void ModeCNDN::processArea(int _mode)
             p1.x = eg.x;
             p1.y = eg.y;
         }
-        if (lineIntersection(p1,p2,vp2,vp3,eg)) {
+        if (lineIntersection(p1,p2,vp1,vp2,eg)) {
             p2.x = eg.x;
             p2.y = eg.y;
         }
@@ -1184,7 +1184,7 @@ void ModeCNDN::processArea(int _mode)
             p4.x = eg.x;
             p4.y = eg.y;
         }
-        if (lineIntersection(p3,p4,vp2,vp3,eg)) {
+        if (lineIntersection(p3,p4,vp1,vp2,eg)) {
             p3.x = eg.x;
             p3.y = eg.y;
         }
