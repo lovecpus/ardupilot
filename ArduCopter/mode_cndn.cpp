@@ -890,11 +890,11 @@ void ModeCNDN::detecteEdge()
     for (int i = 0; i < 4; i++) {
         Vector2f& pos = edge.pos[i];
         vecRects.push_back(Location(Vector3f(pos.x, pos.y, 0)));
-        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %ud,%ud", vecRects.back().lat,vecRects.back().lng);
     }
 
     float minlen = vecRects.front().get_distance(loc);
     Location apos = vecRects.front();
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %u,%u", apos.lat,apos.lng);
 
     vecPoints.push_back(apos);
     for (int i = 1; i < (int)vecRects.size(); i++) {
@@ -904,9 +904,11 @@ void ModeCNDN::detecteEdge()
         }
         vecPoints.push_back(vecRects[i]);
     }
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %u,%u", apos.lat,apos.lng);
 
+    // rotate to nearest current pos
     for (int i = 0; i < (int)vecPoints.size(); i++) {
-        if (vecPoints.front().get_distance(apos) <= 1e-8f)
+        if (vecPoints.front().get_distance(apos) <= 1e-3f)
             break;
         Location lpo = vecPoints.front();
         vecPoints.pop_front();
