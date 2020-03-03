@@ -210,6 +210,7 @@ public:
     const Location &location(uint8_t instance) const {
         return state[instance].location;
     }
+
     const Location &location() const {
         return location(primary_instance);
     }
@@ -440,11 +441,11 @@ public:
     void handle_gps_rtcm_fragment(uint8_t flags, const uint8_t *data, uint8_t len);
 
     void set_offset_cm(float n_cm, float e_cm) {
-        _ofs_ned_cm.x = n_cm;
-        _ofs_ned_cm.y = e_cm;
+        _ofs_ne_cm.x = n_cm;
+        _ofs_ne_cm.y = e_cm;
     }
 private:
-    Vector2f    _ofs_ned_cm;
+    Vector2f    _ofs_ne_cm;
 
 protected:
 
