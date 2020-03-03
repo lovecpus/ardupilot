@@ -696,9 +696,6 @@ void AP_GPS::update_instance(uint8_t instance)
             data_should_be_logged = true;
         }
     } else {
-//--------------------------------------------------------------------------------------            
-        state[instance].location.offset(_ofs_ne_cm.x, _ofs_ne_cm.y);
-//--------------------------------------------------------------------------------------            
         if (state[instance].uart_timestamp_ms != 0) {
             // set the timestamp for this messages based on
             // set_uart_timestamp() in backend, if available
@@ -708,6 +705,9 @@ void AP_GPS::update_instance(uint8_t instance)
         // delta will only be correct after parsing two messages
         timing[instance].delta_time_ms = tnow - timing[instance].last_message_time_ms;
         timing[instance].last_message_time_ms = tnow;
+//--------------------------------------------------------------------------------------            
+        state[instance].location.offset(_ofs_ne_cm.x, _ofs_ne_cm.y);
+//--------------------------------------------------------------------------------------            
         if (state[instance].status >= GPS_OK_FIX_2D) {
             timing[instance].last_fix_time_ms = tnow;
         }
