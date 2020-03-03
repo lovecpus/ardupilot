@@ -929,6 +929,8 @@ void ModeCNDN::detectEdge()
         std::reverse(vecPoints.begin(), vecPoints.end());
     vecPoints.push_front(apos);
     vecPoints.push_back(apos);
+
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] %f,%f", channel_pitch->get_control_in() * 500.0f, channel_roll->get_control_in() * 500.0f);
 }
 
 bool lineIntersection(const Vector3f& a,const Vector3f& b,const Vector3f& c,const Vector3f& d, Vector2f &o){
@@ -1364,45 +1366,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             }
         }
     } break;
-
-    case MAVLINK_MSG_ID_NAMED_VALUE_INT: {
-        mavlink_named_value_int_t packet;
-        mavlink_msg_named_value_int_decode(&msg, &packet);
-        if (strncasecmp(packet.name, "CNDN_VALUE", 10) == 0) {
-            switch (packet.value) {
-            case 0:
-                return_to_manual_control(false);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : return_to_manual_control.", int(packet.value));
-                break;
-
-            case 1:
-                stage = TAKE_AREA;
-                gcs().send_command_long(MAV_CMD_IMAGE_START_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : IMAGE_START_CAPTURE.", int(packet.value));
-                break;
-
-            case 2:
-                gcs().send_message(MSG_POSITION_TARGET_LOCAL_NED);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : POSITION_TARGET_LOCAL_NED.", int(packet.value));
-                break;
-
-            case 3:
-                gcs().send_command_long(MAV_CMD_VIDEO_START_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : VIDEO_START_CAPTURE.", int(packet.value));
-                break;
-
-            case 4:
-                gcs().send_command_long(MAV_CMD_VIDEO_STOP_CAPTURE);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : VIDEO_STOP_CAPTURE.", int(packet.value));
-                break;
-
-            case 5:
-                gcs().send_local_position_ned(0.0f,0.0f,0.0f,0.02f,0.0f,0.0001f);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] VALUE %d : LOCAL_POSITION_NED.", int(packet.value));
-                break;
-            }
-        }
-    } break;
     }
 }
 
@@ -1510,7 +1473,7 @@ void ModeCNDN::inject()
 {
     if (copter.flightmode != this)
     {
-        AP::gps().set_offset_cm(channel_pitch->get_control_in() * 500.0f, channel_roll->get_control_in() * 500.0f);
+        //AP::gps().set_offset_cm(channel_pitch->get_control_in() * 500.0f, channel_roll->get_control_in() * 500.0f);
     }
     else
     {
