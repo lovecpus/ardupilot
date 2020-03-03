@@ -208,7 +208,7 @@ public:
 
     // location of last fix
     const Location &location(uint8_t instance) const {
-        Location &loc = state[instance].location;
+        const Location &loc = state[instance].location;
         loc.offset(_ofs_ned_cm.x, _ofs_ned_cm.y);
         return state[instance].location;
     }
