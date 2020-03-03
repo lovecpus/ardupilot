@@ -33,6 +33,8 @@ break;
     if (copter.flightmode == &copter.mode_cndn)\
         copter.mode_cndn.handle_message(msg);
 
+#define CNDN_MODE_INJECT()  mode_cndn.inject()
+
 #define SIM_LOCATION 1
 #if defined(SIM_LOCATION)
 struct CNAREA
@@ -69,6 +71,7 @@ public:
     void return_to_manual_control(bool maintain_target);
     void handle_message(const mavlink_message_t &msg) override;
     void return_to_mode();
+    void inject();
 
     static const struct AP_Param::GroupInfo var_info[];
 

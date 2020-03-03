@@ -244,6 +244,11 @@ void Copter::fast_loop()
     // send outputs to the motors library immediately
     motors_output();
 
+#ifndef CNDN_MODE_INJECT
+#define CNDN_MODE_INJECT()
+#endif
+    CNDN_MODE_INJECT();
+    
     // run EKF state estimator (expensive)
     // --------------------
     read_AHRS();

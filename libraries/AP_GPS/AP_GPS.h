@@ -208,7 +208,9 @@ public:
 
     // location of last fix
     const Location &location(uint8_t instance) const {
-        return state[instance].location;
+        static Location loc = state[instance].location;
+        loc.offset(_ofs_ned_cm.x, _ofs_ned_cm.y);
+        return loc;
     }
     const Location &location() const {
         return location(primary_instance);
@@ -438,6 +440,13 @@ public:
 
     // handle possibly fragmented RTCM injection data
     void handle_gps_rtcm_fragment(uint8_t flags, const uint8_t *data, uint8_t len);
+
+    void set_offset_cm(float n_cm, float e_cm) {
+        _ofs_ned_cm.x = n_cm;
+        _ofs_ned_cm.y = e_cm;
+    }
+private:
+    Vector2f    _ofs_ned_cm;
 
 protected:
 

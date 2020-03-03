@@ -1506,4 +1506,9 @@ void ModeCNDN::return_to_mode()
     copter.set_mode(Mode::Number::CNDN, ModeReason::MISSION_END);
 }
 
+void ModeCNDN::inject()
+{
+    AP::gps().set_offset_cm(0, 0);
+}
+
 #endif
