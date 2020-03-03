@@ -1473,7 +1473,7 @@ void ModeCNDN::inject()
 {
     if (copter.flightmode != this)
     {
-        //AP::gps().set_offset_cm(channel_pitch->get_control_in() * 500.0f, channel_roll->get_control_in() * 500.0f);
+        AP::gps().set_offset_cm(channel_pitch->get_control_in() * 1.0f, channel_roll->get_control_in() * 1.0f);
     }
     else
     {
