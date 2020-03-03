@@ -677,7 +677,7 @@ void AP_GPS::update_instance(uint8_t instance)
         if (tnow - timing[instance].last_message_time_ms > GPS_TIMEOUT_MS) {
             memset((void *)&state[instance], 0, sizeof(state[instance]));
 //--------------------------------------------------------------------------------------            
-            state[instance].location.offset(_ofs_ne_cm.x, _offseT_ne_cm.y);
+            state[instance].location.offset(_ofs_ne_cm.x, _ofs_ne_cm.y);
 //--------------------------------------------------------------------------------------            
             state[instance].instance = instance;
             state[instance].hdop = GPS_UNKNOWN_DOP;
