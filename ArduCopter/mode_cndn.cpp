@@ -1473,7 +1473,9 @@ void ModeCNDN::inject()
 {
     if (copter.flightmode != this)
     {
-        AP::gps().set_offset_cm(channel_pitch->get_control_in() * 0.001f, channel_roll->get_control_in() * 0.001f);
+        const float ofs_north = cosf(radians(ahrs.yaw_sensor)) * channel_pitch->get_control_in() * 0.001f;
+        const float ofs_east  = sinf(radians(ahrs.yaw_sensor)) * channel_pitch->get_control_in() * 0.001f;
+        AP::gps().set_offset_cm(ofs_north, ofs_east);
     }
     else
     {
