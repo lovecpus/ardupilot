@@ -206,11 +206,15 @@ public:
     // Query the highest status this GPS supports (always reports GPS_OK_FIX_3D for the blended GPS)
     GPS_Status highest_supported_status(uint8_t instance) const;
 
-    // location of last fix
-    const Location &location(uint8_t instance) {
+    Location& ilocation(uint8_t instance) {
         static Location loc = state[instance].location;
         loc.offset(_ofs_ned_cm.x, _ofs_ned_cm.y);
         return loc;
+    }
+
+    // location of last fix
+    const Location &location(uint8_t instance) const {
+        return ilocation(instance);
     }
     const Location &location() const {
         return location(primary_instance);
