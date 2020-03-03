@@ -207,10 +207,10 @@ public:
     GPS_Status highest_supported_status(uint8_t instance) const;
 
     // location of last fix
-    const Location &location(uint8_t instance) const {
-        const Location &loc = state[instance].location;
+    const Location &location(uint8_t instance) {
+        static Location loc = state[instance].location;
         loc.offset(_ofs_ned_cm.x, _ofs_ned_cm.y);
-        return state[instance].location;
+        return loc;
     }
     const Location &location() const {
         return location(primary_instance);
