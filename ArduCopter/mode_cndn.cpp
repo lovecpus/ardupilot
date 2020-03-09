@@ -1370,6 +1370,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             }
         }
     } break;
+
     case MAVLINK_MSG_ID_CNDN_DETECT: {
         mavlink_cndn_detect_t packet;
         mavlink_msg_cndn_detect_decode(&msg, &packet);
