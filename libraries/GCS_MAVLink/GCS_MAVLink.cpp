@@ -78,10 +78,10 @@ void  GCS_MAVLINK::send_command_long(uint32_t msgid, uint8_t confirmation, float
     }
 }
 
-void  GCS_MAVLINK::send_cndn_trigger(uint64_t ms, double lat, double lng)
+void  GCS_MAVLINK::send_cndn_trigger(double lat, double lng)
 {
     if (HAVE_PAYLOAD_SPACE(chan, CNDN_TRIGGER)) {
-        mavlink_msg_cndn_trigger_send(chan, ms, lat, lng);
+        mavlink_msg_cndn_trigger_send(chan, lat, lng);
     }
 }
 
