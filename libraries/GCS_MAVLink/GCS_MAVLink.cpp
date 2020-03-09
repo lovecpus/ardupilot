@@ -78,20 +78,6 @@ void  GCS_MAVLINK::send_command_long(uint32_t msgid, uint8_t confirmation, float
     }
 }
 
-void  GCS_MAVLINK::send_cndn_trigger(uint64_t ms, double lat, double lng)
-{
-    if (HAVE_PAYLOAD_SPACE(chan, CNDN_TRIGGER)) {
-        mavlink_msg_cndn_trigger_send(chan, ms, lat, lng);
-    }
-}
-
-void  GCS_MAVLINK::send_cndn_request(uint8_t sess, uint16_t size, uint16_t offset)
-{
-    if (HAVE_PAYLOAD_SPACE(chan, CNDN_REQUEST)) {
-        mavlink_msg_cndn_request_send(chan, sess, size, offset);
-    }
-}
-
 bool GCS_MAVLINK::locked() const
 {
     return (1U<<chan) & mavlink_locked_mask;

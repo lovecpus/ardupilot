@@ -219,7 +219,7 @@ public:
     void send_local_position_ned(float px, float py, float pz, float vx, float vy, float vz) const;
     bool locked() const;
 
-    void send_cndn_trigger(uint64_t ms, double lat, double lng);
+    void send_cndn_trigger(double lat, double lng);
     void send_cndn_request(uint8_t sess, uint16_t size, uint16_t offset);
 
     // return a bitmap of active channels. Used by libraries to loop
