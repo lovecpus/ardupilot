@@ -1373,19 +1373,14 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_CNDN_DETECT: {
         mavlink_cndn_detect_t packet;
         mavlink_msg_cndn_detect_decode(&msg, &packet);
-
-        for (uint8_t i=0; i<MAVLINK_COMM_NUM_BUFFERS; i++) {
-                mavlink_channel_t chan_index = (mavlink_channel_t)(MAVLINK_COMM_0+i);
-                if (HAVE_PAYLOAD_SPACE(chan_index, CNDN_REQUEST)) {
-                    // we have space so send then clear that channel bit on the mask
-                    mavlink_msg_cndn_request_send(chan_index, 1, 0, 0);
-                }
-        }
+        gcs().send_cndn_request(1, packet.result, 0);
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] RECEIVED DETECT(%d bytes)", int(packet.result));
     } break;
 
     case MAVLINK_MSG_ID_CNDN_DATA: {
         mavlink_cndn_data_t packet;
         mavlink_msg_cndn_data_decode(&msg, &packet);
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] RECEIVED DATA(%d, %d bytes)", int(packet.offset), int(packet.size));
     } break;
     }
 }
