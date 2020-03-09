@@ -829,7 +829,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                     mavlink_channel_t chan_index = (mavlink_channel_t)(MAVLINK_COMM_0+i);
                     //if (HAVE_PAYLOAD_SPACE(chan_index, CNDN_TRIGGER)) {
                         // we have space so send then clear that channel bit on the mask
-                        //mavlink_msg_cndn_trigger_send(chan_index, AP_HAL::millis(), loc.lat/1e7, loc.lng/1e7);
+                        mavlink_msg_cndn_trigger_send(chan_index, AP_HAL::millis(), loc.lat/1e7, loc.lng/1e7);
                         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] HAVE_PAYLOAD_SPACE[%d]", int(chan_index));
                     //}
             }
