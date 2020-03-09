@@ -1384,7 +1384,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                 mavlink_channel_t chan_index = (mavlink_channel_t)(MAVLINK_COMM_0+i);
                 if (HAVE_PAYLOAD_SPACE(chan_index, CNDN_REQUEST)) {
                     // we have space so send then clear that channel bit on the mask
-                    mavlink_msg_cndn_request_send(chan_index, 0, 0);
+                    mavlink_msg_cndn_request_send(chan_index, 1, 0, 0);
                 }
         }
     } break;
