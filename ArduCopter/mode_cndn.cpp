@@ -1379,7 +1379,6 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         mavlink_cndn_detect_t packet;
         mavlink_msg_cndn_detect_decode(&msg, &packet);
 
-        mavlink_cndn_request_t p_req;
         for (uint8_t i=0; i<MAVLINK_COMM_NUM_BUFFERS; i++) {
                 mavlink_channel_t chan_index = (mavlink_channel_t)(MAVLINK_COMM_0+i);
                 if (HAVE_PAYLOAD_SPACE(chan_index, CNDN_REQUEST)) {
