@@ -825,7 +825,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             wp_nav->set_wp_destination(stopping_point, false);
 
             Location loc(copter.current_loc);
-            gcs().send_cndn_trigger(loc.lat*1e-7, loc.lng*1e-7);
+            gcs().send_cndn_trigger(loc.lat, loc.lng);
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] TRIGGER SEND.[%u,%u]", loc.lat, loc.lng);
 
             // detectEdge();
