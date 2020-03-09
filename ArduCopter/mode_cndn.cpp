@@ -833,7 +833,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                     }
             }
 */            
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] TRIGGER SEND.");
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] TRIGGER SEND.[%u,%u]", loc.lat, loc.lng);
 
             // detectEdge();
             // if (!vecPoints.empty()) {
