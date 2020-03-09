@@ -4713,6 +4713,23 @@ void GCS::send_local_position_ned(float px, float py, float pz, float vx, float 
     }
 }
 
+void GCS::send_cndn_trigger(double lat, double lng) {
+    for (uint8_t i=0; i<num_gcs(); i++) {
+        chan(i)->send_cndn_trigger(lat, lng);
+    }
+}
+
+void GCS::send_cndn_request(uint8_t sess, uint16_t size, uint16_t offset)
+{
+    for (uint8_t i=0; i<num_gcs(); i++) {
+        chan(i)->send_cndn_request(sess, size, offset);
+    }
+}
+
+void GCS_MAVLINK::send_cndn_trigger(double lat, double lng) {
+    mavlink_msg_cndn_trigger_send(chan, AP_HAL::millis(), lat, lng);
+}
+
 void GCS_MAVLINK::send_local_position_ned(float px, float py, float pz, float vx, float vy, float vz) const
 {
     mavlink_msg_local_position_ned_send(chan, AP_HAL::millis(), px, py, pz, vx, vy, vz);

@@ -823,17 +823,9 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             Vector3f stopping_point;
             wp_nav->get_wp_stopping_point(stopping_point);
             wp_nav->set_wp_destination(stopping_point, false);
+
             Location loc(copter.current_loc);
-
-            for (uint8_t i=0; i<MAVLINK_COMM_NUM_BUFFERS; i++) {
-                    mavlink_channel_t chan_index = (mavlink_channel_t)(MAVLINK_COMM_0+i);
-                    if (HAVE_PAYLOAD_SPACE(chan_index, CNDN_TRIGGER)) {
-                        // we have space so send then clear that channel bit on the mask
-                        mavlink_msg_cndn_trigger_send(chan_index, AP_HAL::millis(), loc.lat/1e7, loc.lng/1e7);
-                        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] HAVE_PAYLOAD_SPACE[%d]", int(chan_index));
-                    }
-            }
-
+            gcs().send_cndn_trigger(loc.lat*1e-7, loc.lng*1e-7);
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] TRIGGER SEND.[%u,%u]", loc.lat, loc.lng);
 
             // detectEdge();

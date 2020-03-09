@@ -219,6 +219,9 @@ public:
     void send_local_position_ned(float px, float py, float pz, float vx, float vy, float vz) const;
     bool locked() const;
 
+    void send_cndn_trigger(uint64_t ms, double lat, double lng);
+    void send_cndn_request(uint8_t sess, uint16_t size, uint16_t offset);
+
     // return a bitmap of active channels. Used by libraries to loop
     // over active channels to send to all active channels    
     static uint8_t active_channel_mask(void) { return mavlink_active; }
@@ -876,6 +879,9 @@ public:
 
     void send_command_long(uint32_t msgid, uint8_t confirmation=0, float p1=0.0f, float p2=0.0f, float p3=0.0f, float p4=0.0f, float p5=0.0f, float p6=0.0f, float p7=0.0f);
     void send_local_position_ned(float px=0.0f, float py=0.0f, float pz=0.0f, float vx=0.0f, float vy=0.0f, float vz=0.0f);
+
+    void send_cndn_trigger(double lat, double lng);
+    void send_cndn_request(uint8_t sess, uint16_t size, uint16_t offset);
 
 protected:
 
