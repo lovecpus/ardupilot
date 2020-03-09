@@ -4715,7 +4715,7 @@ void GCS::send_local_position_ned(float px, float py, float pz, float vx, float 
 
 void GCS::send_cndn_trigger(double lat, double lng) {
     for (uint8_t i=0; i<num_gcs(); i++) {
-        chan(i)->send_cndn_trigger(lat, lng);
+        chan(i)->send_cndn_trigger(AP_HAL::millis(), lat, lng);
     }
 }
 
