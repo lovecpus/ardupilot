@@ -1263,13 +1263,10 @@ void ModeCNDN::processArea(int _mode)
 void ModeCNDN::handle_message(const mavlink_message_t &msg)
 {
     switch (msg.msgid) {
-    case MAVLINK_MSG_ID_COMMAND_ACK: {
-        mavlink_command_ack_t packet;
-        mavlink_msg_command_ack_decode(&msg, &packet);
-        gcs().send_text(MAV_SEVERITY_INFO, "[ETRI] COMMAND_ACK(%d)", int(packet.command));
-    } break;
-
     case MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED: { // MAV ID: 84
+        if (copter.flightmode != &copter.mode_cndn) 
+            return;
+
         // decode packet
         mavlink_set_position_target_local_ned_t packet;
         mavlink_msg_set_position_target_local_ned_decode(&msg, &packet);
@@ -1371,6 +1368,12 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         }
     } break;
 
+    case MAVLINK_MSG_ID_CNDN_CONNECT: {
+        mavlink_cndn_connect_t packet;
+        mavlink_msg_cndn_connect_decode(&msg, &packet);
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MC CONNECTED(No. %d)", int(packet.type));
+    } break;
+
     case MAVLINK_MSG_ID_CNDN_DETECT: {
         mavlink_cndn_detect_t packet;
         mavlink_msg_cndn_detect_decode(&msg, &packet);
@@ -1392,19 +1395,24 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         mavlink_cndn_data_t packet;
         mavlink_msg_cndn_data_decode(&msg, &packet);
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] RECEIVED DATA(%d, %d bytes)", int(packet.offset), int(packet.size));
-        if (packet.size > 0) {
-            memcpy((void*)(data_buff+packet.offset), packet.data, packet.size);
-            data_wpos = packet.offset + packet.size;
-            if (data_wpos < data_size) {
-                uint16_t dlen = data_size - data_wpos;
-                gcs().send_cndn_request(1, MIN(dlen, 120), data_wpos);
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] DATA REQUEST(%d/%d)", int(data_wpos), int(data_size));
-            } else {
-                // parse data and create mission
-                data_wpos = 0;
-                uint16_t nCMDs = *(uint16_t*)(data_buff+data_wpos); data_wpos += 2;
-                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] DATA COMPLETE(%d commands)", int(nCMDs));
-            }
+        if (packet.size == 0) {
+            data_wpos = 0;
+            break;
+        }
+
+        memcpy((void*)(data_buff+packet.offset), packet.data, packet.size);
+        data_wpos = packet.offset + packet.size;
+        if (data_wpos < data_size) {
+            uint16_t dlen = data_size - data_wpos;
+            gcs().send_cndn_request(1, MIN(dlen, 120), data_wpos);
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] DATA REQUEST(%d/%d)", int(data_wpos), int(data_size));
+        } else {
+            // parse data and create mission
+            data_wpos = 0;
+            uint16_t nCMDs = *(uint16_t*)(data_buff+data_wpos); data_wpos += 2;
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] DATA COMPLETE(%d commands)", int(nCMDs));
+            if (copter.flightmode != &copter.mode_cndn) 
+                return;
         }
     } break;
     }

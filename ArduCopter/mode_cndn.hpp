@@ -30,8 +30,7 @@
 break;
 
 #define CNDN_HANDLE_MESSAGE() \
-    if (copter.flightmode == &copter.mode_cndn)\
-        copter.mode_cndn.handle_message(msg);
+    copter.mode_cndn.handle_message(msg);
 
 #define CNDN_MODE_INJECT()  mode_cndn.inject()
 

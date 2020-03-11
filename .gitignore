@@ -124,3 +124,4 @@ segv_*out
 /ArduSub/scripts/
 persistent.dat
 modules/*
+modules/mavlink
