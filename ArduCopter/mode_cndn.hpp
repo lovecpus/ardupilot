@@ -111,7 +111,9 @@ private:
         PREPARE_FINISH,
         FINISHED,
     } stage;
-
+    uint16_t data_size = 0;
+    uint16_t data_wpos = 0;
+    char* data_buff = NULL;
     uint32_t reach_wp_time_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
     uint32_t edge_time_ms = 0;
     bool b_position_target = false;

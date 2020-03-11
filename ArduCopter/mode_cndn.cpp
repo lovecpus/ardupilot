@@ -1374,14 +1374,38 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
     case MAVLINK_MSG_ID_CNDN_DETECT: {
         mavlink_cndn_detect_t packet;
         mavlink_msg_cndn_detect_decode(&msg, &packet);
-        gcs().send_cndn_request(1, packet.result, 0);
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] RECEIVED DETECT(%d bytes)", int(packet.result));
+
+        data_size = packet.result;
+        if (data_buff != NULL) {
+            delete[] data_buff;
+            data_buff = NULL;
+        }
+        if (data_size > 0) {
+            data_buff = new char[data_size];
+            data_wpos = 0;
+            gcs().send_cndn_request(1, MIN(data_size, 120), 0);
+        }
     } break;
 
     case MAVLINK_MSG_ID_CNDN_DATA: {
         mavlink_cndn_data_t packet;
         mavlink_msg_cndn_data_decode(&msg, &packet);
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] RECEIVED DATA(%d, %d bytes)", int(packet.offset), int(packet.size));
+        if (packet.size > 0) {
+            memcpy((void*)(data_buff+packet.offset), packet.data, packet.size);
+            data_wpos = packet.offset + packet.size;
+            if (data_wpos < data_size) {
+                uint16_t dlen = data_size - data_wpos;
+                gcs().send_cndn_request(1, MIN(dlen, 120), data_wpos);
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] DATA REQUEST(%d/%d)", int(data_wpos), int(data_size));
+            } else {
+                // parse data and create mission
+                data_wpos = 0;
+                uint16_t nCMDs = *(uint16_t*)(data_buff+data_wpos); data_wpos += 2;
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] DATA COMPLETE(%d commands)", int(nCMDs));
+            }
+        }
     } break;
     }
 }
