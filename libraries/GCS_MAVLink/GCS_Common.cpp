@@ -4713,15 +4713,15 @@ void GCS::send_local_position_ned(float px, float py, float pz, float vx, float 
     }
 }
 
-void GCS::send_cndn_trigger(uint32_t lat, uint32_t lng) {
+void GCS::send_cndn_trigger(const Location& home, const Location& loc) {
     for (uint8_t i=0; i<num_gcs(); i++) {
-        chan(i)->send_cndn_trigger(lat, lng);
+        chan(i)->send_cndn_trigger(home, loc);
     }
 }
 
-void GCS_MAVLINK::send_cndn_trigger(uint32_t lat, uint32_t lng) {
+void GCS_MAVLINK::send_cndn_trigger(const Location& home, const Location& loc) {
     if (HAVE_PAYLOAD_SPACE(chan, CNDN_TRIGGER)) {
-        mavlink_msg_cndn_trigger_send(chan, AP_HAL::millis(), lat, lng);
+        mavlink_msg_cndn_trigger_send(chan, AP_HAL::millis(), home.lat, home.lng, loc.lat, loc.lng);
     }
 }
 
