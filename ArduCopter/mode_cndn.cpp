@@ -826,7 +826,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 
             Location loc(copter.current_loc);
             Location home(AP::ahrs().get_home());
-            gcs().send_cndn_trigger(home, loc);
+            gcs().send_cndn_trigger(home, loc, _dst_eg_cm.get(), _spray_width_cm.get());
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] TRIGGER SEND.[%u,%u]", loc.lat, loc.lng);
 
             // detectEdge();
