@@ -34,19 +34,9 @@ break;
 
 #define CNDN_MODE_INJECT()  mode_cndn.inject()
 
-#define SIM_LOCATION 1
-#if defined(SIM_LOCATION)
-struct CNAREA
-{
-    Vector2f pos[4];
-};
-#endif
-
 int degNE(const Vector2f& pp);
 int degNE(const Vector2f& p1, const Vector2f& p2);
 Vector3f locNEU(float latf, float lngf, float altf);
-bool inside(const CNAREA& area, const Vector2f& cp);
-bool inside(const CNAREA& area, const Location& loc);
 
 class ModeCNDN : public Mode
 {
@@ -75,7 +65,7 @@ public:
     static const struct AP_Param::GroupInfo var_info[];
 
 protected:
-    const char *name() const override { return "CNDN_ETRI"; }
+    const char *name() const override { return "CNDN_AW"; }
     const char *name4() const override { return "CNDN"; }
 #if 0
     uint32_t live_logt_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
@@ -89,48 +79,31 @@ private:
     void manual_control();
     bool reached_destination();
     void set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool relative_angle);
-
-    void detectEdge();
-    void processArea(int _mode = 0);
-
-#if defined(SIM_LOCATION)
-    std::deque<CNAREA> vecAreas;
-#endif    
+    void processArea();
 
     enum cndn_state
     {
-        MANUAL,       // pilot toggle the switch to middle position, has manual control
-        TAKE_AREA, // storing points A and B, pilot has manual control
-        PREPARE_FOLLOW,
-        MOVE_TO_EDGE,
-        EDGE_FOLLOW,
+        MANUAL,         // pilot toggle the switch to middle position, has manual control
         PREPARE_AUTO,
-        AUTO, // after A and B defined, pilot toggle the switch from one side to the other, vehicle flies autonomously
+        AUTO,
         RETURN_AUTO,
         PREPARE_FINISH,
         FINISHED,
     } stage;
-    uint16_t data_size = 0;
-    uint16_t data_wpos = 0;
-    char* data_buff = NULL;
-    uint32_t reach_wp_time_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
-    uint32_t edge_time_ms = 0;
-    bool b_position_target = false;
-    std::deque<Location> vecPoints;
-    float  last_yaw_cd = 0.0f;
-    uint32_t last_yaw_ms = 0;
-    uint16_t loiter_time_max;                // How long we should stay in Loiter Mode for mission scripting (time in seconds)
+
+    uint16_t        data_size = 0;
+    uint16_t        data_wpos = 0;
+    char*           data_buff = NULL;
+    uint32_t        reach_wp_time_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
+    float           last_yaw_cd = 0.0f;
+    uint32_t        last_yaw_ms = 0;
+    uint8_t         cmd_mode;
 
     // parameters
     AP_Int8         _method;                ///< CNDN Method 0: Disable, 1: Take Picture, 2: Edge following and auto mission, 3: Take picture after Edge following
-    AP_Int16        _take_alt_cm;           ///< Taleoff Altitute
+    AP_Int16        _take_alt_cm;           ///< Takeoff Altitute
     AP_Int16        _mission_alt_cm;        ///< Mission altitute
-    AP_Int16        _spray_width_cm;        ///< Spray width
-    AP_Int16        _acc_xy_cms;            ///< ACC_XY cms
-    AP_Int16        _spd_xy_cmss;           ///< SPD_XY cmss
-    AP_Int16        _spd_up_cmss;           ///< SPD_UP cmss
-    AP_Int16        _spd_dn_cmss;           ///< SPD_DN cmss
-    AP_Int16        _spd_eg_cmss;           ///< SPD_EDGE cmss
-    AP_Int16        _dst_eg_cm;             ///< DIS_EDGE cm
+    AP_Int16        _spray_width_cm;        ///< Spray width cm
+    AP_Int16        _dst_eg_cm;             ///< Edge distance cm
 };
 #endif
