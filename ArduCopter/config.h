@@ -375,7 +375,7 @@
 // CNDN - allow vehicle to fly in a cndn manner with ETRI mission computer
 #ifndef MODE_CNDN_ENABLED
 # define MODE_CNDN_ENABLED ENABLED
-# define CNDN_PARAMS 0
+# define CNDN_PARAMS 1
 #endif
 
 //////////////////////////////////////////////////////////////////////////////

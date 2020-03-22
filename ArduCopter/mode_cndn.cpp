@@ -440,9 +440,11 @@ void ModeCNDN::processArea()
     }
 
     if (nCMDs == nCmds) {
-        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
-        auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
-        stage = PREPARE_AUTO;
+        if (AP::arming().is_armed()) {
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
+            auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
+            stage = PREPARE_AUTO;
+        }
     } else {
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] No edge detected. %d/%d", nCmds, nCMDs);
         return_to_manual_control(false);
