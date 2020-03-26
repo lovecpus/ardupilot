@@ -89,6 +89,11 @@ void Copter::read_rangefinder(void)
 
         // send downward facing lidar altitude and health to waypoint navigation library
         if (rf_orient == ROTATION_PITCH_270) {
+            // apply Rangefinder state
+            rangefinder_state.alt_healthy = rf_state.alt_healthy;
+            rangefinder_state.alt_cm = rf_state.alt_cm;
+            rangefinder_state.alt_cm_filt.reset(rf_state.alt_cm_filt.get());
+
             if (rangefinder_state.alt_healthy || timed_out) {
                 wp_nav->set_rangefinder_alt(rangefinder_state.enabled, rangefinder_state.alt_healthy, rangefinder_state.alt_cm_filt.get());
             }

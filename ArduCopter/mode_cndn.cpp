@@ -117,7 +117,9 @@ bool ModeCNDN::init(bool ignore_checks)
         pos_control->set_alt_target_to_current_alt();
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
+
     init_speed();
+    copter.rangefinder_state.enabled = false;
 
     if (stage != RETURN_AUTO) {
         // initialise waypoint state
@@ -147,85 +149,86 @@ void ModeCNDN::run()
     target_climb_rate = constrain_float(target_climb_rate, -get_pilot_speed_dn(), g.pilot_speed_up);
     motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
-    switch (stage)
-    {
-    case AUTO:
-    case RETURN_AUTO: {
-        // if vehicle has reached destination switch to PREPARE_FINISH
-        auto_control();
-        if (reached_destination())
-        {
-            stage = PREPARE_FINISH;
-            last_yaw_ms = 0;
-            last_yaw_cd = copter.initial_armed_bearing;
-            AP_Notify::events.waypoint_complete = 1;
-
-            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH.");
-
-            Vector3f tpos;
-            AP_Mission *_mission = AP::mission();
-            uint16_t nCmds = _mission->num_commands();
-            for (uint16_t i=1; i < nCmds; i++) {
-                AP_Mission::Mission_Command cmd;
-                if (_mission->read_cmd_from_storage(i, cmd)) {
-                    if (cmd.id != MAV_CMD_NAV_WAYPOINT) continue;
-                    if (cmd.content.location.get_vector_from_origin_NEU(tpos)) {
-                        tpos.z = _mission_alt_cm.get() * 1.0f;
-                        wp_nav->set_wp_destination(tpos, false);
-                    } else {
-                        return_to_manual_control(false);
-                    }
-                    break;
-                }
-            }
-            auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
-        }
-    } break;
-
-    case PREPARE_AUTO:
-    case PREPARE_FINISH: {
-        auto_control();
-        uint32_t now = AP_HAL::millis();
-        if (stage == PREPARE_AUTO) {
-            if (cmd_mode == 2) {
-                if (last_yaw_ms == 0)
-                    last_yaw_ms = now;
-
-                if ((now - last_yaw_ms) > 500) {
-                    last_yaw_ms = now;
-                    float dy = last_yaw_cd - ahrs.yaw_sensor;
-                    if (dy*dy < 1000.0f)
-                    {
-                        stage = AUTO;
-                        init_speed();
-                        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] GO WITH MISSIONS.");
-                        copter.set_mode(Mode::Number::AUTO, ModeReason::RC_COMMAND);
-                    }
-                }
-            }
-        } else if (stage == PREPARE_FINISH) {
+    switch (stage) {
+        case AUTO:
+        case RETURN_AUTO: {
+            // if vehicle has reached destination switch to PREPARE_FINISH
+            auto_control();
             if (reached_destination()) {
-                if (last_yaw_ms == 0)
-                    last_yaw_ms = now;
+                stage = PREPARE_FINISH;
+                last_yaw_ms = 0;
+                last_yaw_cd = copter.initial_armed_bearing;
+                AP_Notify::events.waypoint_complete = 1;
 
-                if ((now - last_yaw_ms) > 500) {
-                    last_yaw_ms = now;
-                    float dy = last_yaw_cd - ahrs.yaw_sensor;
-                    if (dy*dy < 1000.0f)
-                    {
-                        stage = FINISHED;
-                        auto_yaw.set_mode(AUTO_YAW_HOLD);
-                        AP_Notify::events.mission_complete = 1;
-                        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING.");
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PREPARE FINISH.");
+
+                Vector3f tpos;
+                AP_Mission *_mission = AP::mission();
+                uint16_t nCmds = _mission->num_commands();
+                for (uint16_t i=1; i < nCmds; i++) {
+                    AP_Mission::Mission_Command cmd;
+                    if (_mission->read_cmd_from_storage(i, cmd)) {
+                        if (cmd.id != MAV_CMD_NAV_WAYPOINT) continue;
+                        if (cmd.content.location.get_vector_from_origin_NEU(tpos)) {
+                            const Vector3f wp_dest = wp_nav->get_wp_destination();
+                            tpos.z = wp_dest.z;
+                            wp_nav->set_wp_destination(tpos, false);
+                        } else {
+                            return_to_manual_control(false);
+                        }
+                        break;
+                    }
+                }
+                auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
+            }
+        } break;
+
+        case PREPARE_AUTO:
+        case PREPARE_FINISH: {
+            auto_control();
+            uint32_t now = AP_HAL::millis();
+            if (stage == PREPARE_AUTO) {
+                if (cmd_mode == 2) {
+                    // Enable RangeFinder
+                    if (!copter.rangefinder_state.enabled && copter.rangefinder.has_orientation(ROTATION_PITCH_270))
+                        copter.rangefinder_state.enabled = true;
+
+                    if (last_yaw_ms == 0)
+                        last_yaw_ms = now;
+
+                    if ((now - last_yaw_ms) > 500) {
+                        last_yaw_ms = now;
+                        float dy = last_yaw_cd - ahrs.yaw_sensor;
+                        if (dy*dy < 1000.0f) {
+                            stage = AUTO;
+                            init_speed();
+                            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] GO WITH MISSIONS.");
+                            copter.set_mode(Mode::Number::AUTO, ModeReason::RC_COMMAND);
+                        }
+                    }
+                }
+            } else if (stage == PREPARE_FINISH) {
+                if (reached_destination()) {
+                    if (last_yaw_ms == 0)
+                        last_yaw_ms = now;
+
+                    if ((now - last_yaw_ms) > 500) {
+                        last_yaw_ms = now;
+                        float dy = last_yaw_cd - ahrs.yaw_sensor;
+                        if (dy*dy < 1000.0f) {
+                            stage = FINISHED;
+                            auto_yaw.set_mode(AUTO_YAW_HOLD);
+                            AP_Notify::events.mission_complete = 1;
+                            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING.");
+                        }
                     }
                 }
             }
-        }
-    } break;
+        } break;
 
-    case FINISHED:
-    case MANUAL:
-        manual_control();
+        case MANUAL:
+        case FINISHED:
+            manual_control();
         break;
     }
 }
@@ -330,6 +333,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 void ModeCNDN::return_to_manual_control(bool maintain_target)
 {
     cmd_mode = 0;
+    
     if (stage != MANUAL) {
         stage = MANUAL;
         loiter_nav->clear_pilot_desired_acceleration();
