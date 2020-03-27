@@ -396,9 +396,13 @@ void ModeCNDN::processArea()
                 cmd.content.location.lat = ((uint32_t*)(data_buff+i))[0]; i += 4;
                 cmd.content.location.lng = ((uint32_t*)(data_buff+i))[0]; i += 4;
                 uint16_t alt = ((uint16_t*)(data_buff+i))[0]; i += 2;
-                if (_method.get() == 3)
-                    alt = alt_cm_curr ? alt_cm_curr : alt;
-                cmd.content.location.set_alt_cm(alt, Location::AltFrame::ABOVE_TERRAIN);
+                if (copter.rangefinder_state.alt_healthy) {
+                    if (_method.get() == 2)
+                        alt = alt_cm_curr ? alt_cm_curr : alt;
+                    cmd.content.location.set_alt_cm(alt, Location::AltFrame::ABOVE_TERRAIN);
+                } else {
+                    cmd.content.location.set_alt_cm(alt, Location::AltFrame::ABOVE_HOME);
+                }
                 AP::mission()->add_cmd(cmd);
                 nCmds ++;
             } break;
