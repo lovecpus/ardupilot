@@ -258,14 +258,14 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
     return true;
 }
 
-#if 0
-void ModeCNDN::live_log(const char *fmt, ...)
+#if 1
+void ModeCNDN::live_log(uint32_t tout, const char *fmt, ...)
 {
     uint32_t now = AP_HAL::millis();
     if (live_logt_ms == 0)
         live_logt_ms = now;
 
-    if ((now - live_logt_ms) < 200)
+    if ((now - live_logt_ms) < tout)
         return;
 
     live_logt_ms = now;
@@ -304,8 +304,12 @@ void ModeCNDN::mission_command(uint8_t dest_num)
         break;
 
     case PREPARE_AUTO:
-        if (_method.get() == 0)
-            break;
+        if (_method.get() == 0){
+            init_speed();
+            return_to_manual_control(false);
+            return;
+        }
+
         if (dest_num == 2)
             cmd_mode = dest_num;
         if (dest_num == 0) {
@@ -364,6 +368,8 @@ void ModeCNDN::processArea()
     AP::mission()->reset();
     AP::mission()->clear();
 
+    int16_t alt_cm_curr = copter.rangefinder_state.alt_healthy ? copter.rangefinder_state.alt_cm : 0;
+
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 0;
     cmd.content.location = AP::ahrs().get_home();
@@ -390,7 +396,9 @@ void ModeCNDN::processArea()
                 cmd.content.location.lat = ((uint32_t*)(data_buff+i))[0]; i += 4;
                 cmd.content.location.lng = ((uint32_t*)(data_buff+i))[0]; i += 4;
                 uint16_t alt = ((uint16_t*)(data_buff+i))[0]; i += 2;
-                cmd.content.location.set_alt_cm(alt, Location::AltFrame::ABOVE_HOME);
+                if (_method.get() == 3)
+                    alt = alt_cm_curr ? alt_cm_curr : alt;
+                cmd.content.location.set_alt_cm(alt, Location::AltFrame::ABOVE_TERRAIN);
                 AP::mission()->add_cmd(cmd);
                 nCmds ++;
             } break;

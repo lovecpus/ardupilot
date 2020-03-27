@@ -125,7 +125,8 @@ bool Location::get_alt_cm(AltFrame desired_frame, int32_t &ret_alt_cm) const
         // convert terrain alt to cm
         alt_terr_cm *= 100.0f;
 #else
-        return false;
+        alt_terr_cm = 0;
+        //return false;
 #endif
     }
 

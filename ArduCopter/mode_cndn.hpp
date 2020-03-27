@@ -64,13 +64,14 @@ public:
 
     static const struct AP_Param::GroupInfo var_info[];
 
+#if 1
+    uint32_t live_logt_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
+    void live_log(uint32_t tout, const char *fmt, ...);
+#endif
+
 protected:
     const char *name() const override { return "CNDN_AW"; }
     const char *name4() const override { return "CNDN"; }
-#if 0
-    uint32_t live_logt_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
-    void live_log(const char *fmt, ...);
-#endif
 
 private:
     void init_speed();
@@ -100,7 +101,7 @@ private:
     uint8_t         cmd_mode;
 
     // parameters
-    AP_Int8         _method;                ///< CNDN Method 0: Disable, 1: Take Picture, 2: Edge following and auto mission, 3: Take picture after Edge following
+    AP_Int8         _method;                ///< CNDN Method 0: Disable, 1: Take Picture, 2: Edge following and auto mission, 3: Mission 
     AP_Int16        _take_alt_cm;           ///< Takeoff Altitute
     AP_Int16        _mission_alt_cm;        ///< Mission altitute
     AP_Int16        _spray_width_cm;        ///< Spray width cm
