@@ -51,7 +51,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Description: Mode using method of CNDN & ETRI Mission computer
     // @Values: 0: Disable, 1: All enable, 2: Take picture only, 2: Edge follow only, 3: Take picture after Edge following
     // @User: Standard
-    AP_GROUPINFO_FLAGS("METHOD", 0, ModeCNDN, _method, 3, AP_PARAM_FLAG_ENABLE),
+    AP_GROUPINFO_FLAGS("METHOD", 0, ModeCNDN, _method, 1, AP_PARAM_FLAG_ENABLE),
 
     // @Param: TAKE_ALT
     // @DisplayName: Take picture altitute
