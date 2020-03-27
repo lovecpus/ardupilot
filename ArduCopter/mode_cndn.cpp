@@ -399,7 +399,7 @@ void ModeCNDN::processArea()
                 alt = _mission_alt_cm.get();
                 if (copter.rangefinder_state.alt_healthy) {
                     if (_method.get() == 2)
-                        alt = alt_cm_curr ? alt_cm_curr : alt;
+                        alt = alt_cm_curr > 0 ? alt_cm_curr : alt;
                     cmd.content.location.set_alt_cm(alt, Location::AltFrame::ABOVE_TERRAIN);
                 } else {
                     cmd.content.location.set_alt_cm(alt, Location::AltFrame::ABOVE_HOME);
