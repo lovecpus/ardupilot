@@ -396,6 +396,7 @@ void ModeCNDN::processArea()
                 cmd.content.location.lat = ((uint32_t*)(data_buff+i))[0]; i += 4;
                 cmd.content.location.lng = ((uint32_t*)(data_buff+i))[0]; i += 4;
                 uint16_t alt = ((uint16_t*)(data_buff+i))[0]; i += 2;
+                alt = _mission_alt_cm.get();
                 if (copter.rangefinder_state.alt_healthy) {
                     if (_method.get() == 2)
                         alt = alt_cm_curr ? alt_cm_curr : alt;
