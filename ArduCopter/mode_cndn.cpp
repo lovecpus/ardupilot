@@ -5,7 +5,7 @@
 #if MODE_CNDN_ENABLED == ENABLED
 
 #define USE_ETRI DISABLED
-
+/*
 int degNE(const Vector2f& pp) {
     Vector2f npos = pp.normalized();
     Vector2f nort(1, 0);
@@ -44,6 +44,7 @@ bool lineIntersection(const Vector3f& a,const Vector3f& b,const Vector3f& c,cons
     o.y = oo.y;
     return true;
 }
+*/
 
 const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Param: METHOD
@@ -258,7 +259,7 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
     return true;
 }
 
-#if 1
+#if 0
 void ModeCNDN::live_log(uint32_t tout, const char *fmt, ...)
 {
     uint32_t now = AP_HAL::millis();
@@ -337,7 +338,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 void ModeCNDN::return_to_manual_control(bool maintain_target)
 {
     cmd_mode = 0;
-    
+    copter.rangefinder_state.enabled = false;
     if (stage != MANUAL) {
         stage = MANUAL;
         loiter_nav->clear_pilot_desired_acceleration();

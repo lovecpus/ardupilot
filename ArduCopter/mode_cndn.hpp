@@ -33,11 +33,11 @@ break;
     copter.mode_cndn.handle_message(msg);
 
 #define CNDN_MODE_INJECT()  mode_cndn.inject()
-
+/*
 int degNE(const Vector2f& pp);
 int degNE(const Vector2f& p1, const Vector2f& p2);
 Vector3f locNEU(float latf, float lngf, float altf);
-
+*/
 class ModeCNDN : public Mode
 {
 public:
@@ -64,7 +64,7 @@ public:
 
     static const struct AP_Param::GroupInfo var_info[];
 
-#if 1
+#if 0
     uint32_t live_logt_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
     void live_log(uint32_t tout, const char *fmt, ...);
 #endif
