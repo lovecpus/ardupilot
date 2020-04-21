@@ -4,48 +4,6 @@
 
 #if MODE_CNDN_ENABLED == ENABLED
 
-#define USE_ETRI DISABLED
-/*
-int degNE(const Vector2f& pp) {
-    Vector2f npos = pp.normalized();
-    Vector2f nort(1, 0);
-    int rd = (int)(nort.angle(npos) * 180 / M_PI);
-    if (npos.y<0) rd = 360 - rd;
-    return rd;
-}
-
-int degNE(const Vector2f& p1, const Vector2f& p2) {
-    return degNE(p1-p2);
-}
-
-Vector3f locNEU(float latf, float lngf, float altf) {
-    Vector3f pos;
-    int32_t lat = latf * 1e7f;
-    int32_t lng = lngf * 1e7f;
-    const Location lc {lat,lng,(int)(altf*100),Location::AltFrame::ABSOLUTE,};
-    if (lc.check_latlng() && lc.get_vector_from_origin_NEU(pos))
-        return pos;
-    return pos;
-}
-
-bool lineIntersection(const Vector3f& a,const Vector3f& b,const Vector3f& c,const Vector3f& d, Vector2f &o) {
-	Vector3f dmc(d - c);
-
-	Vector3f bma(b - a);
-	float det = bma.x*dmc.y - bma.y*dmc.x;
-	if (fabsf(det) < 1e-9f)
-		return false;
-
-	Vector3f cma(c-a);
-	float cdt = cma.x*dmc.y - cma.y*dmc.x;
-
-    Vector3f oo(a + (bma * cdt/det));
-    o.x = oo.x;
-    o.y = oo.y;
-    return true;
-}
-*/
-
 const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Param: METHOD
     // @DisplayName: Mode using method
