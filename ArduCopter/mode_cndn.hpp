@@ -13,7 +13,7 @@
 #define CASE_CNDN_AUX_FUNC()  case AUX_FUNC::CNDN: \
     do_aux_function_change_mode(Mode::Number::CNDN, ch_flag); \
     break; \
-    case AUX_FUNC::CNDN_ETRI: \
+    case AUX_FUNC::CNDN_ETRI: {\
         switch (ch_flag) { \
         case LOW:\
             copter.mode_cndn.mission_command(0);\

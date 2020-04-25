@@ -331,8 +331,6 @@ void ModeCNDN::processArea()
     AP::mission()->reset();
     AP::mission()->clear();
 
-    int16_t alt_cm_curr = copter.rangefinder_state.alt_healthy ? copter.rangefinder_state.alt_cm : 0;
-
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 0;
     cmd.content.location = AP::ahrs().get_home();
