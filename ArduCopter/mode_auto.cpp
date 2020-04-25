@@ -24,9 +24,10 @@ bool ModeAuto::init(bool ignore_checks)
 {
     if (mission.num_commands() > 1 || ignore_checks) {
         _mode = Auto_Loiter;
+#ifdef USE_CNDN_RNG        
         if (!copter.rangefinder_state.enabled && copter.rangefinder_state.alt_healthy)
             copter.rangefinder_state.enabled = true;
-
+#endif
         // reject switching to auto mode if landed with motors armed but first command is not a takeoff (reduce chance of flips)
         if (motors->armed() && copter.ap.land_complete && !mission.starts_with_takeoff_cmd()) {
             gcs().send_text(MAV_SEVERITY_CRITICAL, "Auto: Missing Takeoff Cmd");

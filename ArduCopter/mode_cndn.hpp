@@ -14,7 +14,6 @@
     do_aux_function_change_mode(Mode::Number::CNDN, ch_flag); \
     break; \
     case AUX_FUNC::CNDN_ETRI: \
-    if (copter.flightmode == &copter.mode_cndn) { \
         switch (ch_flag) { \
         case LOW:\
             copter.mode_cndn.mission_command(0);\
@@ -25,9 +24,8 @@
         case HIGH:\
             copter.mode_cndn.mission_command(2);\
             break;\
-    }\
-}\
-break;
+        }\
+    } break;
 
 #define CNDN_HANDLE_MESSAGE() \
     copter.mode_cndn.handle_message(msg);

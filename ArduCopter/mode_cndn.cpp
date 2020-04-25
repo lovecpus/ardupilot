@@ -78,8 +78,9 @@ bool ModeCNDN::init(bool ignore_checks)
     }
 
     init_speed();
+#ifdef USE_CNDN_RNG        
     copter.rangefinder_state.enabled = false;
-
+#endif
     if (stage != RETURN_AUTO) {
         // initialise waypoint state
         stage = MANUAL;
@@ -148,10 +149,11 @@ void ModeCNDN::run()
             uint32_t now = AP_HAL::millis();
             if (stage == PREPARE_AUTO) {
                 if (cmd_mode == 2) {
+#ifdef USE_CNDN_RNG        
                     // Enable RangeFinder
                     if (!copter.rangefinder_state.enabled && copter.rangefinder.has_orientation(ROTATION_PITCH_270))
                         copter.rangefinder_state.enabled = true;
-
+#endif
                     if (last_yaw_ms == 0)
                         last_yaw_ms = now;
 
@@ -296,7 +298,9 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 void ModeCNDN::return_to_manual_control(bool maintain_target)
 {
     cmd_mode = 0;
+#ifdef USE_CNDN_RNG        
     copter.rangefinder_state.enabled = false;
+#endif    
     if (stage != MANUAL) {
         stage = MANUAL;
         loiter_nav->clear_pilot_desired_acceleration();
@@ -335,15 +339,26 @@ void ModeCNDN::processArea()
     AP::mission()->add_cmd(cmd);
     bool get_yaw = false;
     int nCmds = 0;
+    //Location homeLoc = AP::ahrs().get_home();
+    int32_t misAlt = _mission_alt_cm.get();
+    Location::AltFrame misFrame = Location::AltFrame::ABOVE_HOME;
+
+    if (_method.get() == 2) {
+        int32_t altCm = 0;
+        if (copter.current_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME, altCm)) {
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] ALT Using current:%d/%d", misAlt, altCm);
+            misAlt = altCm;
+        }
+        misFrame = Location::AltFrame::ABOVE_HOME;
+    }
+
     for(int i=data_wpos; i < data_size; ) {
         switch ((uint8_t)data_buff[i++]) {
             case MAV_CMD_NAV_TAKEOFF: {
                 cmd.id = MAV_CMD_NAV_TAKEOFF;
                 cmd.p1 = 0;
                 cmd.content.location = AP::ahrs().get_home();
-                uint32_t alt = ((uint32_t*)(data_buff+i))[0]; i += 4;
-                alt = _take_alt_cm.get();
-                cmd.content.location.set_alt_cm(alt, Location::AltFrame::ABOVE_HOME);
+                cmd.content.location.set_alt_cm(misAlt, misFrame);
                 AP::mission()->add_cmd(cmd);
                 nCmds ++;
             } break;
@@ -354,15 +369,7 @@ void ModeCNDN::processArea()
                 cmd.p1 = ((uint8_t*)(data_buff+i))[0]; i += 1;
                 cmd.content.location.lat = ((uint32_t*)(data_buff+i))[0]; i += 4;
                 cmd.content.location.lng = ((uint32_t*)(data_buff+i))[0]; i += 4;
-                uint16_t alt = ((uint16_t*)(data_buff+i))[0]; i += 2;
-                alt = _mission_alt_cm.get();
-                if (copter.rangefinder_state.alt_healthy) {
-                    if (_method.get() == 2)
-                        alt = alt_cm_curr > 0 ? alt_cm_curr : alt;
-                    cmd.content.location.set_alt_cm(alt, Location::AltFrame::ABOVE_TERRAIN);
-                } else {
-                    cmd.content.location.set_alt_cm(alt, Location::AltFrame::ABOVE_HOME);
-                }
+                cmd.content.location.set_alt_cm(misAlt, misFrame);
                 AP::mission()->add_cmd(cmd);
                 nCmds ++;
             } break;
@@ -581,18 +588,6 @@ void ModeCNDN::return_to_mode()
 
 void ModeCNDN::inject()
 {
-/*
-    if (copter.flightmode != this)
-    {
-        const float ofs_north = cosf(radians(ahrs.yaw_sensor)) * channel_pitch->get_control_in() * 0.001f;
-        const float ofs_east  = sinf(radians(ahrs.yaw_sensor)) * channel_pitch->get_control_in() * 0.001f;
-        AP::gps().set_offset_cm(ofs_north, ofs_east);
-    }
-    else
-    {
-        AP::gps().set_offset_cm(0, 0);
-    }
-*/
 }
 
 #endif

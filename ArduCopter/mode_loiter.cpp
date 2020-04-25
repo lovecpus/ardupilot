@@ -24,7 +24,9 @@ bool ModeLoiter::init(bool ignore_checks)
         loiter_nav->clear_pilot_desired_acceleration();
     }
     loiter_nav->init_target();
-
+#ifdef USE_CNDN_RNG        
+    copter.rangefinder_state.enabled = false;
+#endif
     // initialise position and desired velocity
     if (!pos_control->is_active_z()) {
         pos_control->set_alt_target_to_current_alt();
