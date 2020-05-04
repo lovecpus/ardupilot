@@ -51,6 +51,13 @@ public:
     void test_pump(bool true_false) { _flags.testing = true_false; }
 
     /// To-Do: add function to decode pilot input from channel 6 tuning knob
+    bool is_manual() const { return _flags.manual; }
+
+    /// manual_pump - set to true to turn on pump as if travelling at 1m/s as a test
+    void manual_pump(bool true_false) { _flags.manual = true_false; }
+
+    // set_manual_speed - sets manusl pump speed ms
+    void set_manual_speed(float _speed) { _manual_speed = _speed; }
 
     /// set_pump_rate - sets desired quantity of spray when travelling at 1m/s as a percentage of the pumps maximum rate
     void set_pump_rate(float pct_at_1ms) { _pump_pct_1ms.set(pct_at_1ms); }
@@ -74,11 +81,13 @@ private:
         uint8_t spraying    : 1;            ///< 1 if we are currently spraying
         uint8_t testing     : 1;            ///< 1 if we are testing the sprayer and should output a minimum value
         uint8_t running     : 1;            ///< 1 if we are permitted to run sprayer
+        uint8_t manual      : 1;            ///< 1 if we are permitted to manual sprayer
     } _flags;
 
     // internal variables
     uint32_t        _speed_over_min_time;   ///< time at which we reached speed minimum
     uint32_t        _speed_under_min_time;  ///< time at which we fell below speed minimum
+    float           _manual_speed;
 
     void stop_spraying();
 };

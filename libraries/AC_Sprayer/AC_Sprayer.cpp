@@ -73,6 +73,7 @@ AC_Sprayer::AC_Sprayer()
     }
 
     // To-Do: ensure that the pump and spinner servo channels are enabled
+    _manual_speed = 200.0f;
 }
 
 /*
@@ -177,14 +178,22 @@ void AC_Sprayer::update()
         should_be_spraying = true;
     }
 
+    if (_flags.manual) {
+        ground_speed = _manual_speed;
+        should_be_spraying = true;
+    }
+
     // if spraying or testing update the pump servo position
     if (should_be_spraying) {
         float pos = ground_speed * _pump_pct_1ms;
         pos = MAX(pos, 100 *_pump_min_pct); // ensure min pump speed
-        pos = MIN(pos,10000); // clamp to range
+        pos = MIN(pos, 10000); // clamp to range
         SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
         SRV_Channels::set_output_pwm(SRV_Channel::k_sprayer_spinner, _spinner_pwm);
         _flags.spraying = true;
+        if (is_manual()) {
+            AP_HAL::debug("manual_pump %0.3f\n", pos);
+        }
     } else {
         stop_spraying();
     }

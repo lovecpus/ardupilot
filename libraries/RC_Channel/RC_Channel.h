@@ -180,7 +180,8 @@ public:
         // if you add something here, make sure to update the documentation of the parameter in RC_Channel.cpp!
         // also, if you add an option >255, you will need to fix duplicate_options_exist
         CNDN =               120, // CNDN mode
-        CNDN_ETRI =          121, // CNDN_ETRI find waypoint / do edge finder
+        CNDN_AUTO =          121, // CNDN_AUTO find waypoint / do edge finder
+        CNDN_PUMP =          122, // CNDN Manual pump rate
         // inputs eventually used to replace RCMAP
         MAINSAIL =           207, // mainsail input
     };

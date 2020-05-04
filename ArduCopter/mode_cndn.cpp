@@ -243,6 +243,14 @@ void ModeCNDN::live_log(uint32_t tout, const char *fmt, ...)
 // save current position as A (dest_num = 0) or B (dest_num = 1).  If both A and B have been saved move to the one specified
 void ModeCNDN::mission_command(uint8_t dest_num)
 {
+    if (copter.flightmode == &copter.mode_auto) {
+        // 미션 비행 모드일 때
+        return;
+    } else if (copter.flightmode != &copter.mode_cndn) {
+        // 씨엔디엔 모드가 아닐 때
+        return;
+    }
+
     // handle state machine changes
     switch (stage) {
     case MANUAL:
@@ -345,6 +353,7 @@ void ModeCNDN::processArea()
         int32_t altCm = 0;
         if (copter.current_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME, altCm)) {
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] ALT Using current:%d/%d", misAlt, altCm);
+            AP::ahrs_navekf().resetHeightDatum();
             misAlt = altCm;
         }
         misFrame = Location::AltFrame::ABOVE_HOME;

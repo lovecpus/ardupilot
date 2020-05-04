@@ -171,4 +171,15 @@ uint64_t millis64()
     return ret;
 }
 
+void debug(const char *errormsg, ...)
+{
+    va_list ap;
+
+    fflush(stdout);
+    va_start(ap, errormsg);
+    vprintf(errormsg, ap);
+    va_end(ap);
+    printf("\n");
+}
+
 } // namespace AP_HAL

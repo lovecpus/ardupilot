@@ -9,11 +9,11 @@
 
 #define CNDN_WP_RADIUS_CM 100
 #define CASE_CNDN_MODE() case Mode::Number::CNDN: ret = &mode_cndn; break;
-#define CASE_CNDN_AUX_INIT()  case AUX_FUNC::CNDN: case AUX_FUNC::CNDN_ETRI:
+#define CASE_CNDN_AUX_INIT()  case AUX_FUNC::CNDN: case AUX_FUNC::CNDN_AUTO:  case AUX_FUNC::CNDN_PUMP:
 #define CASE_CNDN_AUX_FUNC()  case AUX_FUNC::CNDN: \
     do_aux_function_change_mode(Mode::Number::CNDN, ch_flag); \
     break; \
-    case AUX_FUNC::CNDN_ETRI: {\
+    case AUX_FUNC::CNDN_AUTO: {\
         switch (ch_flag) { \
         case LOW:\
             copter.mode_cndn.mission_command(0);\
@@ -25,7 +25,7 @@
             copter.mode_cndn.mission_command(2);\
             break;\
         }\
-    } break;
+    } break; \
 
 #define CNDN_HANDLE_MESSAGE() \
     copter.mode_cndn.handle_message(msg);
