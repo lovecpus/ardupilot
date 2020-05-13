@@ -191,9 +191,9 @@ void AC_Sprayer::update()
         SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
         SRV_Channels::set_output_pwm(SRV_Channel::k_sprayer_spinner, _spinner_pwm);
         _flags.spraying = true;
-        if (is_manual()) {
-            AP_HAL::debug("manual_pump %0.3f\n", pos);
-        }
+        // if (is_manual()) {
+        //     AP_HAL::debug("manual_pump %0.3f\n", pos);
+        // }
     } else {
         stop_spraying();
     }

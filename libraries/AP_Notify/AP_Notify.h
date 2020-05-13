@@ -101,6 +101,7 @@ public:
         bool waiting_for_throw;   // true when copter is in THROW mode and waiting to detect the user hand launch
         bool powering_off;        // true when the vehicle is powering off
         bool video_recording;     // true when the vehicle is recording video
+        bool sprayer_empty;       // true when sprayer tank empty
     };
 
     /// notify_events_type - bitmask of active events.
@@ -123,6 +124,8 @@ public:
         uint32_t tune_next              : 3;    // tuning switched to next parameter
         uint32_t tune_save              : 1;    // tuning saved parameters
         uint32_t tune_error             : 1;    // tuning controller error
+        uint32_t ab_reset               : 1;    // ab point reset
+        uint32_t ab_marked              : 1;    // ab point marked
     };
 
     // The notify flags and values are static to allow direct class access

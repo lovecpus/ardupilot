@@ -87,6 +87,8 @@ bool ModeCNDN::init(bool ignore_checks)
         last_yaw_ms = 0;
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MODE INITIALIZED.");
     } else {
+        stage = MANUAL;
+        last_yaw_ms = 0;
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MISSION COMPLETE.");
     }
 
@@ -358,6 +360,7 @@ void ModeCNDN::processArea()
         }
         misFrame = Location::AltFrame::ABOVE_HOME;
     }
+    Location rtPos;
 
     for(int i=data_wpos; i < data_size; ) {
         switch ((uint8_t)data_buff[i++]) {
@@ -379,6 +382,8 @@ void ModeCNDN::processArea()
                 cmd.content.location.set_alt_cm(misAlt, misFrame);
                 AP::mission()->add_cmd(cmd);
                 nCmds ++;
+                if (rtPos.is_zero())
+                    rtPos = cmd.content.location;
             } break;
 
             case MAV_CMD_CONDITION_YAW: {
@@ -430,6 +435,12 @@ void ModeCNDN::processArea()
     }
 
     if (nCMDs == nCmds) {
+        // create edge navigation
+        cmd.id = MAV_CMD_NAV_WAYPOINT;
+        cmd.p1 = 3;
+        cmd.content.location = rtPos;
+        AP::mission()->add_cmd(cmd);
+
         if (AP::arming().is_armed()) {
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MOVE TO START POINT.");
             auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);

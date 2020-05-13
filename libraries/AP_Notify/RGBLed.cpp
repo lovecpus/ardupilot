@@ -138,6 +138,10 @@ uint32_t RGBLed::get_colour_sequence(void) const
         return sequence_failsafe_radio_or_battery;
     }
 
+    if (AP_Notify::flags.sprayer_empty) {
+        return sequence_sprayer_empty;
+    }
+
     // solid green or blue if armed
     if (AP_Notify::flags.armed) {
         // solid green if armed with GPS 3d lock
