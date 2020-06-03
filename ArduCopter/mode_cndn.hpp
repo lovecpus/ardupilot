@@ -1,6 +1,9 @@
 #include <deque>
 #include <algorithm>
 
+#define USE_CNDN_RNG
+#define CN_UNUSED(_X)  ((_X)=(_X))
+
 #if MODE_CNDN_ENABLED == ENABLED
 /*
 * Init and run calls for CNDN flight mode
@@ -26,6 +29,8 @@
             break;\
         }\
     } break; \
+    case AUX_FUNC::CNDN_PUMP: \
+    break;
 
 #define CNDN_HANDLE_MESSAGE() \
     copter.mode_cndn.handle_message(msg);
@@ -57,8 +62,10 @@ public:
     void mission_command(uint8_t dest_num);
     void return_to_manual_control(bool maintain_target);
     void handle_message(const mavlink_message_t &msg) override;
-    void return_to_mode();
+    void do_set_relay(const AP_Mission::Mission_Command& cmd);
     void inject();
+    void stop_mission();
+    void resume_mission();
 
     static const struct AP_Param::GroupInfo var_info[];
 
@@ -104,5 +111,46 @@ private:
     AP_Int16        _mission_alt_cm;        ///< Mission altitute
     AP_Int16        _spray_width_cm;        ///< Spray width cm
     AP_Int16        _dst_eg_cm;             ///< Edge distance cm
+    AP_Int16        _spd_edge_cm;           ///< Edge speed cm/s
+    AP_Int16        _spd_auto_cm;           ///< Auto speed cm/s
 };
+
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+#define CNLOG   1
+class CNLog {
+private:
+    FILE *fp;     
+public:
+    static CNLog& get(const char *fname) {
+        static CNLog logs(fname);
+        return logs;
+    }
+
+    CNLog(const char *fname) {
+        fp = fopen(fname, "at");
+    }
+
+    ~CNLog() {
+        if (fp)
+            fclose(fp);
+    }
+
+    int log(const char *form, ...) {
+        if (!fp)
+            return -1;
+        va_list args;
+        va_start(args, form);
+        return vfprintf(fp, form, args);
+    }
+};
+
+extern CNLog &cnlog;
+#endif
+
+#ifdef CNLOG
+#define cndebug(form, args ...) cnlog.log(form "\r\n", ## args)
+#else
+#define cndebug(form, args ...)
+#endif
+
 #endif

@@ -3,37 +3,28 @@
 #include "RangeFinder.h"
 #include "RangeFinder_Backend.h"
 
-// Data timeout
-#define AP_RANGEFINDER_ETRI_TIMEOUT_MS 2500
-
 class AP_RangeFinder_ETRI : public AP_RangeFinder_Backend
 {
-
 public:
     // constructor
-    AP_RangeFinder_ETRI(RangeFinder::RangeFinder_State &_state, AP_RangeFinder_Params &_params);
+    AP_RangeFinder_ETRI(RangeFinder::RangeFinder_State &_state, AP_RangeFinder_Params &_paramsm, uint8_t serial_instance);
 
     // static detection function
-    static bool detect();
+    static bool detect(uint8_t serial_instance);
 
     // update state
     void update(void) override;
 
-    // Get update from source
-    void set_distance(float fdist_m);
-
 protected:
 
     MAV_DISTANCE_SENSOR _get_mav_distance_sensor_type() const override {
-        return sensor_type;
+        return MAV_DISTANCE_SENSOR_RADAR;
     }
 
 private:
-    uint16_t distance_cm;
+    bool get_reading(uint16_t &reading_cm);
 
-    // start a reading
-    static bool start_reading(void);
-    static bool get_reading(uint16_t &reading_cm);
-
-    MAV_DISTANCE_SENSOR sensor_type = MAV_DISTANCE_SENSOR_LASER;
+    AP_HAL::UARTDriver *uart = nullptr;
+    uint8_t linebuf[15];
+    uint8_t linebuf_len;
 };

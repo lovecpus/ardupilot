@@ -494,8 +494,8 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t& serial_instance)
         }
         break;
     case RangeFinder_TYPE_ETRI:
-        if (AP_RangeFinder_ETRI::detect()) {
-            drivers[instance] = new AP_RangeFinder_ETRI(state[instance], params[instance]);
+        if (AP_RangeFinder_ETRI::detect(serial_instance)) {
+            drivers[instance] = new AP_RangeFinder_ETRI(state[instance], params[instance], serial_instance++);
         }
         break;
     default:

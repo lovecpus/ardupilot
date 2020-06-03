@@ -526,7 +526,7 @@ bool ModeAuto::start_command(const AP_Mission::Mission_Command& cmd)
 
 #if MODE_CNDN_ENABLED == ENABLED
     case MAV_CMD_DO_SET_RELAY:
-        copter.mode_cndn.return_to_mode();
+        copter.mode_cndn.do_set_relay(cmd);
     break;
 #endif
 
