@@ -614,6 +614,11 @@ void ModeCNDN::auto_control()
 void ModeCNDN::manual_control()
 {
     copter.mode_loiter.run();
+
+    if (copter.sprayer.is_manual()) {
+        int pcts = rc().channel(CH_10)->percent_input();
+        copter.sprayer.set_manual_speed((pcts * 500.0f) / 100.0f);
+    }
 }
 
 bool ModeCNDN::reached_destination()
