@@ -64,6 +64,14 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("SPD_AUTO", 6, ModeCNDN, _spd_auto_cm, 500),
 
+    // @Param: RADAR_FLT_HZ
+    // @DisplayName: RADAR Filter Herz
+    // @Description: Radar low pass filter frequency
+    // @Units: Hz
+    // @Range: 0.0 1.0
+    // @User: Standard
+    AP_GROUPINFO("RADAR_HZ", 7, ModeCNDN, _radar_flt_hz, 0.25),
+
     AP_GROUPEND
 };
 
@@ -293,6 +301,9 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             Location home(AP::ahrs().get_home());
             gcs().send_cndn_trigger(home, loc, _dst_eg_cm.get(), _spray_width_cm.get());
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] TRIGGER SEND.[%u,%u]", loc.lat, loc.lng);
+            copter.rangefinder_state.alt_cm_filt.set_cutoff_frequency(_radar_flt_hz.get());
+        } else {
+            copter.rangefinder_state.alt_cm_filt.set_cutoff_frequency(RANGEFINDER_WPNAV_FILT_HZ);
         }
         break;
 
@@ -381,7 +392,7 @@ void ModeCNDN::processArea()
         misFrame = Location::AltFrame::ABOVE_HOME;
 #ifdef USE_CNDN_RNG
         if (copter.rangefinder_state.alt_healthy) {
-            misAlt = copter.rangefinder_state.alt_cm;
+            misAlt = copter.rangefinder_state.alt_cm_filt.get();
             misFrame = Location::AltFrame::ABOVE_TERRAIN;
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] ALT Using terrain: %d", (int)misAlt);
         } else {

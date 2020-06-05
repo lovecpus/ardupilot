@@ -113,6 +113,7 @@ private:
     AP_Int16        _dst_eg_cm;             ///< Edge distance cm
     AP_Int16        _spd_edge_cm;           ///< Edge speed cm/s
     AP_Int16        _spd_auto_cm;           ///< Auto speed cm/s
+    AP_Float        _radar_flt_hz;          ///< RADAR Lowpass filter apply frequency
 };
 
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
