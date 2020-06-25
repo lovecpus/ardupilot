@@ -524,6 +524,7 @@ void ModeCNDN::processArea()
             case MAV_CMD_DO_CHANGE_SPEED: {
                 uint8_t typ = ((uint8_t*)(data_buff+i))[0]; i += 1;
                 uint8_t spd = ((uint8_t*)(data_buff+i))[0]; i += 1;
+                CN_UNUSED(typ);
 
                 cmd.id = MAV_CMD_DO_CHANGE_SPEED;
                 cmd.content.speed.speed_type = 0;

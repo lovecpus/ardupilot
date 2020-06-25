@@ -155,12 +155,12 @@ void AC_Sprayer::update()
                     float vx = velocity.x * 100.0f / ground_speed;
                     float vy = velocity.y * 100.0f / ground_speed;
                     float vw = AP::ahrs().yaw_sensor;
-                    float ax = cos(vw * M_PI / 18000.0f);
-                    float ay = sin(vw * M_PI / 18000.0f);
+                    float ax = cosf(vw * M_PI / 18000.0f);
+                    float ay = sinf(vw * M_PI / 18000.0f);
                     float aw = norm(vx-ax, vy-ay);
                     should_foreback = (_flags.foreback = (aw > 1.0f) ? 1 : 0);
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-                    gcs().send_text(MAV_SEVERITY_INFO, "%0.3f(Moving %s)", aw, _flags.foreback ? "BACKWARD" : "FOREWARD");
+                    gcs().send_text(MAV_SEVERITY_INFO, "%0.3f(Moving %s)", aw, _flags.foreback ? "BACKWARD" : "FORWARD");
 #endif                    
                 }
             }
