@@ -21,8 +21,9 @@ public:
         RTL =           6,  // automatic return to launching point
         CIRCLE =        7,  // automatic circular flight with automatic throttle
         LAND =          9,  // automatic landing with horizontal position control
-        CNDN =         10,  // CNDN & ETRI misstion computer control
+        CNDN =         10,  // CNDN misstion computer control
         DRIFT =        11,  // semi-automous position, yaw and throttle control
+        CNDN2 =        12,  // CNDN & AUTOWORLD misstion computer control
         SPORT =        13,  // manual earth-frame angular rate control with manual throttle
         FLIP =         14,  // automatically flip the vehicle on the roll axis
         AUTOTUNE =     15,  // automatically tune the vehicle's roll and pitch gains

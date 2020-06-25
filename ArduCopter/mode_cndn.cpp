@@ -79,6 +79,7 @@ ModeCNDN::ModeCNDN()
 {
     AP_Param::setup_object_defaults(this, var_info);
     cmd_mode = 0;
+    m_bZigZag = false;
 }
 
 bool ModeCNDN::init(bool ignore_checks)
@@ -115,7 +116,11 @@ bool ModeCNDN::init(bool ignore_checks)
         // initialise waypoint state
         stage = MANUAL;
         last_yaw_ms = 0;
-        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] MODE INITIALIZED.");
+        if (isZigZag()) {
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AB MODE INITIALIZED.");
+        } else {
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] AREA MODE INITIALIZED.");
+        }
     } else {
         stage = MANUAL;
         last_yaw_ms = 0;
@@ -172,6 +177,32 @@ void ModeCNDN::run()
                     }
                 }
                 auto_yaw.set_fixed_yaw(last_yaw_cd * 0.01f, 0.0f, 0, false);
+            }
+        } break;
+
+        case WAY_A:
+        case WAY_B: {
+#ifdef USE_CNDN_RNG        
+            // Enable RangeFinder
+            if (!copter.rangefinder_state.enabled && copter.rangefinder.has_orientation(ROTATION_PITCH_270))
+                copter.rangefinder_state.enabled = true;
+#endif
+            auto_control();
+            uint32_t now = AP_HAL::millis();
+            if (reached_destination()) {
+                if (last_yaw_ms == 0)
+                    last_yaw_ms = now;
+
+                if ((now - last_yaw_ms) > 500) {
+                    last_yaw_ms = now;
+                    float dy = last_yaw_cd - ahrs.yaw_sensor;
+                    if (dy*dy < 1000.0f) {
+                        stage = FINISHED;
+                        auto_yaw.set_mode(AUTO_YAW_HOLD);
+                        AP_Notify::events.mission_complete = 1;
+                        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] FINISHING.");
+                    }
+                }
             }
         } break;
 
@@ -277,11 +308,46 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 {
     if (copter.flightmode == &copter.mode_auto) {
         // 미션 비행 모드일 때
+        float mss;
+        switch (dest_num) {
+            case 6: // CNDN_SPD_UP
+                mss = pos_control->get_max_speed_xy() + 50.0f;
+                mss = MAX(100, MIN(1500, mss));
+                copter.wp_nav->set_speed_xy(mss);
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+                gcs().send_text(MAV_SEVERITY_INFO, "mission speed up to :%0.3f", mss);
+#endif                
+            break;
+            case 7: // CNDN_SPD_DN
+                mss = pos_control->get_max_speed_xy() - 50.0f;
+                mss = MAX(100, MIN(1500, mss));
+                copter.wp_nav->set_speed_xy(mss);
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+                gcs().send_text(MAV_SEVERITY_INFO, "mission speed down to :%0.3f", mss);
+#endif                
+            break;
+
+            case 8: // CNDN_SPR_UP
+                copter.sprayer.inc_pump_rate(+2.5);
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+                gcs().send_text(MAV_SEVERITY_INFO, "mission sprayer rate 2.5%% up");
+#endif                
+            break;
+            case 9: // CNDN_SPR_DN
+                copter.sprayer.inc_pump_rate(-2.5);
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+                gcs().send_text(MAV_SEVERITY_INFO, "mission sprayer rate 2.5%% down");
+#endif
+            break;
+        }
         return;
     } else if (copter.flightmode != &copter.mode_cndn) {
         // 씨엔디엔 모드가 아닐 때
         return;
     }
+
+    if (dest_num > 2)
+        return;
 
     // handle state machine changes
     switch (stage) {
@@ -299,7 +365,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 
             Location loc(copter.current_loc);
             Location home(AP::ahrs().get_home());
-            gcs().send_cndn_trigger(home, loc, _dst_eg_cm.get(), _spray_width_cm.get());
+            gcs().send_cndn_trigger(home, loc, _dst_eg_cm.get(), _spray_width_cm.get(), m_bZigZag?1:0, (int16_t)ahrs.yaw_sensor);
             gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] TRIGGER SEND.[%u,%u]", loc.lat, loc.lng);
             copter.rangefinder_state.alt_cm_filt.set_cutoff_frequency(_radar_flt_hz.get());
         } else {
@@ -316,6 +382,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 
         if (dest_num == 2)
             cmd_mode = dest_num;
+
         if (dest_num == 0) {
             init_speed();
             return_to_manual_control(false);
@@ -362,12 +429,48 @@ void ModeCNDN::return_to_manual_control(bool maintain_target)
     }
 }
 
+void ModeCNDN::processAB()
+{
+#if 0    
+    data_wpos = 0;
+    uint16_t nCMDs = *(uint16_t*)(data_buff+data_wpos); data_wpos += 2;
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PROCESS AB(%d commands)", int(nCMDs));
+
+    //Location homeLoc = AP::ahrs().get_home();
+    int32_t misAlt = _mission_alt_cm.get();
+    Location::AltFrame misFrame = Location::AltFrame::ABOVE_HOME;
+
+    if (_method.get() == 2) {
+        int32_t altCm = 0;
+        if (copter.current_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME, altCm)) {
+            misAlt = altCm;
+        }
+        misFrame = Location::AltFrame::ABOVE_HOME;
+#ifdef USE_CNDN_RNG
+        if (copter.rangefinder_state.alt_healthy) {
+            misAlt = copter.rangefinder_state.alt_cm_filt.get();
+            misFrame = Location::AltFrame::ABOVE_TERRAIN;
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] ALT Using terrain: %d", (int)misAlt);
+        } else {
+            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] ALT Using current: %d/%d", (int)misAlt, (int)altCm);
+        }
+#else        
+        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] ALT Using current: %d/%d", (int)misAlt, (int)altCm);
+#endif        
+#ifdef USE_CNDN_RNG
+    } else if (copter.rangefinder_state.alt_healthy) {
+        misFrame = Location::AltFrame::ABOVE_TERRAIN;
+#endif
+    }
+#endif
+}
+
 void ModeCNDN::processArea()
 {
     // parse data and create mission
     data_wpos = 0;
     uint16_t nCMDs = *(uint16_t*)(data_buff+data_wpos); data_wpos += 2;
-    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] DATA COMPLETE(%d commands)", int(nCMDs));
+    gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] PROCESS AREA(%d commands)", int(nCMDs));
 
     AP_Mission::Mission_Command cmd;
 
@@ -421,9 +524,6 @@ void ModeCNDN::processArea()
             case MAV_CMD_DO_CHANGE_SPEED: {
                 uint8_t typ = ((uint8_t*)(data_buff+i))[0]; i += 1;
                 uint8_t spd = ((uint8_t*)(data_buff+i))[0]; i += 1;
-
-                gcs().send_text(MAV_SEVERITY_INFO, "do_change_speed(%d,%d)", typ, spd);
-                cndebug("do_change_speed(%d,%d)", typ, spd);
 
                 cmd.id = MAV_CMD_DO_CHANGE_SPEED;
                 cmd.content.speed.speed_type = 0;
@@ -666,12 +766,16 @@ void ModeCNDN::set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, floa
 void ModeCNDN::do_set_relay(const AP_Mission::Mission_Command& cmd)
 {
     if (cmd.content.relay.num == 255) {
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] RELAY TO CNDN.");
+#endif        
         stage = RETURN_AUTO;
         copter.set_mode(Mode::Number::CNDN, ModeReason::MISSION_END);
     } else if (cmd.content.relay.num == 254) {
         bool bRun = (cmd.content.relay.state == 1);
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
         gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SPRAYER %s.", bRun?"RUN":"STOP");
+#endif        
 #if SPRAYER_ENABLED == ENABLED
         copter.sprayer.run(bRun);
 #endif

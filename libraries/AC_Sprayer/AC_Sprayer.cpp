@@ -73,7 +73,9 @@ AC_Sprayer::AC_Sprayer()
     }
 
     // To-Do: ensure that the pump and spinner servo channels are enabled
-    _manual_speed = 200.0f;
+    _manual_speed = 300.0f;
+    _flags.foreback = false;
+    _flags.manual = false;
 }
 
 /*
@@ -135,7 +137,7 @@ void AC_Sprayer::update()
 
     // get the current time
     const uint32_t now = AP_HAL::millis();
-
+    bool should_foreback = _flags.foreback;
     bool should_be_spraying = _flags.spraying;
     // check our speed vs the minimum
     if (ground_speed >= _speed_min) {
@@ -149,6 +151,17 @@ void AC_Sprayer::update()
                 if((now - _speed_over_min_time) > AC_SPRAYER_DEFAULT_TURN_ON_DELAY) {
                     should_be_spraying = true;
                     _speed_over_min_time = 0;
+
+                    float vx = velocity.x * 100.0f / ground_speed;
+                    float vy = velocity.y * 100.0f / ground_speed;
+                    float vw = AP::ahrs().yaw_sensor;
+                    float ax = cos(vw * M_PI / 18000.0f);
+                    float ay = sin(vw * M_PI / 18000.0f);
+                    float aw = norm(vx-ax, vy-ay);
+                    should_foreback = (_flags.foreback = (aw > 1.0f) ? 1 : 0);
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+                    gcs().send_text(MAV_SEVERITY_INFO, "%0.3f(Moving %s)", aw, _flags.foreback ? "BACKWARD" : "FOREWARD");
+#endif                    
                 }
             }
         }
@@ -167,6 +180,8 @@ void AC_Sprayer::update()
                     _speed_under_min_time = 0;
                 }
             }
+        } else {
+            _flags.foreback = 0;
         }
         // reset the speed over timer
         _speed_over_min_time = 0;
@@ -176,6 +191,7 @@ void AC_Sprayer::update()
     if (_flags.testing) {
         ground_speed = 100.0f;
         should_be_spraying = true;
+        should_foreback = false;
     }
 
     if (_flags.manual) {
@@ -188,8 +204,21 @@ void AC_Sprayer::update()
         float pos = ground_speed * _pump_pct_1ms;
         pos = MAX(pos, 100 *_pump_min_pct); // ensure min pump speed
         pos = MIN(pos, 10000); // clamp to range
+#if 0
         SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
         SRV_Channels::set_output_pwm(SRV_Channel::k_sprayer_spinner, _spinner_pwm);
+#else        
+        if (should_foreback) {
+            // 후방 문사
+            SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
+            SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, 0, 0, 10000);
+        } else {
+            // 전방 분사
+            SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
+            SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, 0, 0, 10000);
+        }
+#endif        
+
         _flags.spraying = true;
         // if (is_manual()) {
         //     AP_HAL::debug("manual_pump %0.3f\n", pos);

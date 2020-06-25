@@ -11,26 +11,27 @@
 #define CNDN_TONE_STARTUP    { "MFT200L4O4CL8GAL2F", false }
 
 #define CNDN_WP_RADIUS_CM 100
-#define CASE_CNDN_MODE() case Mode::Number::CNDN: ret = &mode_cndn; break;
-#define CASE_CNDN_AUX_INIT()  case AUX_FUNC::CNDN: case AUX_FUNC::CNDN_AUTO:  case AUX_FUNC::CNDN_PUMP:
+#define CASE_CNDN_MODE() case Mode::Number::CNDN: ret = &mode_cndn; mode_cndn.setZigZag(false);  break; \
+    case Mode::Number::CNDN2: ret = &mode_cndn; mode_cndn.setZigZag(true);  break;
+
+#define CASE_CNDN_AUX_INIT()  case AUX_FUNC::CNDN: case AUX_FUNC::CNDN_AUTO:  case AUX_FUNC::CNDN_PUMP: \
+        case AUX_FUNC::CNDN_SPD_UP: case AUX_FUNC::CNDN_SPD_DN: case AUX_FUNC::CNDN_SPR_UP: case AUX_FUNC::CNDN_SPR_DN:
+
 #define CASE_CNDN_AUX_FUNC()  case AUX_FUNC::CNDN: \
     do_aux_function_change_mode(Mode::Number::CNDN, ch_flag); \
     break; \
     case AUX_FUNC::CNDN_AUTO: {\
         switch (ch_flag) { \
-        case LOW:\
-            copter.mode_cndn.mission_command(0);\
-            break;\
-        case MIDDLE:\
-            copter.mode_cndn.mission_command(1);\
-            break;\
-        case HIGH:\
-            copter.mode_cndn.mission_command(2);\
-            break;\
+        case LOW: copter.mode_cndn.mission_command(0); break;\
+        case MIDDLE: copter.mode_cndn.mission_command(1); break;\
+        case HIGH: copter.mode_cndn.mission_command(2); break;\
         }\
     } break; \
-    case AUX_FUNC::CNDN_PUMP: \
-    break;
+    case AUX_FUNC::CNDN_SPD_UP: if (ch_flag != LOW) copter.mode_cndn.mission_command(6); break;\
+    case AUX_FUNC::CNDN_SPD_DN: if (ch_flag != LOW) copter.mode_cndn.mission_command(7); break;\
+    case AUX_FUNC::CNDN_SPR_UP: if (ch_flag != LOW) copter.mode_cndn.mission_command(8); break;\
+    case AUX_FUNC::CNDN_SPR_DN: if (ch_flag != LOW) copter.mode_cndn.mission_command(9); break;\
+    case AUX_FUNC::CNDN_PUMP: break;
 
 #define CNDN_HANDLE_MESSAGE() \
     copter.mode_cndn.handle_message(msg);
@@ -66,6 +67,8 @@ public:
     void inject();
     void stop_mission();
     void resume_mission();
+    void setZigZag(bool bZigZag) { m_bZigZag = bZigZag; }
+    bool isZigZag() { return m_bZigZag; }
 
     static const struct AP_Param::GroupInfo var_info[];
 
@@ -86,6 +89,7 @@ private:
     bool reached_destination();
     void set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool relative_angle);
     void processArea();
+    void processAB();
 
     enum cndn_state
     {
@@ -95,6 +99,8 @@ private:
         RETURN_AUTO,
         PREPARE_FINISH,
         FINISHED,
+        WAY_A,
+        WAY_B,
     } stage;
 
     uint16_t        data_size = 0;
@@ -104,6 +110,7 @@ private:
     float           last_yaw_cd = 0.0f;
     uint32_t        last_yaw_ms = 0;
     uint8_t         cmd_mode;
+    bool            m_bZigZag;
 
     // parameters
     AP_Int8         _method;                ///< CNDN Method 0: Disable, 1: Take Picture, 2: Edge following and auto mission, 3: Mission 

@@ -17,6 +17,7 @@
 #include <inttypes.h>
 #include <AP_Common/AP_Common.h>
 #include <AP_Param/AP_Param.h>
+#include <AP_Math/AP_Math.h>
 
 #define AC_SPRAYER_DEFAULT_PUMP_RATE        10.0f   ///< default quantity of spray per meter travelled
 #define AC_SPRAYER_DEFAULT_PUMP_MIN         0       ///< default minimum pump speed expressed as a percentage from 0 to 100
@@ -24,6 +25,15 @@
 #define AC_SPRAYER_DEFAULT_SPEED_MIN        100     ///< we must be travelling at least 1m/s to begin spraying
 #define AC_SPRAYER_DEFAULT_TURN_ON_DELAY    100     ///< delay between when we reach the minimum speed and we begin spraying.  This reduces the likelihood of constantly turning on/off the pump
 #define AC_SPRAYER_DEFAULT_SHUT_OFF_DELAY   1000    ///< shut-off delay in milli seconds.  This reduces the likelihood of constantly turning on/off the pump
+
+#if 0
+#if !defined(MIN)
+#define MIN(_A,_B)  ((_A)<(_B) ? (_A) : (_B))
+#endif
+#if !defined(MAX)
+#define MAX(_A,_B)  ((_A)>(_B) ? (_A) : (_B))
+#endif
+#endif
 
 /// @class  AC_Sprayer
 /// @brief  Object managing a crop sprayer comprised of a spinner and a pump both controlled by pwm
@@ -62,6 +72,14 @@ public:
     /// set_pump_rate - sets desired quantity of spray when travelling at 1m/s as a percentage of the pumps maximum rate
     void set_pump_rate(float pct_at_1ms) { _pump_pct_1ms.set(pct_at_1ms); }
 
+    /// increase/decrease percentage of the pumps maximum rate
+    void inc_pump_rate(float percentage) {
+        float pcs = _pump_pct_1ms.get() + percentage;
+        pcs = MIN(pcs, 150);
+        pcs = MAX(pcs, 1);
+        _pump_pct_1ms.set(pcs);
+    }
+
     /// update - adjusts servo positions based on speed and requested quantity
     void update();
 
@@ -82,6 +100,7 @@ private:
         uint8_t testing     : 1;            ///< 1 if we are testing the sprayer and should output a minimum value
         uint8_t running     : 1;            ///< 1 if we are permitted to run sprayer
         uint8_t manual      : 1;            ///< 1 if we are permitted to manual sprayer
+        uint8_t foreback    : 1;            ///< 1 if we are permitted to manual sprayer
     } _flags;
 
     // internal variables

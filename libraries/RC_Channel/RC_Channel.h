@@ -182,6 +182,11 @@ public:
         CNDN =               120, // CNDN mode
         CNDN_AUTO =          121, // CNDN_AUTO find waypoint / do edge finder
         CNDN_PUMP =          122, // CNDN Manual pump rate
+        CNDN_SPD_UP =        123, // CNDN Move speed up
+        CNDN_SPD_DN =        124, // CNDN Move speed down
+        CNDN_SPR_UP =        125, // CNDN Sprayer rate up
+        CNDN_SPR_DN =        126, // CNDN Sprayer rate down
+
         // inputs eventually used to replace RCMAP
         MAINSAIL =           207, // mainsail input
     };

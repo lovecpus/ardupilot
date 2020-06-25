@@ -41,10 +41,17 @@ bool GCS_MAVLINK::ftp_init(void) {
         goto failed;
     }
 
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+    if (!hal.scheduler->thread_create(FUNCTOR_BIND_MEMBER(&GCS_MAVLINK::ftp_worker, void),
+                                      "FTP", 1024, AP_HAL::Scheduler::PRIORITY_IO, 0)) {
+        goto failed;
+    }
+#else
     if (!hal.scheduler->thread_create(FUNCTOR_BIND_MEMBER(&GCS_MAVLINK::ftp_worker, void),
                                       "FTP", 3072, AP_HAL::Scheduler::PRIORITY_IO, 0)) {
         goto failed;
     }
+#endif    
 
     return true;
 
