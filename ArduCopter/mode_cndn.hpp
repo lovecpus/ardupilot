@@ -44,6 +44,7 @@ Vector3f locNEU(float latf, float lngf, float altf);
 */
 class ModeCNDN : public Mode
 {
+    friend class ModeZigZag;
 public:
     // inherit constructor
     using Mode::Mode;
@@ -110,6 +111,7 @@ private:
     float           last_yaw_cd = 0.0f;
     uint32_t        last_yaw_ms = 0;
     uint8_t         cmd_mode;
+    bool            edge_mode = false;
     bool            m_bZigZag;
 
     // parameters

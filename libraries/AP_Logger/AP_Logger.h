@@ -366,6 +366,9 @@ public:
     // returns true if msg_type is associated with a message
     bool msg_type_in_use(uint8_t msg_type) const;
 
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+    void debug(const char* form, ...);
+#endif
 protected:
 
     const struct LogStructure *_structures;

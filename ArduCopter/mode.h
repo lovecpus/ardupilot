@@ -1384,13 +1384,18 @@ private:
 
     Vector2f dest_A;    // in NEU frame in cm relative to ekf origin
     Vector2f dest_B;    // in NEU frame in cm relative to ekf origin
+    Vector2f direct;    // direction of flying zigzag
+    float    misAlt;    // mission altitute
 
     enum zigzag_state {
-        STORING_POINTS, // storing points A and B, pilot has manual control
+        MANUAL,         // pilot toggle the switch to middle position, has manual control
+        WAIT_MOVE,      // A, B point is stored and wait for mode changed
+        WAIT_AUTO,      // A, B point is stored and mode to zigzag initialized
         AUTO,           // after A and B defined, pilot toggle the switch from one side to the other, vehicle flies autonomously
-        MANUAL_REGAIN   // pilot toggle the switch to middle position, has manual control
     } stage;
 
+    uint32_t steps = 0;
+    uint32_t step_time_ms = 0;
     uint32_t reach_wp_time_ms = 0;  // time since vehicle reached destination (or zero if not yet reached)
 };
 

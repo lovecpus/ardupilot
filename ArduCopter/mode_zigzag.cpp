@@ -6,7 +6,7 @@
 * Init and run calls for zigzag flight mode
 */
 
-#define ZIGZAG_WP_RADIUS_CM 300
+#define ZIGZAG_WP_RADIUS_CM 100
 
 // initialise zigzag controller
 bool ModeZigZag::init(bool ignore_checks)
@@ -23,7 +23,7 @@ bool ModeZigZag::init(bool ignore_checks)
         loiter_nav->set_pilot_desired_acceleration(target_roll, target_pitch, G_Dt);
     } else {
         // clear out pilot desired acceleration in case radio failsafe event occurs and we do not switch to RTL for some reason
-    loiter_nav->clear_pilot_desired_acceleration();
+        loiter_nav->clear_pilot_desired_acceleration();
     }
     loiter_nav->init_target();
 
@@ -34,10 +34,29 @@ bool ModeZigZag::init(bool ignore_checks)
     }
 
     // initialise waypoint state
-    stage = STORING_POINTS;
-    dest_A.zero();
-    dest_B.zero();
+    copter.sprayer.run(false);
+    stage = (stage == WAIT_MOVE) ? WAIT_AUTO : MANUAL;
 
+    if (stage == MANUAL) {
+        copter.rangefinder_state.enabled = false;
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+        gcs().send_text(MAV_SEVERITY_INFO, "[AB-LINE] MANUAL CONTROL.");
+#endif
+    } else if (stage == WAIT_AUTO) {
+        copter.rangefinder_state.enabled = true;
+        misAlt = copter.mode_cndn._mission_alt_cm.get();
+        if (copter.rangefinder_state.alt_healthy)
+            misAlt = copter.rangefinder_state.alt_cm_filt.get();
+
+        Vector3f curr_pos = inertial_nav.get_position();
+        curr_pos.z = misAlt;
+        wp_nav->set_wp_destination(curr_pos, true);
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+        gcs().send_text(MAV_SEVERITY_INFO, "[AB-LINE] WAIT FOR DIRECTION.");
+    } else {
+        gcs().send_text(MAV_SEVERITY_INFO, "[AB-LINE] STAGE(%d)", stage);
+#endif        
+    }
     return true;
 }
 
@@ -49,24 +68,120 @@ void ModeZigZag::run()
     pos_control->set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
     pos_control->set_max_accel_z(g.pilot_accel_z);
 
-    // auto control
-    if (stage == AUTO) {
+    switch (stage) {
+        case WAIT_AUTO: {
+            if (is_disarmed_or_landed() || !motors->get_interlock()) {
+                // vehicle should be under manual control when disarmed or landed
+                return_to_manual_control(false);
+            }
+            auto_control();
+            // wait vector to move direction
+            int16_t rv = (channel_roll->get_control_in() / 1000);
+            int16_t arv = (rv != 0) ? (rv / abs(rv)) : 0;
+            if (arv > 0) {
+                Vector2f delta = (dest_B - dest_A).normalized();
+                float dir = 90.0f * M_PI / 180.0f;
+                direct.x = cosf(dir)*delta.x - sinf(dir)*delta.y;
+                direct.y = sinf(dir)*delta.x + cosf(dir)*delta.y;
+                direct *= copter.mode_cndn._spray_width_cm.get();
+
+                stage = AUTO;
+                Vector3f dst;
+                dst.x = dest_A.x;
+                dst.y = dest_A.y;
+                dst.z = misAlt;
+                copter.rangefinder_state.enabled = true;
+                wp_nav->set_speed_xy(copter.mode_cndn._spd_auto_cm.get());
+                wp_nav->set_wp_destination(dst, true);
+                steps = 0;
+            } else if (arv < 0) {
+                Vector2f delta = (dest_B - dest_A).normalized();
+                float dir = -90.0f * M_PI / 180.0f;
+                direct.x = cosf(dir)*delta.x - sinf(dir)*delta.y;
+                direct.y = sinf(dir)*delta.x + cosf(dir)*delta.y;
+                direct *= copter.mode_cndn._spray_width_cm.get();
+
+                stage = AUTO;
+                Vector3f dst;
+                dst.x = dest_A.x;
+                dst.y = dest_A.y;
+                dst.z = misAlt;
+                copter.rangefinder_state.enabled = true;
+                wp_nav->set_speed_xy(copter.mode_cndn._spd_auto_cm.get());
+                wp_nav->set_wp_destination(dst, true);
+                steps = 0;
+            }
+        } break;
+
+        case WAIT_MOVE:
+        case MANUAL:
+            manual_control();
+        break;
+
+        case AUTO:
         if (is_disarmed_or_landed() || !motors->get_interlock()) {
             // vehicle should be under manual control when disarmed or landed
             return_to_manual_control(false);
-        } else if (reached_destination()) {
-        // if vehicle has reached destination switch to manual control
-            AP_Notify::events.waypoint_complete = 1;
-            return_to_manual_control(true);
-        } else {
-            auto_control();
         }
-    }
 
-    // manual control
-    if (stage == STORING_POINTS || stage == MANUAL_REGAIN) {
-        // receive pilot's inputs, do position and attitude control
-        manual_control();
+        if (reached_destination()) {
+            uint32_t now = AP_HAL::millis();
+            // move to next point
+            Vector3f dst;
+            switch (steps) {
+                case 0: { // arrived at A, move to B point with spray
+                    if (step_time_ms == 0) step_time_ms = now;
+                    if (now - step_time_ms < 1000) break;
+                    step_time_ms = 0;
+
+                    dst.x = dest_B.x;
+                    dst.y = dest_B.y;
+                    dst.z = misAlt;
+                    wp_nav->set_wp_destination(dst, true);
+                    copter.sprayer.run(true);
+                    steps = 1;
+                } break;
+
+                case 1: { // arrived at B, move to B step point without spray
+                    dest_A += direct;
+                    dest_B += direct;
+
+                    dst.x = dest_B.x;
+                    dst.y = dest_B.y;
+                    dst.z = misAlt;
+                    wp_nav->set_wp_destination(dst, true);
+                    copter.sprayer.run(false);
+                    steps = 2;
+                } break;
+
+                case 2: { // arrived at B step, move to A point with spray
+                    if (step_time_ms == 0) step_time_ms = now;
+                    if (now - step_time_ms < 1000) break;
+                    step_time_ms = 0;
+
+                    dst.x = dest_A.x;
+                    dst.y = dest_A.y;
+                    dst.z = misAlt;
+                    wp_nav->set_wp_destination(dst, true);
+                    copter.sprayer.run(true);
+                    steps = 3;
+                } break;
+
+                case 3: { // arrived at A, move to A step point without spray
+                    dest_A += direct;
+                    dest_B += direct;
+
+                    dst.x = dest_A.x;
+                    dst.y = dest_A.y;
+                    dst.z = misAlt;
+                    wp_nav->set_wp_destination(dst, true);
+                    copter.sprayer.run(false);
+                    steps = 0;
+                } break;
+            }
+        }
+        auto_control();
+        break;
     }
 }
 
@@ -74,7 +189,7 @@ void ModeZigZag::run()
 void ModeZigZag::save_or_move_to_destination(uint8_t dest_num)
 {
     // sanity check
-    if (dest_num > 1) {
+    if (dest_num > 2) {
         return;
     }
 
@@ -83,43 +198,43 @@ void ModeZigZag::save_or_move_to_destination(uint8_t dest_num)
 
     // handle state machine changes
     switch (stage) {
-
-        case STORING_POINTS:
-            if (dest_num == 0) {
+        case MANUAL:
+            if (dest_num == 1) {
                 // store point A
                 dest_A.x = curr_pos.x;
                 dest_A.y = curr_pos.y;
-                gcs().send_text(MAV_SEVERITY_INFO, "ZigZag: point A stored");
+                gcs().send_text(MAV_SEVERITY_INFO, "AB Line: point A stored");
                 copter.Log_Write_Event(DATA_ZIGZAG_STORE_A);
-            } else {
+            } else if (dest_num == 2) {
                 // store point B
                 dest_B.x = curr_pos.x;
                 dest_B.y = curr_pos.y;
-                gcs().send_text(MAV_SEVERITY_INFO, "ZigZag: point B stored");
+                gcs().send_text(MAV_SEVERITY_INFO, "AB Line: point B stored");
                 copter.Log_Write_Event(DATA_ZIGZAG_STORE_B);
+            } else {
+                dest_A.zero();
+                dest_B.zero();
+                gcs().send_text(MAV_SEVERITY_INFO, "AB Line: points cleared");
+                stage = MANUAL;
             }
+
             // if both A and B have been stored advance state
             if (!dest_A.is_zero() && !dest_B.is_zero() && is_positive((dest_B - dest_A).length_squared())) {
-                stage = MANUAL_REGAIN;
+                gcs().send_text(MAV_SEVERITY_INFO, "AB Line: location successed.");
+                stage = WAIT_MOVE;
             }
             break;
 
         case AUTO:
-        case MANUAL_REGAIN:
-            // A and B have been defined, move vehicle to destination A or B
-            Vector3f next_dest;
-            bool terr_alt;
-            if (calculate_next_dest(dest_num, stage == AUTO, next_dest, terr_alt)) {
-                wp_nav->wp_and_spline_init();
-                if (wp_nav->set_wp_destination(next_dest, terr_alt)) {
-                    stage = AUTO;
-                    reach_wp_time_ms = 0;
-                    if (dest_num == 0) {
-                        gcs().send_text(MAV_SEVERITY_INFO, "ZigZag: moving to A");
-                    } else {
-                        gcs().send_text(MAV_SEVERITY_INFO, "ZigZag: moving to B");
-                    }
-                }
+        case WAIT_MOVE:
+        case WAIT_AUTO:
+            if (dest_num == 0) {
+                dest_A.zero();
+                dest_B.zero();
+                gcs().send_text(MAV_SEVERITY_INFO, "AB Line: points cleared");
+                stage = MANUAL;
+            } else {
+                gcs().send_text(MAV_SEVERITY_INFO, "AB Line: stage invalid: %d", stage);
             }
             break;
     }
@@ -129,7 +244,7 @@ void ModeZigZag::save_or_move_to_destination(uint8_t dest_num)
 void ModeZigZag::return_to_manual_control(bool maintain_target)
 {
     if (stage == AUTO) {
-        stage = MANUAL_REGAIN;
+        stage = MANUAL;
         loiter_nav->clear_pilot_desired_acceleration();
         if (maintain_target) {
             const Vector3f& wp_dest = wp_nav->get_wp_destination();
@@ -140,7 +255,7 @@ void ModeZigZag::return_to_manual_control(bool maintain_target)
         } else {
             loiter_nav->init_target();
         }
-        gcs().send_text(MAV_SEVERITY_INFO, "ZigZag: manual control");
+        gcs().send_text(MAV_SEVERITY_INFO, "AB Line: manual control");
     }
 }
 
@@ -287,11 +402,6 @@ bool ModeZigZag::reached_destination()
 {
     // check if wp_nav believes it has reached the destination
     if (!wp_nav->reached_wp_destination()) {
-        return false;
-    }
-
-    // check distance to destination
-    if (wp_nav->get_wp_distance_to_destination() > ZIGZAG_WP_RADIUS_CM) {
         return false;
     }
 

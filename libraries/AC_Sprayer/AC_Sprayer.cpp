@@ -160,7 +160,7 @@ void AC_Sprayer::update()
                     float aw = norm(vx-ax, vy-ay);
                     should_foreback = (_flags.foreback = (aw > 1.0f) ? 1 : 0);
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-                    gcs().send_text(MAV_SEVERITY_INFO, "%0.3f(Moving %s)", aw, _flags.foreback ? "BACKWARD" : "FORWARD");
+                    gcs().send_text(MAV_SEVERITY_INFO, "[%0.3f,%0.3f][%0.3f,%0.3f]%0.3f(Moving %s)", vx, vy, ax, ay, aw, _flags.foreback ? "BACKWARD" : "FORWARD");
 #endif                    
                 }
             }

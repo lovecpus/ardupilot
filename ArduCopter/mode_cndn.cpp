@@ -226,8 +226,9 @@ void ModeCNDN::run()
                         if (dy*dy < 1000.0f) {
                             stage = AUTO;
                             init_speed();
-                            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] GO WITH MISSIONS.");
+                            copter.sprayer.run(false);
                             copter.set_mode(Mode::Number::AUTO, ModeReason::RC_COMMAND);
+                            gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] GO WITH MISSIONS.");
                         }
                     }
                 }
@@ -306,7 +307,7 @@ void ModeCNDN::live_log(uint32_t tout, const char *fmt, ...)
 // save current position as A (dest_num = 0) or B (dest_num = 1).  If both A and B have been saved move to the one specified
 void ModeCNDN::mission_command(uint8_t dest_num)
 {
-    if (copter.flightmode == &copter.mode_auto) {
+    if (copter.flightmode == &copter.mode_auto || copter.flightmode == &copter.mode_zigzag) {
         // 미션 비행 모드일 때
         float mss;
         switch (dest_num) {
@@ -314,6 +315,10 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 mss = pos_control->get_max_speed_xy() + 50.0f;
                 mss = MAX(100, MIN(1500, mss));
                 copter.wp_nav->set_speed_xy(mss);
+                if (copter.flightmode == &copter.mode_auto && edge_mode)
+                    _spd_edge_cm.set_and_save(mss);
+                else
+                    _spd_auto_cm.set_and_save(mss);
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
                 gcs().send_text(MAV_SEVERITY_INFO, "mission speed up to :%0.3f", mss);
 #endif                
@@ -322,6 +327,10 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                 mss = pos_control->get_max_speed_xy() - 50.0f;
                 mss = MAX(100, MIN(1500, mss));
                 copter.wp_nav->set_speed_xy(mss);
+                if (copter.flightmode == &copter.mode_auto && edge_mode)
+                    _spd_edge_cm.set_and_save(mss);
+                else
+                    _spd_auto_cm.set_and_save(mss);
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
                 gcs().send_text(MAV_SEVERITY_INFO, "mission speed down to :%0.3f", mss);
 #endif                
@@ -341,6 +350,14 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             break;
         }
         return;
+#if MODE_ZIGZAG_ENABLED == ENABLED
+     } else if (copter.flightmode == &copter.mode_loiter) {
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+        gcs().send_text(MAV_SEVERITY_INFO, "[MODE] mission_command :%d", dest_num);
+#endif                
+        copter.mode_zigzag.save_or_move_to_destination(dest_num);
+        return;
+#endif
     } else if (copter.flightmode != &copter.mode_cndn) {
         // 씨엔디엔 모드가 아닐 때
         return;
@@ -540,6 +557,13 @@ void ModeCNDN::processArea()
                 }
                 AP::mission()->add_cmd(cmd);
                 nCmds ++;
+
+                cmd.id = MAV_CMD_DO_SET_RELAY;
+                cmd.p1 = 0;
+                cmd.content.location = Location();
+                cmd.content.relay.num = 254;
+                cmd.content.relay.state = spd ? 4 : 3;
+                AP::mission()->add_cmd(cmd);
             } break;
 
             case MAV_CMD_NAV_WAYPOINT: {
@@ -773,13 +797,26 @@ void ModeCNDN::do_set_relay(const AP_Mission::Mission_Command& cmd)
         stage = RETURN_AUTO;
         copter.set_mode(Mode::Number::CNDN, ModeReason::MISSION_END);
     } else if (cmd.content.relay.num == 254) {
-        bool bRun = (cmd.content.relay.state == 1);
+        switch (cmd.content.relay.state) {
+            case 3:
+            case 4:
+                edge_mode = (cmd.content.relay.state == 3);
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-        gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SPRAYER %s.", bRun?"RUN":"STOP");
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SPEED %s.", edge_mode?"EDGE":"NORMAL");
+#endif        
+            break;
+
+            case 0:
+            case 1: {
+                bool bRun = (cmd.content.relay.state == 1);
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+                gcs().send_text(MAV_SEVERITY_INFO, "[CNDN] SPRAYER %s.", bRun?"RUN":"STOP");
 #endif        
 #if SPRAYER_ENABLED == ENABLED
-        copter.sprayer.run(bRun);
+                copter.sprayer.run(bRun);
 #endif
+            } break;
+        }
     }
 }
 

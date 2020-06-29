@@ -27,6 +27,8 @@ bool ModeLoiter::init(bool ignore_checks)
 #ifdef USE_CNDN_RNG        
     copter.rangefinder_state.enabled = false;
 #endif
+    copter.sprayer.run(false);
+
     // initialise position and desired velocity
     if (!pos_control->is_active_z()) {
         pos_control->set_alt_target_to_current_alt();

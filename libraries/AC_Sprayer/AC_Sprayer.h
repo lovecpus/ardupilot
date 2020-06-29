@@ -23,8 +23,8 @@
 #define AC_SPRAYER_DEFAULT_PUMP_MIN         0       ///< default minimum pump speed expressed as a percentage from 0 to 100
 #define AC_SPRAYER_DEFAULT_SPINNER_PWM      1300    ///< default speed of spinner (higher means spray is throw further horizontally
 #define AC_SPRAYER_DEFAULT_SPEED_MIN        100     ///< we must be travelling at least 1m/s to begin spraying
-#define AC_SPRAYER_DEFAULT_TURN_ON_DELAY    100     ///< delay between when we reach the minimum speed and we begin spraying.  This reduces the likelihood of constantly turning on/off the pump
-#define AC_SPRAYER_DEFAULT_SHUT_OFF_DELAY   1000    ///< shut-off delay in milli seconds.  This reduces the likelihood of constantly turning on/off the pump
+#define AC_SPRAYER_DEFAULT_TURN_ON_DELAY    250     ///< delay between when we reach the minimum speed and we begin spraying.  This reduces the likelihood of constantly turning on/off the pump
+#define AC_SPRAYER_DEFAULT_SHUT_OFF_DELAY   500    ///< shut-off delay in milli seconds.  This reduces the likelihood of constantly turning on/off the pump
 
 #if 0
 #if !defined(MIN)
@@ -77,7 +77,7 @@ public:
         float pcs = _pump_pct_1ms.get() + percentage;
         pcs = MIN(pcs, 150);
         pcs = MAX(pcs, 1);
-        _pump_pct_1ms.set(pcs);
+        _pump_pct_1ms.set_and_save(pcs);
     }
 
     /// update - adjusts servo positions based on speed and requested quantity

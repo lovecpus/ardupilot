@@ -976,6 +976,23 @@ bool AP_Logger::msg_type_in_use(const uint8_t msg_type) const
     return false;
 }
 
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+void AP_Logger::debug(const char* form, ...) {
+    static uint32_t s_tick = 0;
+    uint32_t now = AP_HAL::millis();
+    if (s_tick == 0) s_tick = now;
+    if (now - s_tick > 500) {
+        s_tick = now;
+
+        char buff[255];
+        va_list args;
+        va_start(args, form);
+        vsprintf(buff, form, args);
+        gcs().send_text(MAV_SEVERITY_DEBUG, "%s", buff);
+    }
+}
+#endif
+
 // find a free message type
 int16_t AP_Logger::find_free_msg_type() const
 {
