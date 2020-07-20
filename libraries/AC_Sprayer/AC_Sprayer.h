@@ -66,18 +66,24 @@ public:
     /// manual_pump - set to true to turn on pump as if travelling at 1m/s as a test
     void manual_pump(bool true_false) { _flags.manual = true_false; }
 
-    // set_manual_speed - sets manusl pump speed ms
+    /// set_manual_speed - sets manusl pump speed ms
     void set_manual_speed(float _speed) { _manual_speed = _speed; }
 
     /// set_pump_rate - sets desired quantity of spray when travelling at 1m/s as a percentage of the pumps maximum rate
     void set_pump_rate(float pct_at_1ms) { _pump_pct_1ms.set(pct_at_1ms); }
 
+    /// set armed
+    void set_armed(uint8_t armed) { _flags.armed = armed; }
+
+    bool is_armed() { return _flags.armed != 0; }
+
     /// increase/decrease percentage of the pumps maximum rate
-    void inc_pump_rate(float percentage) {
+    float inc_pump_rate(float percentage) {
         float pcs = _pump_pct_1ms.get() + percentage;
         pcs = MIN(pcs, 150);
         pcs = MAX(pcs, 1);
         _pump_pct_1ms.set_and_save(pcs);
+        return pcs;
     }
 
     /// update - adjusts servo positions based on speed and requested quantity
@@ -101,6 +107,7 @@ private:
         uint8_t running     : 1;            ///< 1 if we are permitted to run sprayer
         uint8_t manual      : 1;            ///< 1 if we are permitted to manual sprayer
         uint8_t foreback    : 1;            ///< 1 if we are permitted to manual sprayer
+        uint8_t armed       : 1;            ///< 1 if we are permitted to arm motors
     } _flags;
 
     // internal variables

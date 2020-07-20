@@ -309,21 +309,9 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 {
     if (copter.flightmode == &copter.mode_auto || copter.flightmode == &copter.mode_zigzag) {
         // 미션 비행 모드일 때
-        float mss;
+        float mss, prr;
         switch (dest_num) {
             case 6: // CNDN_SPD_UP
-                mss = pos_control->get_max_speed_xy() + 50.0f;
-                mss = MAX(100, MIN(1500, mss));
-                copter.wp_nav->set_speed_xy(mss);
-                if (copter.flightmode == &copter.mode_auto && edge_mode)
-                    _spd_edge_cm.set_and_save(mss);
-                else
-                    _spd_auto_cm.set_and_save(mss);
-#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-                gcs().send_text(MAV_SEVERITY_INFO, "mission speed up to :%0.3f", mss);
-#endif                
-            break;
-            case 7: // CNDN_SPD_DN
                 mss = pos_control->get_max_speed_xy() - 50.0f;
                 mss = MAX(100, MIN(1500, mss));
                 copter.wp_nav->set_speed_xy(mss);
@@ -331,22 +319,34 @@ void ModeCNDN::mission_command(uint8_t dest_num)
                     _spd_edge_cm.set_and_save(mss);
                 else
                     _spd_auto_cm.set_and_save(mss);
-#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-                gcs().send_text(MAV_SEVERITY_INFO, "mission speed down to :%0.3f", mss);
-#endif                
+//#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+                gcs().send_text(MAV_SEVERITY_INFO, "Change Speed to :%0.2f m/s", mss * 1e-2);
+//#endif                
+            break;
+            case 7: // CNDN_SPD_DN
+                mss = pos_control->get_max_speed_xy() + 50.0f;
+                mss = MAX(100, MIN(1500, mss));
+                copter.wp_nav->set_speed_xy(mss);
+                if (copter.flightmode == &copter.mode_auto && edge_mode)
+                    _spd_edge_cm.set_and_save(mss);
+                else
+                    _spd_auto_cm.set_and_save(mss);
+//#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+                gcs().send_text(MAV_SEVERITY_INFO, "Change Speed to :%0.2f m/s", mss * 1e-2);
+//#endif                
             break;
 
             case 8: // CNDN_SPR_UP
-                copter.sprayer.inc_pump_rate(+2.5);
-#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-                gcs().send_text(MAV_SEVERITY_INFO, "mission sprayer rate 2.5%% up");
-#endif                
+                prr = copter.sprayer.inc_pump_rate(-2.5);
+//#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+                gcs().send_text(MAV_SEVERITY_INFO, "sprayer pump rate %0.1f%%", prr);
+//#endif                
             break;
             case 9: // CNDN_SPR_DN
-                copter.sprayer.inc_pump_rate(-2.5);
-#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-                gcs().send_text(MAV_SEVERITY_INFO, "mission sprayer rate 2.5%% down");
-#endif
+                prr = copter.sprayer.inc_pump_rate(+2.5);
+//#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+                gcs().send_text(MAV_SEVERITY_INFO, "sprayer pump rate %0.1f%%", prr);
+//#endif
             break;
         }
         return;
@@ -822,6 +822,9 @@ void ModeCNDN::do_set_relay(const AP_Mission::Mission_Command& cmd)
 
 void ModeCNDN::inject()
 {
+#if SPRAYER_ENABLED == ENABLED
+    copter.sprayer.set_armed(is_disarmed_or_landed() ? 0 : 1);
+#endif
 }
 
 void ModeCNDN::stop_mission() {

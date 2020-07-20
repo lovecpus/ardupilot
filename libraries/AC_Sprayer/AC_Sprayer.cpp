@@ -115,6 +115,10 @@ void AC_Sprayer::stop_spraying()
 /// update - adjust pwm of servo controlling pump speed according to the desired quantity and our horizontal speed
 void AC_Sprayer::update()
 {
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+    static uint8_t bForeback = 0;
+#endif    
+
     // exit immediately if we are disabled or shouldn't be running
     if (!_enabled || !running()) {
         run(false);
@@ -139,6 +143,23 @@ void AC_Sprayer::update()
     const uint32_t now = AP_HAL::millis();
     bool should_foreback = _flags.foreback;
     bool should_be_spraying = _flags.spraying;
+
+    // check foreback
+    float vx = velocity.x * 100.0f / ground_speed;
+    float vy = velocity.y * 100.0f / ground_speed;
+    float vw = AP::ahrs().yaw_sensor;
+    float ax = cosf(vw * M_PI / 18000.0f);
+    float ay = sinf(vw * M_PI / 18000.0f);
+    float aw = norm(vx-ax, vy-ay);
+    should_foreback = (_flags.foreback = (aw > 1.5f) ? 1 : 0);
+
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+    if (bForeback != _flags.foreback) {
+        bForeback = _flags.foreback;
+        gcs().send_text(MAV_SEVERITY_INFO, "[%0.3f,%0.3f][%0.3f,%0.3f]%0.3f(Moving %s)", vx, vy, ax, ay, aw, _flags.foreback ? "BACKWARD" : "FORWARD");
+    }
+#endif                    
+
     // check our speed vs the minimum
     if (ground_speed >= _speed_min) {
         // if we are not already spraying
@@ -151,17 +172,6 @@ void AC_Sprayer::update()
                 if((now - _speed_over_min_time) > AC_SPRAYER_DEFAULT_TURN_ON_DELAY) {
                     should_be_spraying = true;
                     _speed_over_min_time = 0;
-
-                    float vx = velocity.x * 100.0f / ground_speed;
-                    float vy = velocity.y * 100.0f / ground_speed;
-                    float vw = AP::ahrs().yaw_sensor;
-                    float ax = cosf(vw * M_PI / 18000.0f);
-                    float ay = sinf(vw * M_PI / 18000.0f);
-                    float aw = norm(vx-ax, vy-ay);
-                    should_foreback = (_flags.foreback = (aw > 1.0f) ? 1 : 0);
-#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-                    gcs().send_text(MAV_SEVERITY_INFO, "[%0.3f,%0.3f][%0.3f,%0.3f]%0.3f(Moving %s)", vx, vy, ax, ay, aw, _flags.foreback ? "BACKWARD" : "FORWARD");
-#endif                    
                 }
             }
         }
@@ -207,15 +217,31 @@ void AC_Sprayer::update()
 #if 0
         SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
         SRV_Channels::set_output_pwm(SRV_Channel::k_sprayer_spinner, _spinner_pwm);
-#else        
-        if (should_foreback) {
-            // 후방 문사
-            SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
-            SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, 0, 0, 10000);
+#else 
+        if (_flags.manual) {
+            if (!is_armed()) {
+                // 전후방 분사
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
+            } else if (should_foreback) {
+                // 후방 문사
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, 0, 0, 10000);
+            } else {
+                // 전방 분사
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, 0, 0, 10000);
+            }
         } else {
-            // 전방 분사
-            SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
-            SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, 0, 0, 10000);
+            if (should_foreback) {
+                // 후방 문사
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, 0, 0, 10000);
+            } else {
+                // 전방 분사
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, 0, 0, 10000);
+            }
         }
 #endif        
 
