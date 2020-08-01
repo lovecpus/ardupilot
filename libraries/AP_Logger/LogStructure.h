@@ -1810,3 +1810,9 @@ enum LogOriginType {
     ekf_origin = 0,
     ahrs_home = 1
 };
+
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+# define logdebug(FORM, ...) hal.console->printf(FORM, __VA_ARGS__)
+#else
+# define logdebug(FORM, ...)
+#endif

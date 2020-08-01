@@ -98,7 +98,7 @@ private:
     const uint32_t sequence_failsafe_ekf = DEFINE_COLOUR_SEQUENCE_FAILSAFE(RED);
     const uint32_t sequence_failsafe_gps_glitching = DEFINE_COLOUR_SEQUENCE_FAILSAFE(BLUE);
     const uint32_t sequence_failsafe_radio_or_battery = DEFINE_COLOUR_SEQUENCE_FAILSAFE(OFF);
-    const uint32_t sequence_sprayer_empty = DEFINE_COLOUR_SEQUENCE_ALTERNATE_F(YELLOW,BLUE);
+    const uint32_t sequence_sprayer_empty = DEFINE_COLOUR_SEQUENCE_ALTERNATE_F(YELLOW,GREEN);
 
     const uint32_t sequence_armed = DEFINE_COLOUR_SEQUENCE_SOLID(GREEN);
     const uint32_t sequence_armed_nogps = DEFINE_COLOUR_SEQUENCE_SOLID(BLUE);

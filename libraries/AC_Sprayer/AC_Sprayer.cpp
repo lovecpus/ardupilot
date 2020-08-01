@@ -87,6 +87,10 @@ AC_Sprayer *AC_Sprayer::get_singleton()
     return _singleton;
 }
 
+void AC_Sprayer::active(const bool true_false) {
+    _flags.active = true_false;
+}
+
 void AC_Sprayer::run(const bool true_false)
 {
     // return immediately if no change
@@ -96,7 +100,7 @@ void AC_Sprayer::run(const bool true_false)
 
     // set flag indicate whether spraying is permitted:
     // do not allow running to be set to true if we are currently not enabled
-    _flags.running = true_false && _enabled;
+    _flags.running = true_false && _enabled && _flags.active;
 
     // turn off the pump and spinner servos if necessary
     if (!_flags.running) {
@@ -199,7 +203,7 @@ void AC_Sprayer::update()
 
     // if testing pump output speed as if traveling at 1m/s
     if (_flags.testing) {
-        ground_speed = 100.0f;
+        ground_speed = 200.0f;
         should_be_spraying = true;
         should_foreback = false;
     }
@@ -219,7 +223,7 @@ void AC_Sprayer::update()
         SRV_Channels::set_output_pwm(SRV_Channel::k_sprayer_spinner, _spinner_pwm);
 #else 
         if (_flags.manual) {
-            if (!is_armed()) {
+            if (_flags.fullspray != 0) {
                 // 전후방 분사
                 SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
                 SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);

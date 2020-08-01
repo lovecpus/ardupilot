@@ -1,6 +1,9 @@
 #include <deque>
 #include <algorithm>
 
+# define gcsdebug(FORM, ...) gcs().send_text(MAV_SEVERITY_INFO, FORM, __VA_ARGS__)
+# define gcsinfo(FORM) gcs().send_text(MAV_SEVERITY_INFO, FORM)
+
 #define USE_CNDN_RNG
 #define CN_UNUSED(_X)  ((_X)=(_X))
 
@@ -15,10 +18,11 @@
     case Mode::Number::CNDN2: ret = &mode_cndn; mode_cndn.setZigZag(true);  break;
 
 #define CASE_CNDN_AUX_INIT()  case AUX_FUNC::CNDN: case AUX_FUNC::CNDN_AUTO:  case AUX_FUNC::CNDN_PUMP: \
-        case AUX_FUNC::CNDN_SPD_UP: case AUX_FUNC::CNDN_SPD_DN: case AUX_FUNC::CNDN_SPR_UP: case AUX_FUNC::CNDN_SPR_DN:
+        case AUX_FUNC::CNDN_SPD_UP: case AUX_FUNC::CNDN_SPD_DN: case AUX_FUNC::CNDN_SPR_UP: case AUX_FUNC::CNDN_SPR_DN: \
+        case AUX_FUNC::CNDN_SPR_FF:
 
 #define CASE_CNDN_AUX_FUNC()  case AUX_FUNC::CNDN: \
-    do_aux_function_change_mode(Mode::Number::CNDN, ch_flag); \
+    copter.mode_cndn.mission_command(3 + ch_flag); \
     break; \
     case AUX_FUNC::CNDN_AUTO: {\
         switch (ch_flag) { \
@@ -37,6 +41,7 @@
     copter.mode_cndn.handle_message(msg);
 
 #define CNDN_MODE_INJECT()  mode_cndn.inject()
+
 /*
 int degNE(const Vector2f& pp);
 int degNE(const Vector2f& p1, const Vector2f& p2);
@@ -83,6 +88,7 @@ protected:
     const char *name4() const override { return "CNDN"; }
 
 private:
+
     void init_speed();
     void pos_control_start();
     void auto_control();
@@ -91,8 +97,10 @@ private:
     void set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool relative_angle);
     void processArea();
     void processAB();
+    bool getResume(Mode::CNMIS& dat);
+    void setResume(Mode::CNMIS& dat);
 
-    enum cndn_state
+   enum cndn_state
     {
         MANUAL,         // pilot toggle the switch to middle position, has manual control
         PREPARE_AUTO,
@@ -124,43 +132,5 @@ private:
     AP_Int16        _spd_auto_cm;           ///< Auto speed cm/s
     AP_Float        _radar_flt_hz;          ///< RADAR Lowpass filter apply frequency
 };
-
-#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-#define CNLOG   1
-class CNLog {
-private:
-    FILE *fp;     
-public:
-    static CNLog& get(const char *fname) {
-        static CNLog logs(fname);
-        return logs;
-    }
-
-    CNLog(const char *fname) {
-        fp = fopen(fname, "at");
-    }
-
-    ~CNLog() {
-        if (fp)
-            fclose(fp);
-    }
-
-    int log(const char *form, ...) {
-        if (!fp)
-            return -1;
-        va_list args;
-        va_start(args, form);
-        return vfprintf(fp, form, args);
-    }
-};
-
-extern CNLog &cnlog;
-#endif
-
-#ifdef CNLOG
-#define cndebug(form, args ...) cnlog.log(form "\r\n", ## args)
-#else
-#define cndebug(form, args ...)
-#endif
 
 #endif

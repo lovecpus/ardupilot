@@ -25,7 +25,6 @@ bool ModeZigZag::init(bool ignore_checks)
         // clear out pilot desired acceleration in case radio failsafe event occurs and we do not switch to RTL for some reason
         loiter_nav->clear_pilot_desired_acceleration();
     }
-    loiter_nav->init_target();
 
     // initialise position_z and desired velocity_z
     if (!pos_control->is_active_z()) {
@@ -33,22 +32,25 @@ bool ModeZigZag::init(bool ignore_checks)
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
 
+    Vector3f stopping_point;
+    loiter_nav->init_target();
+    wp_nav->get_wp_stopping_point(stopping_point);
+    wp_nav->set_wp_destination(stopping_point, false);
+
     // initialise waypoint state
     copter.sprayer.run(false);
-    stage = (stage == WAIT_MOVE) ? WAIT_AUTO : MANUAL;
 
+    stage = MANUAL;
     if (stage == MANUAL) {
         copter.rangefinder_state.enabled = false;
-//#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-        gcs().send_text(MAV_SEVERITY_INFO, "[AB-LINE] MANUAL CONTROL.");
-//#endif
+        dest_A.zero();
+        dest_B.zero();
     } else if (stage == WAIT_AUTO) {
         Vector3f origin;
         pos_control->get_stopping_point_xy(origin);
         pos_control->get_stopping_point_z(origin);
         wp_nav->set_wp_destination(origin, false);
         copter.rangefinder_state.enabled = true;
-
 #if 0
         Vector3f curr_pos = inertial_nav.get_position();
         curr_pos.z = misAlt;
@@ -56,9 +58,9 @@ bool ModeZigZag::init(bool ignore_checks)
         wp_nav->set_wp_destination(curr_pos, true);
 #endif
 //#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-        gcs().send_text(MAV_SEVERITY_INFO, "[AB-LINE] WAIT FOR MOVE.(%0.1f)", origin.z);
+        gcsdebug("[AB-LINE] WAIT FOR MOVE.(%0.1f)", origin.z);
     } else {
-        gcs().send_text(MAV_SEVERITY_INFO, "[AB-LINE] STAGE(%d)", stage);
+        gcsdebug("[AB-LINE] STAGE(%d)", stage);
 //#endif        
     }
     return true;
@@ -95,6 +97,9 @@ void ModeZigZag::run()
                 direct *= copter.mode_cndn._spray_width_cm.get();
 
                 stage = AUTO;
+                processArea();
+                AP::mission()->start_or_resume();
+#if 0                
                 Vector3f dst;
                 dst.x = dest_A.x;
                 dst.y = dest_A.y;
@@ -104,6 +109,7 @@ void ModeZigZag::run()
                 wp_nav->set_wp_destination(dst, true);
                 copter.sprayer.run(true);
                 steps = 3;
+#endif
             } else if (arv < 0) {
                 Vector2f delta = (dest_B - dest_A).normalized();
                 float dir = -90.0f * M_PI / 180.0f;
@@ -112,6 +118,9 @@ void ModeZigZag::run()
                 direct *= copter.mode_cndn._spray_width_cm.get();
 
                 stage = AUTO;
+                processArea();
+                AP::mission()->start_or_resume();
+#if 0                
                 Vector3f dst;
                 dst.x = dest_A.x;
                 dst.y = dest_A.y;
@@ -121,6 +130,7 @@ void ModeZigZag::run()
                 wp_nav->set_wp_destination(dst, true);
                 copter.sprayer.run(true);
                 steps = 3;
+#endif
             }
         } break;
 
@@ -133,8 +143,12 @@ void ModeZigZag::run()
         if (is_disarmed_or_landed() || !motors->get_interlock()) {
             // vehicle should be under manual control when disarmed or landed
             return_to_manual_control(false);
+        } else {
+            copter.rangefinder_state.enabled = true;
         }
         auto_control();
+        AP::mission()->update();
+#if 0
         if (reached_destination()) {
             uint32_t now = AP_HAL::millis();
             // move to next point
@@ -148,6 +162,7 @@ void ModeZigZag::run()
                     dst.x = dest_B.x;
                     dst.y = dest_B.y;
                     dst.z = misAlt;
+                    wp_nav->set_speed_xy(copter.mode_cndn._spd_auto_cm.get());
                     wp_nav->set_wp_destination(dst, true);
                     copter.sprayer.run(true);
                     steps = 1;
@@ -160,6 +175,7 @@ void ModeZigZag::run()
                     dst.x = dest_B.x;
                     dst.y = dest_B.y;
                     dst.z = misAlt;
+                    wp_nav->set_speed_xy(copter.mode_cndn._spd_auto_cm.get());
                     wp_nav->set_wp_destination(dst, true);
                     copter.sprayer.run(false);
                     steps = 2;
@@ -173,6 +189,7 @@ void ModeZigZag::run()
                     dst.x = dest_A.x;
                     dst.y = dest_A.y;
                     dst.z = misAlt;
+                    wp_nav->set_speed_xy(copter.mode_cndn._spd_auto_cm.get());
                     wp_nav->set_wp_destination(dst, true);
                     copter.sprayer.run(true);
                     steps = 3;
@@ -185,12 +202,14 @@ void ModeZigZag::run()
                     dst.x = dest_A.x;
                     dst.y = dest_A.y;
                     dst.z = misAlt;
+                    wp_nav->set_speed_xy(copter.mode_cndn._spd_auto_cm.get());
                     wp_nav->set_wp_destination(dst, true);
                     copter.sprayer.run(false);
                     steps = 0;
                 } break;
             }
         }
+#endif
         break;
     }
 }
@@ -199,7 +218,7 @@ void ModeZigZag::run()
 void ModeZigZag::save_or_move_to_destination(uint8_t dest_num)
 {
     // sanity check
-    if (dest_num > 2) {
+    if (dest_num > 2 || is_disarmed_or_landed()) {
         return;
     }
 
@@ -211,27 +230,32 @@ void ModeZigZag::save_or_move_to_destination(uint8_t dest_num)
         case MANUAL:
             if (dest_num == 1) {
                 // store point A
+                dloc_A = copter.current_loc;
                 dest_A.x = curr_pos.x;
                 dest_A.y = curr_pos.y;
-                gcs().send_text(MAV_SEVERITY_INFO, "AB Line: point A stored");
+                gcsinfo("AB Line: point A stored");
                 copter.Log_Write_Event(DATA_ZIGZAG_STORE_A);
             } else if (dest_num == 2) {
                 // store point B
+                dloc_B = copter.current_loc;
                 dest_B.x = curr_pos.x;
                 dest_B.y = curr_pos.y;
-                gcs().send_text(MAV_SEVERITY_INFO, "AB Line: point B stored");
+                gcsinfo("AB Line: point B stored");
                 copter.Log_Write_Event(DATA_ZIGZAG_STORE_B);
             } else {
                 dest_A.zero();
                 dest_B.zero();
-                gcs().send_text(MAV_SEVERITY_INFO, "AB Line: points cleared");
+                gcsinfo("AB Line: points cleared");
                 stage = MANUAL;
             }
 
             // if both A and B have been stored advance state
-            if (!dest_A.is_zero() && !dest_B.is_zero() && is_positive((dest_B - dest_A).length_squared())) {
-                gcs().send_text(MAV_SEVERITY_INFO, "AB Line: location successed.");
-                stage = WAIT_MOVE;
+            if (!dest_A.is_zero() && !dest_B.is_zero() && (dest_B - dest_A).length_squared() > 5.0f) {
+                gcsinfo("AB Line: location successed.");
+                wp_nav->set_speed_xy(copter.mode_cndn._spd_auto_cm.get());
+                wp_nav->set_wp_destination(curr_pos, false);
+                stage = WAIT_AUTO;
+                processArea();
             }
             break;
 
@@ -241,10 +265,11 @@ void ModeZigZag::save_or_move_to_destination(uint8_t dest_num)
             if (dest_num == 0) {
                 dest_A.zero();
                 dest_B.zero();
-                gcs().send_text(MAV_SEVERITY_INFO, "AB Line: points cleared");
-                stage = MANUAL;
+                gcsinfo("AB Line: points cleared");
+                return_to_manual_control(false);
             } else {
-                gcs().send_text(MAV_SEVERITY_INFO, "AB Line: stage invalid: %d", stage);
+                gcsdebug("AB Line: stage invalid: %d", stage);
+                return_to_manual_control(false);
             }
             break;
     }
@@ -253,8 +278,9 @@ void ModeZigZag::save_or_move_to_destination(uint8_t dest_num)
 // return manual control to the pilot
 void ModeZigZag::return_to_manual_control(bool maintain_target)
 {
-    if (stage == AUTO) {
+    if (stage != MANUAL) {
         stage = MANUAL;
+        copter.rangefinder_state.enabled = false;
         loiter_nav->clear_pilot_desired_acceleration();
         if (maintain_target) {
             const Vector3f& wp_dest = wp_nav->get_wp_destination();
@@ -265,7 +291,7 @@ void ModeZigZag::return_to_manual_control(bool maintain_target)
         } else {
             loiter_nav->init_target();
         }
-        gcs().send_text(MAV_SEVERITY_INFO, "AB Line: manual control");
+        gcsinfo("AB Line: manual control");
     }
 }
 
@@ -494,6 +520,179 @@ bool ModeZigZag::calculate_next_dest(uint8_t dest_num, bool use_wpnav_alt, Vecto
     }
 
     return true;
+}
+
+void ModeZigZag::processArea() {
+    AP_Mission::Mission_Command cmd;
+
+    AP::mission()->clear();
+
+    cmd.id = MAV_CMD_NAV_WAYPOINT;
+    cmd.p1 = 0;
+    cmd.content.location = dloc_B;
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_DO_CHANGE_SPEED;
+    cmd.p1 = 0;
+    cmd.content.speed.speed_type = 0;
+    cmd.content.speed.throttle_pct = 0;
+    cmd.content.speed.target_ms = copter.mode_cndn._spd_auto_cm.get();
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_DO_SET_RELAY;
+    cmd.p1 = 0;
+    cmd.content.location = Location();
+    cmd.content.relay.num = 254;
+    cmd.content.relay.state = 0;    // SPRAYER OFF
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_NAV_WAYPOINT;
+    cmd.p1 = 1;
+    cmd.content.location = dloc_B;
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_DO_SET_RELAY;
+    cmd.p1 = 0;
+    cmd.content.location = Location();
+    cmd.content.relay.num = 254;
+    cmd.content.relay.state = 1;    // SPRAYER ON
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_NAV_WAYPOINT;
+    cmd.p1 = 1;
+    cmd.content.location = dloc_A;
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_DO_SET_RELAY;
+    cmd.p1 = 0;
+    cmd.content.location = Location();
+    cmd.content.relay.num = 254;
+    cmd.content.relay.state = 0;    // SPRAYER OFF
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_DO_SET_RELAY;
+    cmd.p1 = 0;
+    cmd.content.location = Location();
+    cmd.content.relay.num = 255;
+    cmd.content.relay.state = 1;    // ZIGZAG RETURN
+    AP::mission()->add_cmd(cmd);
+}
+
+bool ModeZigZag::getResume(Mode::CNMIS& dat) {
+    AP_Mission::Mission_Command cmd;
+
+    dat.misFrame = Location::AltFrame::ABOVE_HOME;
+    if (!copter.current_loc.get_alt_cm(dat.misFrame, dat.misAlt))
+        dat.misAlt = copter.mode_cndn._mission_alt_cm.get();
+#ifdef USE_CNDN_RNG
+    if (copter.rangefinder_state.alt_healthy) {
+        dat.misAlt = copter.rangefinder_state.alt_cm_filt.get();
+        dat.misFrame = Location::AltFrame::ABOVE_TERRAIN;
+    }
+#endif
+
+    dat.repl_idx = dat.jump_idx = 0;
+    if (dat.curr_idx == 0)
+        dat.curr_idx = AP::mission()->get_current_nav_cmd().index;
+
+    if (dat.curr_idx == AP_MISSION_CMD_INDEX_NONE) {
+        for(uint16_t i=0; i<AP::mission()->num_commands(); i++) {
+            if (AP::mission()->read_cmd_from_storage(i, cmd) && cmd.id == MAV_CMD_DO_JUMP) {
+                dat.curr_idx = cmd.content.jump.target;
+            }
+        }
+    }
+
+    for(uint16_t i=0; i<AP::mission()->num_commands(); i++) {
+        if (AP::mission()->read_cmd_from_storage(i, cmd)) {
+            switch(cmd.id) {
+                case MAV_CMD_NAV_WAYPOINT:
+                    if (i > dat.curr_idx) {
+                        if (cmd.p1 == 3) dat.repl_idx = i;
+                    } else {
+                        dat.loctg = cmd.content.location;
+                    }
+                break;
+
+                case MAV_CMD_CONDITION_YAW:
+                    if (i >= dat.curr_idx) break;
+                    dat.yawcd = cmd.content.yaw.angle_deg;
+                break;
+
+                case MAV_CMD_DO_CHANGE_SPEED:
+                    if (i >= dat.curr_idx) break;
+                    dat.spdcm = cmd.content.speed.target_ms;
+                break;
+
+                case MAV_CMD_DO_SET_RELAY:
+                    if (i >= dat.curr_idx) break;
+                    if (cmd.content.relay.num == 254) {
+                        switch (cmd.content.relay.state) {
+                            case 0: case 1: dat.spryr = cmd.content.relay.state; break;
+                            case 3: case 4: dat.edge = cmd.content.relay.state; break;
+                        }
+                    }
+                break;
+
+                case MAV_CMD_DO_JUMP:
+                    if (i <= dat.curr_idx) break;
+                    dat.jump_idx = i;
+                break;
+            }
+        }
+    }
+    dat.addNew = !(dat.repl_idx && dat.jump_idx);
+    return !dat.addNew;
+}
+
+void ModeZigZag::setResume(Mode::CNMIS& dat) {
+    AP_Mission::Mission_Command cmd;
+
+    cmd.id = MAV_CMD_NAV_WAYPOINT;
+    cmd.p1 = 3;
+    cmd.content.location = copter.current_loc;
+    cmd.content.location.set_alt_cm(dat.misAlt, dat.misFrame);
+    AP::mission()->add_cmd(cmd);
+    dat.repl_idx = cmd.index;
+
+    cmd.id = MAV_CMD_DO_CHANGE_SPEED;
+    cmd.p1 = 0;
+    cmd.content.speed.speed_type = 0;
+    cmd.content.speed.throttle_pct = 0;
+    cmd.content.speed.target_ms = dat.spdcm;
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_DO_SET_RELAY;
+    cmd.p1 = 0;
+    cmd.content.location = Location();
+    cmd.content.relay.num = 254;
+    cmd.content.relay.state = dat.edge;
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_CONDITION_YAW;
+    cmd.p1 = 0;
+    cmd.content.yaw.angle_deg = dat.yawcd;
+    cmd.content.yaw.turn_rate_dps = 0;
+    cmd.content.yaw.direction = 0;
+    cmd.content.yaw.relative_angle = 0;
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_DO_SET_RELAY;
+    cmd.p1 = 0;
+    cmd.content.location = Location();
+    cmd.content.relay.num = 254;
+    cmd.content.relay.state = dat.spryr;
+    AP::mission()->add_cmd(cmd);
+
+    cmd.id = MAV_CMD_DO_JUMP;
+    cmd.p1 = 0;
+    cmd.content.jump.target = dat.curr_idx;
+    cmd.content.jump.num_times = -1;
+    AP::mission()->add_cmd(cmd);
+    dat.jump_idx = cmd.index;
+    dat.addNew = !(dat.repl_idx && dat.jump_idx);
+
+    gcsinfo("[CNDN] ADD RESUME POSITION.");
 }
 
 #endif // MODE_ZIGZAG_ENABLED == ENABLED

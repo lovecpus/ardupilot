@@ -23,7 +23,7 @@
 #define AC_SPRAYER_DEFAULT_PUMP_MIN         0       ///< default minimum pump speed expressed as a percentage from 0 to 100
 #define AC_SPRAYER_DEFAULT_SPINNER_PWM      1300    ///< default speed of spinner (higher means spray is throw further horizontally
 #define AC_SPRAYER_DEFAULT_SPEED_MIN        100     ///< we must be travelling at least 1m/s to begin spraying
-#define AC_SPRAYER_DEFAULT_TURN_ON_DELAY    250     ///< delay between when we reach the minimum speed and we begin spraying.  This reduces the likelihood of constantly turning on/off the pump
+#define AC_SPRAYER_DEFAULT_TURN_ON_DELAY    100     ///< delay between when we reach the minimum speed and we begin spraying.  This reduces the likelihood of constantly turning on/off the pump
 #define AC_SPRAYER_DEFAULT_SHUT_OFF_DELAY   500    ///< shut-off delay in milli seconds.  This reduces the likelihood of constantly turning on/off the pump
 
 #if 0
@@ -47,6 +47,9 @@ public:
 
     static AC_Sprayer *get_singleton();
     static AC_Sprayer *_singleton;
+
+    /// active - toggle switch for sprayer
+    void active(const bool true_false);
 
     /// run - allow or disallow spraying to occur
     void run(bool true_false);
@@ -73,9 +76,9 @@ public:
     void set_pump_rate(float pct_at_1ms) { _pump_pct_1ms.set(pct_at_1ms); }
 
     /// set armed
-    void set_armed(uint8_t armed) { _flags.armed = armed; }
+    void set_fullspray(uint8_t fullspray) { _flags.fullspray = fullspray; }
 
-    bool is_armed() { return _flags.armed != 0; }
+    bool is_fullspray() { return _flags.fullspray != 0; }
 
     /// increase/decrease percentage of the pumps maximum rate
     float inc_pump_rate(float percentage) {
@@ -85,6 +88,8 @@ public:
         _pump_pct_1ms.set_and_save(pcs);
         return pcs;
     }
+
+    float get_manual_speed() { return _manual_speed; }
 
     /// update - adjusts servo positions based on speed and requested quantity
     void update();
@@ -107,7 +112,8 @@ private:
         uint8_t running     : 1;            ///< 1 if we are permitted to run sprayer
         uint8_t manual      : 1;            ///< 1 if we are permitted to manual sprayer
         uint8_t foreback    : 1;            ///< 1 if we are permitted to manual sprayer
-        uint8_t armed       : 1;            ///< 1 if we are permitted to arm motors
+        uint8_t fullspray   : 1;            ///< 1 if we are permitted to arm motors
+        uint8_t active      : 1;            ///< 1 if we are permitted to run sprayer
     } _flags;
 
     // internal variables

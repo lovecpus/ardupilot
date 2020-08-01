@@ -7,7 +7,6 @@ class ParametersG2;
 class GCS_Copter;
 
 class Mode {
-
 public:
 
     // Auto Pilot Modes enumeration
@@ -250,6 +249,19 @@ public:
     uint16_t get_pilot_speed_dn(void);
 
     // end pass-through functions
+    struct CNMIS {
+        float   yawcd;
+        float   spdcm;
+        uint8_t spryr;
+        uint8_t edge;
+        bool    addNew;
+        uint16_t curr_idx;
+        uint16_t repl_idx;
+        uint16_t jump_idx;
+        Location loctg;
+        int32_t  misAlt;
+        Location::AltFrame misFrame;
+    };
 };
 
 
@@ -1370,6 +1382,10 @@ public:
     // return manual control to the pilot
     void return_to_manual_control(bool maintain_target);
 
+    bool getResume(Mode::CNMIS& dat);
+    void setResume(Mode::CNMIS& dat);
+    void processArea();
+
 protected:
 
     const char *name() const override { return "ZIGZAG"; }
@@ -1386,6 +1402,7 @@ private:
     Vector2f dest_B;    // in NEU frame in cm relative to ekf origin
     Vector2f direct;    // direction of flying zigzag
     float    misAlt;    // mission altitute
+    Location dloc_A, dloc_B;
 
     enum zigzag_state {
         MANUAL,         // pilot toggle the switch to middle position, has manual control

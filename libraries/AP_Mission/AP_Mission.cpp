@@ -1597,7 +1597,6 @@ bool AP_Mission::get_next_cmd(uint16_t start_index, Mission_Command& cmd, bool i
 
         // check for do-jump command
         if (temp_cmd.id == MAV_CMD_DO_JUMP) {
-
             if (max_loops-- == 0) {
                 return false;
             }
