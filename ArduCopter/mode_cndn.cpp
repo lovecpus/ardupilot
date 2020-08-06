@@ -972,7 +972,7 @@ class GPIOSensor
 private:
     GPIOSensor() {
 #if defined(HAL_PUMP_SENSOR_PIN)
-        //hal.gpio->pinMode(HAL_PUMP_SENSOR_PIN, HAL_GPIO_INPUT);
+        hal.gpio->pinMode(HAL_PUMP_SENSOR_PIN, HAL_GPIO_INPUT);
 #endif
     }
     uint8_t last = 0;
@@ -990,8 +990,7 @@ public:
 
     uint8_t read() {
 #if defined(HAL_PUMP_SENSOR_PIN)
-        //return hal.gpio->read(HAL_PUMP_SENSOR_PIN);
-        return 0;
+        return hal.gpio->read(HAL_PUMP_SENSOR_PIN);
 #else
         return 0;
 #endif
