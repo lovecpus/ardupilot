@@ -98,7 +98,7 @@ public:
     /// update - adjusts servo positions based on speed and requested quantity
     void update();
 
-    bool test_sensor(uint32_t cn);
+    bool test_sensor(float cn);
 
     static const struct AP_Param::GroupInfo var_info[];
 

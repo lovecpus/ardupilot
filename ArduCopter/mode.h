@@ -1386,8 +1386,9 @@ public:
     void setResume();
     void processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight);
     void turnZigZag(uint8_t state);
-    void resume_mission();
+    bool resume_mission();
     bool isOwnMission();
+    bool hasResume(uint16_t &resumeIdx);
 
 protected:
 
@@ -1395,7 +1396,6 @@ protected:
     const char *name4() const override { return "ZIGZ"; }
 
 private:
-
     void auto_control();
     void manual_control();
     bool reached_destination();

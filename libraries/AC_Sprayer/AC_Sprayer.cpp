@@ -116,8 +116,8 @@ void AC_Sprayer::stop_spraying()
     _flags.spraying = false;
 }
 
-bool AC_Sprayer::test_sensor(uint32_t cn) {
-    return (cn >= (uint32_t)(_spinner_pwm.get()));
+bool AC_Sprayer::test_sensor(float cn) {
+    return (cn > _spinner_pwm.get() * 1.0f);
 }
 
 /// update - adjust pwm of servo controlling pump speed according to the desired quantity and our horizontal speed

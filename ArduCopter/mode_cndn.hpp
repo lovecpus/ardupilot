@@ -73,10 +73,11 @@ public:
     void do_set_relay(const AP_Mission::Mission_Command& cmd);
     void inject();
     void inject_400hz();
-    void stop_mission();
+    void stop_mission(bool bForce = false);
     void resume_mission();
     void setZigZag(bool bZigZag) { m_bZigZag = bZigZag; }
     bool isZigZag() { return m_bZigZag; }
+    bool hoverMissionResume();
 
     static const struct AP_Param::GroupInfo var_info[];
 
@@ -102,6 +103,7 @@ private:
     bool getResume(Mode::CNMIS& dat);
     void setResume(Mode::CNMIS& dat);
     bool isOwnMission();
+    bool hasResume(uint16_t &resumeIdx);
 
    enum cndn_state
     {
@@ -126,6 +128,7 @@ private:
     uint8_t         m_lockStick = 0;
     Vector2f        m_target_pos;
     uint32_t        _rate_dt = 0;
+    Location        resumeLoc;
     CNTimeout       toYAW;
 
     // parameters
