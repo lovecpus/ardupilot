@@ -1088,7 +1088,6 @@ void ModeCNDN::inject() {
                     resumeLoc.alt += _take_alt_cm.get();
                     loiter_nav->init_target();
                     loiter_nav->clear_pilot_desired_acceleration();
-                    wp_nav->set_wp_destination(copter.current_loc);
                     copter.set_mode(Mode::Number::LOITER, ModeReason::MISSION_STOP);
                 }
             break;
@@ -1097,6 +1096,10 @@ void ModeCNDN::inject() {
             break;
         }
     }
+}
+
+void ModeCNDN::initMissionResume() {
+    bInitMissionResume = true;
 }
 
 bool ModeCNDN::hoverMissionResume() {
@@ -1132,15 +1135,16 @@ bool ModeCNDN::hoverMissionResume() {
         return false;
     }
 
-    if (wp_nav->get_wp_distance_to_destination() < CNDN_WP_RADIUS_CM) {
+    if (pos_control->get_distance_to_target() < CNDN_WP_RADIUS_CM) {
         if ((resumeLoc.alt - copter.current_loc.alt) > 0) {
-            if (wp_nav->set_wp_destination(resumeLoc)) {
+            if (bInitMissionResume) {
+                bInitMissionResume = false;
+                pos_control->set_alt_target_with_slew(resumeLoc.alt, G_Dt);
+                pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
                 auto_yaw.set_mode(AUTO_YAW_HOLD);
             } else {
                 return false;
             }
-        } else {
-            return false;
         }
     }
 
@@ -1148,7 +1152,7 @@ bool ModeCNDN::hoverMissionResume() {
     motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
 
     // run waypoint controller
-    copter.failsafe_terrain_set_status(wp_nav->update_wpnav());
+    loiter_nav->update();
 
     // call z-axis position controller (wp_nav should have already updated its alt target)
     pos_control->update_z_controller();

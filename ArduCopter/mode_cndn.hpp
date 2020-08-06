@@ -77,6 +77,7 @@ public:
     void resume_mission();
     void setZigZag(bool bZigZag) { m_bZigZag = bZigZag; }
     bool isZigZag() { return m_bZigZag; }
+    void initMissionResume();
     bool hoverMissionResume();
 
     static const struct AP_Param::GroupInfo var_info[];
@@ -130,6 +131,7 @@ private:
     uint32_t        _rate_dt = 0;
     Location        resumeLoc;
     CNTimeout       toYAW;
+    bool            bInitMissionResume = false;
 
     // parameters
     AP_Int8         _method;                ///< CNDN Method 0: Disable, 1: Take Picture, 2: Edge following and auto mission, 3: Mission 

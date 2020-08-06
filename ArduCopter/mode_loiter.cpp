@@ -36,7 +36,8 @@ bool ModeLoiter::init(bool ignore_checks)
     }
 
     if (copter.init_mode_reason == ModeReason::MISSION_STOP) {
-        gcsinfo("[CNDN] MISSION_STOP");
+        logdebug("[%d] MISSION STOP\n", AP_HAL::millis());
+        copter.mode_cndn.initMissionResume();
     }
 
     return true;
