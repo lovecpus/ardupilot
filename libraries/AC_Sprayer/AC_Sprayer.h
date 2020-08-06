@@ -50,6 +50,7 @@ public:
 
     /// active - toggle switch for sprayer
     void active(const bool true_false);
+    bool is_active() { return _flags.active != 0; }
 
     /// run - allow or disallow spraying to occur
     void run(bool true_false);
@@ -62,6 +63,7 @@ public:
 
     /// test_pump - set to true to turn on pump as if travelling at 1m/s as a test
     void test_pump(bool true_false) { _flags.testing = true_false; }
+    bool is_test_pump() { return  _flags.testing; }
 
     /// To-Do: add function to decode pilot input from channel 6 tuning knob
     bool is_manual() const { return _flags.manual; }
@@ -80,6 +82,8 @@ public:
 
     bool is_fullspray() { return _flags.fullspray != 0; }
 
+    bool is_test_empty() { return _flags.test_empty; }
+
     /// increase/decrease percentage of the pumps maximum rate
     float inc_pump_rate(float percentage) {
         float pcs = _pump_pct_1ms.get() + percentage;
@@ -93,6 +97,8 @@ public:
 
     /// update - adjusts servo positions based on speed and requested quantity
     void update();
+
+    bool test_sensor(uint32_t cn);
 
     static const struct AP_Param::GroupInfo var_info[];
 
@@ -111,7 +117,7 @@ private:
         uint8_t testing     : 1;            ///< 1 if we are testing the sprayer and should output a minimum value
         uint8_t running     : 1;            ///< 1 if we are permitted to run sprayer
         uint8_t manual      : 1;            ///< 1 if we are permitted to manual sprayer
-        uint8_t foreback    : 1;            ///< 1 if we are permitted to manual sprayer
+        uint8_t test_empty  : 1;            ///< 1 if we are permitted to manual sprayer
         uint8_t fullspray   : 1;            ///< 1 if we are permitted to arm motors
         uint8_t active      : 1;            ///< 1 if we are permitted to run sprayer
     } _flags;
@@ -119,6 +125,7 @@ private:
     // internal variables
     uint32_t        _speed_over_min_time;   ///< time at which we reached speed minimum
     uint32_t        _speed_under_min_time;  ///< time at which we fell below speed minimum
+    uint32_t        _rate_dt;
     float           _manual_speed;
 
     void stop_spraying();

@@ -135,3 +135,23 @@ template<typename s, size_t t> struct assert_storage_size {
 bool is_bounded_int32(int32_t value, int32_t lower_bound, int32_t upper_bound);
 
 bool hex_to_uint8(uint8_t a, uint8_t &res);  // return the uint8 value of an ascii hex character
+
+class CNTimeout
+{
+private:
+    uint32_t    m_s;
+    bool        b_disabled;
+
+public:
+    CNTimeout() : m_s(0), b_disabled(false) {}
+    void reset(uint32_t s) { m_s = s; b_disabled = false; }
+    void disable() { b_disabled = true; }
+    bool isEnabled() { return !b_disabled; }
+    bool isTimeout(uint32_t s, uint32_t tio) {
+        if (s > m_s + tio) {
+            m_s = s + tio;
+            return true;
+        }
+        return false;
+    }
+};

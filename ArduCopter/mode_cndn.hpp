@@ -13,7 +13,7 @@
 */
 #define CNDN_TONE_STARTUP    { "MFT200L4O4CL8GAL2F", false }
 
-#define CNDN_WP_RADIUS_CM 100
+#define CNDN_WP_RADIUS_CM 50
 #define CASE_CNDN_MODE() case Mode::Number::CNDN: ret = &mode_cndn; mode_cndn.setZigZag(false);  break; \
     case Mode::Number::CNDN2: ret = &mode_cndn; mode_cndn.setZigZag(true);  break;
 
@@ -41,6 +41,7 @@
     copter.mode_cndn.handle_message(msg);
 
 #define CNDN_MODE_INJECT()  mode_cndn.inject()
+#define CNDN_MODE_INJECT400()  mode_cndn.inject_400hz()
 
 /*
 int degNE(const Vector2f& pp);
@@ -71,6 +72,7 @@ public:
     void handle_message(const mavlink_message_t &msg) override;
     void do_set_relay(const AP_Mission::Mission_Command& cmd);
     void inject();
+    void inject_400hz();
     void stop_mission();
     void resume_mission();
     void setZigZag(bool bZigZag) { m_bZigZag = bZigZag; }
@@ -78,9 +80,8 @@ public:
 
     static const struct AP_Param::GroupInfo var_info[];
 
-#if 0
-    uint32_t live_logt_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
-    void live_log(uint32_t tout, const char *fmt, ...);
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+    CNTimeout toDBG;
 #endif
 
 protected:
@@ -93,12 +94,14 @@ private:
     void pos_control_start();
     void auto_control();
     void manual_control();
+    void zigzag_manual();
     bool reached_destination();
     void set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool relative_angle);
     void processArea();
     void processAB();
     bool getResume(Mode::CNMIS& dat);
     void setResume(Mode::CNMIS& dat);
+    bool isOwnMission();
 
    enum cndn_state
     {
@@ -108,19 +111,22 @@ private:
         RETURN_AUTO,
         PREPARE_FINISH,
         FINISHED,
-        WAY_A,
-        WAY_B,
     } stage;
 
+    int32_t         yaw_sensor = 0;
+    uint32_t        reach_wp_time_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
+    char*           data_buff = NULL;
     uint16_t        data_size = 0;
     uint16_t        data_wpos = 0;
-    char*           data_buff = NULL;
-    uint32_t        reach_wp_time_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
     float           last_yaw_cd = 0.0f;
     uint32_t        last_yaw_ms = 0;
-    uint8_t         cmd_mode;
     bool            edge_mode = false;
     bool            m_bZigZag;
+    uint8_t         cmd_mode;
+    uint8_t         m_lockStick = 0;
+    Vector2f        m_target_pos;
+    uint32_t        _rate_dt = 0;
+    CNTimeout       toYAW;
 
     // parameters
     AP_Int8         _method;                ///< CNDN Method 0: Disable, 1: Take Picture, 2: Edge following and auto mission, 3: Mission 

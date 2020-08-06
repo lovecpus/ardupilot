@@ -82,8 +82,8 @@ private:
     DEFINE_COLOUR_SEQUENCE(colour,colour,colour,colour,colour,colour,colour,colour,colour,colour)
 #define DEFINE_COLOUR_SEQUENCE_ALTERNATE(colour1, colour2)                      \
     DEFINE_COLOUR_SEQUENCE(colour1,colour2,colour1,colour2,colour1,colour2,colour1,colour2,colour1,colour2)
-#define DEFINE_COLOUR_SEQUENCE_ALTERNATE_F(colour1, colour2)                      \
-    DEFINE_COLOUR_SEQUENCE(colour1,colour1,colour1,OFF,OFF,colour2,colour2,colour2,OFF,OFF)
+#define DEFINE_COLOUR_SEQUENCE_ALTERNATE_F(colour1, colour2, colour3)                      \
+    DEFINE_COLOUR_SEQUENCE(colour1,OFF,colour2,OFF,colour3,OFF,colour2,colour2,colour2,OFF)
 
 #define OFF    0
 #define BLUE   1
@@ -98,7 +98,7 @@ private:
     const uint32_t sequence_failsafe_ekf = DEFINE_COLOUR_SEQUENCE_FAILSAFE(RED);
     const uint32_t sequence_failsafe_gps_glitching = DEFINE_COLOUR_SEQUENCE_FAILSAFE(BLUE);
     const uint32_t sequence_failsafe_radio_or_battery = DEFINE_COLOUR_SEQUENCE_FAILSAFE(OFF);
-    const uint32_t sequence_sprayer_empty = DEFINE_COLOUR_SEQUENCE_ALTERNATE_F(YELLOW,GREEN);
+    const uint32_t sequence_sprayer_empty = DEFINE_COLOUR_SEQUENCE_ALTERNATE_F(RED,GREEN,BLUE);
 
     const uint32_t sequence_armed = DEFINE_COLOUR_SEQUENCE_SOLID(GREEN);
     const uint32_t sequence_armed_nogps = DEFINE_COLOUR_SEQUENCE_SOLID(BLUE);

@@ -338,6 +338,10 @@ void Copter::fourhundred_hz_logging()
     if (should_log(MASK_LOG_ATTITUDE_FAST) && !copter.flightmode->logs_attitude()) {
         Log_Write_Attitude();
     }
+#ifndef CNDN_MODE_INJECT400
+#define CNDN_MODE_INJECT400()
+#endif
+    CNDN_MODE_INJECT400();
 }
 
 // ten_hz_logging_loop
@@ -382,16 +386,16 @@ void Copter::ten_hz_logging_loop()
 #if FRAME_CONFIG == HELI_FRAME
     Log_Write_Heli();
 #endif
+
+#ifndef CNDN_MODE_INJECT
+#define CNDN_MODE_INJECT()
+#endif
+    CNDN_MODE_INJECT();
 }
 
 // twentyfive_hz_logging - should be run at 25hz
 void Copter::twentyfive_hz_logging()
 {
-#ifndef CNDN_MODE_INJECT
-#define CNDN_MODE_INJECT()
-#endif
-    CNDN_MODE_INJECT();
-
 #if HIL_MODE != HIL_MODE_DISABLED
     // HIL for a copter needs very fast update of the servo values
     gcs().send_message(MSG_SERVO_OUTPUT_RAW);

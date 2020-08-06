@@ -889,7 +889,7 @@ private:
 
 
 class ModeLoiter : public Mode {
-
+friend class ModeCNDN;
 public:
     // inherit constructor
     using Mode::Mode;
@@ -1382,9 +1382,12 @@ public:
     // return manual control to the pilot
     void return_to_manual_control(bool maintain_target);
 
-    bool getResume(Mode::CNMIS& dat);
-    void setResume(Mode::CNMIS& dat);
-    void processArea();
+    bool getResume();
+    void setResume();
+    void processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight);
+    void turnZigZag(uint8_t state);
+    void resume_mission();
+    bool isOwnMission();
 
 protected:
 
@@ -1402,7 +1405,8 @@ private:
     Vector2f dest_B;    // in NEU frame in cm relative to ekf origin
     Vector2f direct;    // direction of flying zigzag
     float    misAlt;    // mission altitute
-    Location dloc_A, dloc_B;
+    Location::AltFrame  misFrame;
+    CNMIS    cms;
 
     enum zigzag_state {
         MANUAL,         // pilot toggle the switch to middle position, has manual control
