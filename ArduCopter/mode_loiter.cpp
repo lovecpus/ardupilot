@@ -36,7 +36,6 @@ bool ModeLoiter::init(bool ignore_checks)
     }
 
     if (copter.init_mode_reason == ModeReason::MISSION_STOP) {
-        logdebug("[%d] MISSION STOP\n", AP_HAL::millis());
         copter.mode_cndn.initMissionResume();
     }
 
@@ -83,11 +82,11 @@ void ModeLoiter::precision_loiter_xy()
 // should be called at 100hz or more
 void ModeLoiter::run()
 {
-    if (copter.init_mode_reason == ModeReason::MISSION_STOP) {
-        if (copter.mode_cndn.hoverMissionResume())
-            return;
-        copter.init_mode_reason = ModeReason::RC_COMMAND;
-    }
+    // if (copter.init_mode_reason == ModeReason::MISSION_STOP) {
+    //     if (copter.mode_cndn.hoverMissionResume())
+    //         return;
+    //     copter.init_mode_reason = ModeReason::RC_COMMAND;
+    // }
 
     float target_roll, target_pitch;
     float target_yaw_rate = 0.0f;

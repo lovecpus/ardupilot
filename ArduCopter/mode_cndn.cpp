@@ -127,8 +127,10 @@ bool ModeCNDN::init(bool ignore_checks)
     }
 
     if (stage == MANUAL) {
-        if (isZigZag())
+        if (isZigZag()) {
             yaw_sensor = ahrs.yaw_sensor;
+            auto_yaw.set_fixed_yaw(yaw_sensor * 0.01f, 0.0f, 0, false);
+        }
 
         if (copter.init_mode_reason == ModeReason::MISSION_END) {
             gcsinfo("[CNDN] MISSION COMPLETE.");
@@ -563,7 +565,6 @@ void ModeCNDN::processAB()
 {
     data_wpos = 0;
     uint16_t nCMDs = *(uint16_t*)(data_buff+data_wpos); data_wpos += 2;
-    gcsdebug("[CNDN] PROCESS AB(%d commands)", int(nCMDs));
 
     int nCmds = 0;
     AP_Mission::Mission_Command cmd;
@@ -939,13 +940,11 @@ void ModeCNDN::do_set_relay(const AP_Mission::Mission_Command& cmd) {
             case 3:
             case 4:
                 edge_mode = (cmd.content.relay.state == 4);
-                logdebug("[CNDN] SPEED %s.\n", edge_mode?"EDGE":"NORMAL");
             break;
 
             case 0:
             case 1: {
                 bool bRun = (cmd.content.relay.state == 1);
-                logdebug("[CNDN] SPRAYER %s.\n", bRun?"RUN":"STOP");
 #if SPRAYER_ENABLED == ENABLED
                 copter.sprayer.run(bRun);
 #endif
@@ -1011,25 +1010,6 @@ public:
         return (now - l_ms) > tout;
     }
 
-    void update(uint32_t now) {
-        float fv = AP::rpm()->enabled(0) ? AP::rpm()->get_rpm(0) : -1.0f;
-        if (!is_equal(fv, -1.0f)) {
-            l_ms = now;
-            l_cn = fv;
-        }
-    }
-
-    bool changed() {
-        if (l_en != l_cn) {
-            l_en = l_cn;
-            l_dt = l_cn;
-            return true;
-        }
-        return false;
-    }
-
-    float get_delta() { return l_dt; }
-
     void resetTimeout(uint32_t now) { l_ms = now; }
 
     bool stateChanged(bool bSet) {
@@ -1040,7 +1020,7 @@ public:
         return false;
     }
 
-    float getCount() { return l_cn; }
+    float getCount() { return AP::rpm()->enabled(0) ? AP::rpm()->get_rpm(0) : 0.0f; }
 };
 
 void ModeCNDN::inject() {
@@ -1059,13 +1039,11 @@ void ModeCNDN::inject() {
     }
 
     uint32_t now = AP_HAL::millis();
-    GPIOSensor::get().update(now);
-
-    if (!copter.sprayer.is_test_empty() || !copter.sprayer.is_active()) {
+    bool bNotEmpty = copter.sprayer.test_sensor(GPIOSensor::get().getCount());
+    if (!copter.sprayer.running() || !copter.sprayer.is_test_empty() || !copter.sprayer.is_active() || bNotEmpty)
         GPIOSensor::get().resetTimeout(now);
-    }
 
-    if (GPIOSensor::get().changed() && copter.sprayer.test_sensor(GPIOSensor::get().getCount())) {
+    if (bNotEmpty) {
         AP_Notify::flags.sprayer_empty = false;
         copter.sprayer.test_pump(false);
     } else if (GPIOSensor::get().isTimeout(now, 1000)) {
@@ -1076,7 +1054,7 @@ void ModeCNDN::inject() {
 
     if (GPIOSensor::get().stateChanged(AP_Notify::flags.sprayer_empty)) {
         if (AP_Notify::flags.sprayer_empty)
-            gcsinfo("분무기가 비었습니다");
+            gcs().send_text(MAV_SEVERITY_WARNING, "농약이 없습니다.");
     }
 #endif
 
@@ -1137,14 +1115,11 @@ bool ModeCNDN::hoverMissionResume() {
 
     if (pos_control->get_distance_to_target() < CNDN_WP_RADIUS_CM) {
         if ((resumeLoc.alt - copter.current_loc.alt) > 0) {
-            if (bInitMissionResume) {
-                bInitMissionResume = false;
-                pos_control->set_alt_target_with_slew(resumeLoc.alt, G_Dt);
-                pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
-                auto_yaw.set_mode(AUTO_YAW_HOLD);
-            } else {
-                return false;
-            }
+            pos_control->set_alt_target_with_slew(resumeLoc.alt, G_Dt);
+            pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
+            auto_yaw.set_mode(AUTO_YAW_HOLD);
+        } else {
+            return false;
         }
     }
 
@@ -1203,12 +1178,11 @@ void ModeCNDN::zigzag_manual() {
 
         switch (m_lockStick) {
             case 0: {
-                if (aroll > 250.0f || apitch > 250.0f) {
+                auto_yaw.set_fixed_yaw(yaw_sensor * 0.01f, 0.0f, 0, false);
+                if (aroll > 500.0f || apitch > 500.0f) {
                     if (aroll > apitch) {
                         m_lockStick = 2;
                         Location loc = copter.current_loc;
-                        //auto_yaw.set_fixed_yaw(yaw_sensor * 1e-2f, 0.0f, 0, false);
-                        auto_yaw.set_mode(AUTO_YAW_HOLD);
                         loc.offset_bearing(yaw_sensor * 1e-2f + 90 * (target_roll/aroll), _spray_width_cm.get() * 1e-2f);
                         wp_nav->set_wp_destination(loc);
                     } else {
@@ -1222,7 +1196,7 @@ void ModeCNDN::zigzag_manual() {
             case 1: {
                 target_roll = 0.0f;
                 target_yaw_rate = 0.0f;
-                if (apitch < 50.0f && aroll < 50.0f) {
+                if (apitch < 200.0f && aroll < 200.0f) {
                     m_lockStick = 0;
                 }
                 // process pilot's roll and pitch input
@@ -1231,8 +1205,7 @@ void ModeCNDN::zigzag_manual() {
 
             case 2: {
                 target_yaw_rate = 0.0f;
-                if (reached_destination() && (apitch < 50.0f && aroll < 50.0f)) {
-                    auto_yaw.set_mode(AUTO_YAW_HOLD);
+                if (reached_destination() && (apitch < 200.0f && aroll < 200.0f)) {
                     m_lockStick = 0;
                 }
             } break;

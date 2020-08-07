@@ -235,7 +235,6 @@ void AC_Sprayer::update()
 
         _flags.spraying = true;
         _flags.test_empty = pos >= (100 * _pump_min_pct + (_pump_pct_1ms * _speed_min));
-        //logdebug("PUMP %0.3f, %0.1f\n", pos, (100 * _pump_min_pct + (_pump_pct_1ms * _speed_min)));
     } else {
         _flags.test_empty = false;
         stop_spraying();
