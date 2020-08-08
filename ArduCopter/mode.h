@@ -1418,6 +1418,7 @@ private:
     uint32_t steps = 0;
     uint32_t step_time_ms = 0;
     uint32_t reach_wp_time_ms = 0;  // time since vehicle reached destination (or zero if not yet reached)
+    CNTimeout toAUTO;
 };
 
 #if MODE_AUTOROTATE_ENABLED == ENABLED

@@ -163,7 +163,7 @@ bool AC_WPNav::set_wp_destination(const Location& destination)
 {
     bool terr_alt;
     Vector3f dest_neu;
-
+    
     // convert destination location to vector
     if (!get_vector_NEU(destination, dest_neu, terr_alt)) {
         return false;
@@ -937,6 +937,28 @@ void AC_WPNav::calc_spline_pos_vel(float spline_time, Vector3f& position, Vector
                _hermite_spline_solution[2] * 2.0f * spline_time + \
                _hermite_spline_solution[3] * 3.0f * spline_time_sqrd;
 }
+
+bool AC_WPNav::get_terrain_alt(float &alt_cm) {
+    // use range finder if connected
+    if (_rangefinder_use) {
+        if (_rangefinder_healthy) {
+            alt_cm = _rangefinder_alt_cm;
+            return true;
+        }
+        return false;
+    }
+
+#if AP_TERRAIN_AVAILABLE
+    // use terrain database
+    float terr_alt = 0.0f;
+    if (_terrain != nullptr && _terrain->height_above_terrain(terr_alt, true)) {
+        alt_cm = (terr_alt * 100.0f);
+        return true;
+    }
+#endif
+    return false;
+}
+
 
 // get terrain's altitude (in cm above the ekf origin) at the current position (+ve means terrain below vehicle is above ekf origin's altitude)
 bool AC_WPNav::get_terrain_offset(float& offset_cm)

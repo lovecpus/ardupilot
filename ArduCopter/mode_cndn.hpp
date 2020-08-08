@@ -3,8 +3,8 @@
 
 # define gcsdebug(FORM, ...) gcs().send_text(MAV_SEVERITY_INFO, FORM, __VA_ARGS__)
 # define gcsinfo(FORM) gcs().send_text(MAV_SEVERITY_INFO, FORM)
+# define gcswarning(FORM) gcs().send_text(MAV_SEVERITY_WARNING, FORM)
 
-#define USE_CNDN_RNG
 #define CN_UNUSED(_X)  ((_X)=(_X))
 
 #if MODE_CNDN_ENABLED == ENABLED
@@ -74,13 +74,14 @@ public:
     void inject();
     void inject_400hz();
     void stop_mission(bool bForce = false);
-    void resume_mission();
+    bool resume_mission();
     void setZigZag(bool bZigZag) { m_bZigZag = bZigZag; }
     bool isZigZag() { return m_bZigZag; }
     void initMissionResume();
     bool hoverMissionResume();
 
     static const struct AP_Param::GroupInfo var_info[];
+    CNTimeout toAUTO;
 
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
     CNTimeout toDBG;
@@ -111,8 +112,8 @@ private:
         MANUAL,         // pilot toggle the switch to middle position, has manual control
         PREPARE_AUTO,
         AUTO,
-        RETURN_AUTO,
-        PREPARE_FINISH,
+        SET_AUTO,
+        PREPARE_ABLINE,
         FINISHED,
     } stage;
 
@@ -131,7 +132,7 @@ private:
     uint32_t        _rate_dt = 0;
     Location        resumeLoc;
     CNTimeout       toYAW;
-    bool            bInitMissionResume = false;
+    uint32_t        m_missionReset = 0;
 
     // parameters
     AP_Int8         _method;                ///< CNDN Method 0: Disable, 1: Take Picture, 2: Edge following and auto mission, 3: Mission 

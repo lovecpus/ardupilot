@@ -57,6 +57,7 @@ public:
     // return true if range finder may be used for terrain following
     bool rangefinder_used() const { return _rangefinder_use && _rangefinder_healthy; }
 
+    bool get_terrain_alt(float &alt_cm);
     ///
     /// waypoint controller
     ///

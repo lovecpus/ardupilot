@@ -65,13 +65,14 @@ void ModeZigZag::run()
     pos_control->set_max_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
     pos_control->set_max_accel_z(g.pilot_accel_z);
 
+    manual_control();
+    uint32_t now = AP_HAL::millis();
     switch (stage) {
         case WAIT_AUTO: {
             if (is_disarmed_or_landed() || !motors->get_interlock()) {
                 // vehicle should be under manual control when disarmed or landed
                 return_to_manual_control(false);
             }
-            manual_control();
 
             // wait vector to move direction
             int16_t rv = (channel_roll->get_control_in() / 1000);
@@ -79,18 +80,30 @@ void ModeZigZag::run()
 
             if (arv != 0) {
                 processArea(dest_A, dest_B, arv < 0);
-                copter.set_mode(Mode::Number::AUTO, ModeReason::RC_COMMAND);
+                pos_control->set_alt_target_to_current_alt();
+                wp_nav->wp_and_spline_init();
+                stage = WAIT_MOVE;
+                toAUTO.reset(now);
             }
         } break;
 
         case AUTO: {
-            manual_control();
-            copter.set_mode(Mode::Number::AUTO, ModeReason::MISSION_RESUME);
+            pos_control->set_alt_target_to_current_alt();
+            wp_nav->wp_and_spline_init();
+            stage = WAIT_MOVE;
+            toAUTO.reset(now);
         } break;
 
-        case WAIT_MOVE:
+        case WAIT_MOVE: {
+            copter.rangefinder_state.enabled = true;
+            if (toAUTO.isTimeout(now, 1000)) {
+                toAUTO.disable();
+                copter.set_mode(Mode::Number::AUTO, ModeReason::MISSION_RESUME);
+                stage = MANUAL;
+            }
+        } break;
+
         case MANUAL:
-            manual_control();
         break;
     }
 }
@@ -169,7 +182,6 @@ void ModeZigZag::return_to_manual_control(bool maintain_target)
         } else {
             loiter_nav->init_target();
         }
-        gcsinfo("AB Line: manual control");
     }
 }
 
@@ -401,27 +413,37 @@ bool ModeZigZag::calculate_next_dest(uint8_t dest_num, bool use_wpnav_alt, Vecto
 }
 
 bool ModeZigZag::getResume() {
+    float alt_cm = 0.0f;
+    if (wp_nav->get_terrain_alt(alt_cm)) {
+        cms.misAlt = alt_cm;
+        cms.misFrame = Location::AltFrame::ABOVE_TERRAIN;
+    } else {
+        cms.misFrame = Location::AltFrame::ABOVE_HOME;
+        if (!copter.current_loc.get_alt_cm(cms.misFrame, cms.misAlt))
+            cms.misAlt = copter.mode_cndn._mission_alt_cm.get();
+    }
+    cms.curr_idx = AP::mission()->get_current_nav_index();
     if (!isOwnMission()) {
-        cms.curr_idx = AP::mission()->get_current_nav_index();
         cms.addNew = true;
         return false;
     }
 
     AP_Mission::Mission_Command cmd;
 
+    cms.yawcd = ahrs.yaw_sensor * 1e-2f;
     cms.repl_idx = cms.jump_idx = 0;
-    cms.curr_idx = AP::mission()->get_current_nav_index();
-    for(uint16_t i=0; i<AP::mission()->num_commands(); i++) {
+    if (!hasResume(cms.repl_idx)) {
+        cms.addNew = true;
+        return false;
+    }
+    cms.repl_idx += 2;
+
+    for(uint16_t i=1; i<AP::mission()->num_commands(); i++) {
         if (AP::mission()->read_cmd_from_storage(i, cmd)) {
             switch(cmd.id) {
-                case MAV_CMD_DO_SET_ROI:
-                    if (i > cms.curr_idx && cmd.p1 == 3) {
-                        cms.repl_idx = i + 2;
-                    }
-                break;
-
                 case MAV_CMD_NAV_WAYPOINT:
                     if (i >= cms.curr_idx) break;
+                    cms.loctg = cmd.content.location;
                     cms.misFrame = cmd.content.location.get_alt_frame();
                     if (cmd.content.location.get_alt_cm(cms.misFrame, cms.misAlt))
                         cms.misAlt = cms.misAlt;
@@ -448,7 +470,6 @@ bool ModeZigZag::getResume() {
                 break;
 
                 case MAV_CMD_DO_JUMP:
-                    if (i <= cms.curr_idx) break;
                     if (i <= cms.repl_idx) break;
                     cms.jump_idx = i;
                 break;
@@ -463,10 +484,9 @@ void ModeZigZag::setResume() {
     AP_Mission::Mission_Command cmd;
 
     if (cms.addNew) {
-        cmd.id = MAV_CMD_DO_SET_ROI;
+        cmd.id = MAV_CMD_NAV_TAKEOFF;
         cmd.p1 = 3;
         cmd.content.location.zero();
-        cmd.content.location.offset(0.5f,0.5f);
         cmd.content.location.set_alt_cm(cms.misAlt, cms.misFrame);
         AP::mission()->add_cmd(cmd);
 
@@ -516,6 +536,7 @@ void ModeZigZag::setResume() {
     } else {
         if (AP::mission()->read_cmd_from_storage(cms.repl_idx, cmd)) {
             cmd.content.location = copter.current_loc;
+            cmd.content.location.set_alt_cm(cms.misAlt, cms.misFrame);
             AP::mission()->replace_cmd(cmd.index, cmd);
         }
         if (AP::mission()->read_cmd_from_storage(cms.jump_idx, cmd)) {
@@ -523,23 +544,22 @@ void ModeZigZag::setResume() {
             AP::mission()->replace_cmd(cmd.index, cmd);
         }
     }
-    gcsinfo("[CNDN] SET RESUME POSITION.");
 }
 
 bool ModeZigZag::isOwnMission() {
     AP_Mission::Mission_Command cmd;
-    if (!AP::mission()->read_cmd_from_storage(1, cmd) || cmd.id != MAV_CMD_NAV_TAKEOFF) return false;
-    if (!AP::mission()->read_cmd_from_storage(2, cmd) || cmd.id != MAV_CMD_DO_SET_ROI || cmd.p1 != 0) return false;
-    if (!AP::mission()->read_cmd_from_storage(3, cmd) || cmd.id != MAV_CMD_CONDITION_YAW || cmd.p1 != 1) return false;
-    if (!AP::mission()->read_cmd_from_storage(4, cmd) || cmd.id != MAV_CMD_DO_CHANGE_SPEED || cmd.p1 != 0) return false;
-    if (!AP::mission()->read_cmd_from_storage(5, cmd) || cmd.id != MAV_CMD_DO_SET_RELAY || cmd.p1 != 0) return false;
+    if (!AP::mission()->read_cmd_from_storage(1, cmd) || cmd.id != MAV_CMD_NAV_TAKEOFF || cmd.p1 != 1) return false;
+    if (!AP::mission()->read_cmd_from_storage(2, cmd) || cmd.id != MAV_CMD_CONDITION_YAW) return false;
+    if (!AP::mission()->read_cmd_from_storage(3, cmd) || cmd.id != MAV_CMD_DO_CHANGE_SPEED) return false;
+    if (!AP::mission()->read_cmd_from_storage(4, cmd) || cmd.id != MAV_CMD_DO_SET_RELAY) return false;
+    if (!AP::mission()->read_cmd_from_storage(14, cmd) || cmd.id != MAV_CMD_DO_JUMP) return false;
     return true;
 }
 
 bool ModeZigZag::hasResume(uint16_t &resumeIdx) {
     AP_Mission::Mission_Command cmd;
     for(uint16_t i=0; i<AP::mission()->num_commands(); i++) {
-        if (AP::mission()->read_cmd_from_storage(i, cmd) && cmd.id == MAV_CMD_DO_SET_ROI && cmd.p1 == 3) {
+        if (AP::mission()->read_cmd_from_storage(i, cmd) && cmd.id == MAV_CMD_NAV_TAKEOFF && cmd.p1 == 3) {
             if (!AP::mission()->read_cmd_from_storage(i+1, cmd) || cmd.id != MAV_CMD_CONDITION_YAW) return false;
             if (!AP::mission()->read_cmd_from_storage(i+2, cmd) || cmd.id != MAV_CMD_NAV_WAYPOINT || cmd.p1 != 3) return false;
             if (!AP::mission()->read_cmd_from_storage(i+3, cmd) || cmd.id != MAV_CMD_DO_CHANGE_SPEED) return false;
@@ -563,54 +583,48 @@ bool ModeZigZag::resume_mission() {
 void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     AP_Mission::Mission_Command cmd;
 
-    if (copter.rangefinder_state.alt_healthy) {
+    if (wp_nav->get_terrain_alt(misAlt)) {
         misFrame = Location::AltFrame::ABOVE_TERRAIN;
-        misAlt = copter.rangefinder_state.alt_cm_filt.get();
     } else {
         misFrame = Location::AltFrame::ABOVE_HOME;
         misAlt = copter.mode_cndn._mission_alt_cm.get();
     }
 
     Vector2f delta = (dstB - dstA).normalized();
-    float dir = (bLeftRight?-1:+1) * 90.0f * M_PI / 180.0f;
-    direct.x = cosf(dir)*delta.x - sinf(dir)*delta.y;
-    direct.y = sinf(dir)*delta.x + cosf(dir)*delta.y;
-    direct *= copter.mode_cndn._spray_width_cm.get();
-
-    Vector2f dA = dstA + direct;    // in NEU frame in cm relative to ekf origin
-    Vector2f dB = dstB + direct;    // in NEU frame in cm relative to ekf origin
+    float ang = atan2f(delta.y, delta.x) * 180.0f / M_PI + 180;
+    while (ang < 0) ang += 360.0f;
+    while (ang >= 360) ang -= 360.0f;
+    float dir = bLeftRight ? -90.0f : +90.0f;
 
     Location dloc_A(Vector3f(dstA.x, dstA.y, misAlt));
     Location dloc_B(Vector3f(dstB.x, dstB.y, misAlt));
-    Location dloc_AA(Vector3f(dA.x, dA.y, misAlt));
-    Location dloc_BA(Vector3f(dB.x, dB.y, misAlt));
+    // Vector2f dA = dstA + direct;    // in NEU frame in cm relative to ekf origin
+    // Vector2f dB = dstB + direct;    // in NEU frame in cm relative to ekf origin
+    // Location dloc_AA(Vector3f(dA.x, dA.y, misAlt));
+    // Location dloc_BA(Vector3f(dB.x, dB.y, misAlt));
+    Location dloc_AA(dloc_A);
+    Location dloc_BA(dloc_B);
+    dloc_AA.offset_bearing(ang+dir, copter.mode_cndn._spray_width_cm.get() * 1e-2f);
+    dloc_BA.offset_bearing(ang+dir, copter.mode_cndn._spray_width_cm.get() * 1e-2f);
 
     AP::mission()->reset();
     AP::mission()->clear();
 
     cmd.id = MAV_CMD_NAV_WAYPOINT;
-    cmd.p1 = 0;
+    cmd.p1 = bLeftRight ? 0 : 1;
     cmd.content.location = AP::ahrs().get_home();
     cmd.content.location.set_alt_cm(misAlt, misFrame);
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_NAV_TAKEOFF;
-    cmd.p1 = 0;
+    cmd.p1 = 1;
     cmd.content.location = AP::ahrs().get_home();
     cmd.content.location.set_alt_cm(misAlt, misFrame);
     AP::mission()->add_cmd(cmd);
 
-    cmd.id = MAV_CMD_DO_SET_ROI;
-    cmd.p1 = 0;
-    cmd.content.location.zero();
-    cmd.content.location.offset(direct.x, direct.y);
-    AP::mission()->add_cmd(cmd);
-
     cmd.id = MAV_CMD_CONDITION_YAW;
-    cmd.p1 = 1;
-    cmd.content.yaw.angle_deg = atan2f(delta.y, delta.x) * 180.0f / M_PI + 180;
-    while (cmd.content.yaw.angle_deg < 0) cmd.content.yaw.angle_deg += 360.0f;
-    while (cmd.content.yaw.angle_deg >= 360) cmd.content.yaw.angle_deg -= 360.0f;
+    cmd.p1 = 0;
+    cmd.content.yaw.angle_deg = ang;
     cmd.content.yaw.turn_rate_dps = 0;
     cmd.content.yaw.direction = 0;
     cmd.content.yaw.relative_angle = 0;
@@ -620,7 +634,7 @@ void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     cmd.p1 = 0;
     cmd.content.speed.speed_type = 0;
     cmd.content.speed.throttle_pct = 0;
-    cmd.content.speed.target_ms = copter.mode_cndn._spd_auto_cm.get() * 1e-2;
+    cmd.content.speed.target_ms = copter.mode_cndn._spd_auto_cm.get() * 1e-2f;
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_DO_SET_RELAY;
@@ -629,7 +643,7 @@ void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     cmd.content.relay.state = 0;    // SPRAYER OFF
     AP::mission()->add_cmd(cmd);
 
-    // 6
+    // 5
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 1;
     cmd.content.location = dloc_B;
@@ -648,7 +662,7 @@ void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     cmd.content.relay.state = 1;    // ZIGZAG SET NEXT
     AP::mission()->add_cmd(cmd);
 
-    // 9
+    // 8
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 1;
     cmd.content.location = dloc_A;
@@ -662,7 +676,7 @@ void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     cmd.content.location.set_alt_cm(misAlt, misFrame);
     AP::mission()->add_cmd(cmd);
 
-    // 11
+    // 10
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 1;
     cmd.content.location = dloc_AA;
@@ -681,7 +695,7 @@ void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     cmd.content.relay.state = 2;    // ZIGZAG SET NEXT
     AP::mission()->add_cmd(cmd);
 
-    // 14
+    // 13
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 1;
     cmd.content.location = dloc_BA;
@@ -702,15 +716,17 @@ void ModeZigZag::turnZigZag(uint8_t state) {
     switch (state) {
         case 1: //
         // 후반부 작업
-        if (AP::mission()->read_cmd_from_storage(2, cmd) && cmd.id == MAV_CMD_DO_SET_ROI && cmd.content.location.get_vector_xy_from_origin_NE(direct)) {
-            Vector2f delta = direct.normalized();
-            if (AP::mission()->read_cmd_from_storage(6, cmdB) && cmdB.id == MAV_CMD_NAV_WAYPOINT && cmdB.content.location.get_vector_xy_from_origin_NE(dB)) {
-                if (AP::mission()->read_cmd_from_storage(9, cmdA) && cmdA.id == MAV_CMD_NAV_WAYPOINT && cmdA.content.location.get_vector_xy_from_origin_NE(dA)) {
-                    direct = delta * copter.mode_cndn._spray_width_cm.get() * 1e-2;
-                    cmdA.content.location.offset(direct.x, direct.y);
-                    cmdB.content.location.offset(direct.x, direct.y);
-                    cmdA.index = 11; AP::mission()->replace_cmd(cmdA.index, cmdA);
-                    cmdB.index = 14; AP::mission()->replace_cmd(cmdB.index, cmdB);
+        if (AP::mission()->read_cmd_from_storage(0, cmd) && cmd.id == MAV_CMD_NAV_WAYPOINT) {
+            float dir = cmd.p1 ? -90.0f : +90.0f;
+            if (AP::mission()->read_cmd_from_storage(2, cmd) && cmd.id == MAV_CMD_CONDITION_YAW) {
+                float ang = cmd.content.yaw.angle_deg;
+                if (AP::mission()->read_cmd_from_storage(5, cmdB) && cmdB.id == MAV_CMD_NAV_WAYPOINT) {
+                    if (AP::mission()->read_cmd_from_storage(8, cmdA) && cmdA.id == MAV_CMD_NAV_WAYPOINT) {
+                        cmdA.content.location.offset_bearing(ang+dir, copter.mode_cndn._spray_width_cm.get() * 1e-2f);
+                        cmdB.content.location.offset_bearing(ang+dir, copter.mode_cndn._spray_width_cm.get() * 1e-2f);
+                        cmdA.index = 10; AP::mission()->replace_cmd(cmdA.index, cmdA);
+                        cmdB.index = 13; AP::mission()->replace_cmd(cmdB.index, cmdB);
+                    }
                 }
             }
         }
@@ -718,15 +734,17 @@ void ModeZigZag::turnZigZag(uint8_t state) {
 
         case 2: //
         // 전반부 작업
-        if (AP::mission()->read_cmd_from_storage(2, cmd) && cmd.id == MAV_CMD_DO_SET_ROI && cmd.content.location.get_vector_xy_from_origin_NE(direct)) {
-            Vector2f delta = direct.normalized();
-            if (AP::mission()->read_cmd_from_storage(11, cmdA) && cmdA.id == MAV_CMD_NAV_WAYPOINT && cmdA.content.location.get_vector_xy_from_origin_NE(dA)) {
-                if (AP::mission()->read_cmd_from_storage(14, cmdB) && cmdB.id == MAV_CMD_NAV_WAYPOINT && cmdB.content.location.get_vector_xy_from_origin_NE(dB)) {
-                    direct = delta * copter.mode_cndn._spray_width_cm.get() * 1e-2;
-                    cmdA.content.location.offset(direct.x, direct.y);
-                    cmdB.content.location.offset(direct.x, direct.y);
-                    cmdA.index = 9; AP::mission()->replace_cmd(cmdA.index, cmdA);
-                    cmdB.index = 6; AP::mission()->replace_cmd(cmdB.index, cmdB);
+        if (AP::mission()->read_cmd_from_storage(0, cmd) && cmd.id == MAV_CMD_NAV_WAYPOINT) {
+            float dir = cmd.p1 ? -90.0f : +90.0f;
+            if (AP::mission()->read_cmd_from_storage(2, cmd) && cmd.id == MAV_CMD_CONDITION_YAW) {
+                float ang = cmd.content.yaw.angle_deg;
+                if (AP::mission()->read_cmd_from_storage(10, cmdA) && cmdA.id == MAV_CMD_NAV_WAYPOINT) {
+                    if (AP::mission()->read_cmd_from_storage(13, cmdB) && cmdB.id == MAV_CMD_NAV_WAYPOINT) {
+                        cmdA.content.location.offset_bearing(ang+dir, copter.mode_cndn._spray_width_cm.get() * 1e-2f);
+                        cmdB.content.location.offset_bearing(ang+dir, copter.mode_cndn._spray_width_cm.get() * 1e-2f);
+                        cmdA.index = 8; AP::mission()->replace_cmd(cmdA.index, cmdA);
+                        cmdB.index = 5; AP::mission()->replace_cmd(cmdB.index, cmdB);
+                    }
                 }
             }
         }
