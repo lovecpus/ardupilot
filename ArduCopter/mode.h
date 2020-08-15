@@ -1385,6 +1385,7 @@ public:
     bool getResume();
     void setResume();
     void processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight);
+    void processAB(Vector2f& dstA,Vector2f& dstB, bool bLeftRight);
     void turnZigZag(uint8_t state);
     bool resume_mission();
     bool isOwnMission();

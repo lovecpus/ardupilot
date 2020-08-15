@@ -13,7 +13,7 @@
 */
 #define CNDN_TONE_STARTUP    { "MFT200L4O4CL8GAL2F", false }
 
-#define CNDN_WP_RADIUS_CM 50
+#define CNDN_WP_RADIUS_CM 100
 #define CASE_CNDN_MODE() case Mode::Number::CNDN: ret = &mode_cndn; mode_cndn.setZigZag(false);  break; \
     case Mode::Number::CNDN2: ret = &mode_cndn; mode_cndn.setZigZag(true);  break;
 
@@ -62,9 +62,9 @@ public:
     bool requires_GPS() const override { return true; }
     bool has_manual_throttle() const override { return false; }
     bool allows_arming(bool from_gcs) const override { return true; }
-    bool is_autopilot() const override { return true; }
+    bool is_autopilot() const override { return false; }
     bool has_user_takeoff(bool must_navigate) const override { return true; }
-    bool in_guided_mode() const override { return true; }
+    bool in_guided_mode() const override { return false; }
     bool set_destination(const Vector3f &destination, bool use_yaw = false, float yaw_cd = 0.0, bool use_yaw_rate = false, float yaw_rate_cds = 0.0, bool yaw_relative = false);
     // save current position as A (dest_num = 0) or B (dest_num = 1).  If both A and B have been saved move to the one specified
     void mission_command(uint8_t dest_num);
@@ -73,7 +73,7 @@ public:
     void do_set_relay(const AP_Mission::Mission_Command& cmd);
     void inject();
     void inject_400hz();
-    void stop_mission(bool bForce = false);
+    void stop_mission();
     bool resume_mission();
     void setZigZag(bool bZigZag) { m_bZigZag = bZigZag; }
     bool isZigZag() { return m_bZigZag; }
