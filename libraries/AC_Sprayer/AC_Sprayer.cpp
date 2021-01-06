@@ -49,6 +49,14 @@ const AP_Param::GroupInfo AC_Sprayer::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("PUMP_MIN",   4, AC_Sprayer, _pump_min_pct, AC_SPRAYER_DEFAULT_PUMP_MIN),
 
+    // @Param: PUMP_MIN
+    // @DisplayName: Pump speed minimum
+    // @Description: Minimum pump speed expressed as a percentage
+    // @Units: %
+    // @Range: 0 100
+    // @User: Standard
+    AP_GROUPINFO("PUMP_BACK",   5, AC_Sprayer, _pump_back_rate, 10),
+
     AP_GROUPEND
 };
 
@@ -220,6 +228,9 @@ void AC_Sprayer::update()
         float pos = ground_speed * _pump_pct_1ms;
         pos = MAX(pos, 100 * _pump_min_pct); // ensure min pump speed
         pos = MIN(pos, 10000); // clamp to range
+        float back = _pump_back_rate.get() * 100;
+        back = MAX(back, 0); // ensure min pump speed
+        back = MIN(back, 10000); // clamp to range
 
         if (_flags.fullspray != 0 || _flags.testing) {
             // 전후방 분사
@@ -228,11 +239,11 @@ void AC_Sprayer::update()
         } else if (should_foreback) {
             // 후방 문사
             SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
-            SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, 0, 0, 10000);
+            SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, back, 0, 10000);
         } else {
             // 전방 분사
             SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
-            SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, 0, 0, 10000);
+            SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, back, 0, 10000);
         }
 
         _flags.spraying = true;

@@ -13,6 +13,8 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "RangeFinder.h"
 #include "AP_RangeFinder_analog.h"
 #include "AP_RangeFinder_PulsedLightLRF.h"
@@ -494,9 +496,15 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t& serial_instance)
         }
         break;
     case RangeFinder_TYPE_ETRI:
+#if RF_ETRI_MAVLINK    
+        if (AP_RangeFinder_ETRI::detect()) {
+            drivers[instance] = new AP_RangeFinder_ETRI(state[instance], params[instance]);
+        }
+#else
         if (AP_RangeFinder_ETRI::detect(serial_instance)) {
             drivers[instance] = new AP_RangeFinder_ETRI(state[instance], params[instance], serial_instance++);
         }
+#endif
         break;
     default:
         break;
@@ -536,7 +544,7 @@ void RangeFinder::handle_msg(const mavlink_message_t &msg)
     uint8_t i;
     for (i=0; i<num_instances; i++) {
         if ((drivers[i] != nullptr) && (params[i].type != RangeFinder_TYPE_NONE)) {
-          drivers[i]->handle_msg(msg);
+            drivers[i]->handle_msg(msg);
         }
     }
 }

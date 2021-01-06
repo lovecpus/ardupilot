@@ -72,6 +72,7 @@ void ModeZigZag::run()
             if (is_disarmed_or_landed() || !motors->get_interlock()) {
                 // vehicle should be under manual control when disarmed or landed
                 return_to_manual_control(false);
+                break;
             }
 
             // wait vector to move direction
@@ -99,6 +100,10 @@ void ModeZigZag::run()
 
         case WAIT_MOVE: {
             manual_control();
+            if (is_disarmed_or_landed() || !motors->get_interlock()) {
+                return_to_manual_control(false);
+                break;
+            }
             copter.rangefinder_state.enabled = true;
             if (toAUTO.isTimeout(now, 1000)) {
                 toAUTO.disable();
@@ -618,7 +623,14 @@ void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
         misAlt = copter.mode_cndn._mission_alt_cm.get();
     }
 
+    float dist = (dstB - dstA).length();
+    if (dist < 1e-5f) {
+        gcsdebug("Distance too near(%.4f).\n", dist);
+        return;
+    }
+
     Vector2f delta = (dstB - dstA).normalized();
+
     float ang = degrees(atan2f(delta.y, delta.x)) + 180.0f;
     cms.yawcd = ang;
     while (ang < 0) ang += 360.0f;

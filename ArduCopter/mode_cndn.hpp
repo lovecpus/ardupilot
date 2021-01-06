@@ -143,6 +143,8 @@ private:
     AP_Int16        _spd_edge_cm;           ///< Edge speed cm/s
     AP_Int16        _spd_auto_cm;           ///< Auto speed cm/s
     AP_Float        _radar_flt_hz;          ///< RADAR Lowpass filter apply frequency
+    AP_Int16        _spray_backs;           ///< Sprayer minimum steps
+    AP_Int8         _sensor_pin;            ///< CNDN Level sensor gpio pin
 };
 
 #endif

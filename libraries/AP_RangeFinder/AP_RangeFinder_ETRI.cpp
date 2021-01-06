@@ -13,6 +13,8 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "AP_RangeFinder_ETRI.h"
 #include <AP_HAL/AP_HAL.h>
 
@@ -20,6 +22,57 @@
 
 extern const AP_HAL::HAL& hal;
 
+#if RF_ETRI_MAVLINK
+/*
+   The constructor also initialises the rangefinder. Note that this
+   constructor is not called until detect() returns true, so we
+   already know that we should setup the rangefinder
+*/
+AP_RangeFinder_ETRI::AP_RangeFinder_ETRI(RangeFinder::RangeFinder_State &_state, AP_RangeFinder_Params &_params) :
+    AP_RangeFinder_Backend(_state, _params)
+{
+    state.distance_cm = 0;
+    state.last_reading_ms = AP_HAL::millis();
+}
+
+/*
+   detect if a CNDN rangefinder is connected. We'll detect by
+   trying to take a reading on Serial. If we get a result the sensor is
+   there.
+*/
+bool AP_RangeFinder_ETRI::detect()
+{
+    return true;
+}
+
+/*
+   Set the distance based on a MAVLINK message
+*/
+void AP_RangeFinder_ETRI::handle_msg(const mavlink_message_t &msg)
+{
+    mavlink_distance_sensor_t packet;
+    mavlink_msg_distance_sensor_decode(&msg, &packet);
+    uint8_t id = params.address.get();
+
+    // only accept distances for downward facing sensors
+    if ((!id || (id == packet.id)) && packet.orientation == params.orientation.get()) {
+        state.last_reading_ms = AP_HAL::millis();
+        state.distance_cm = packet.current_distance;
+    }
+}
+void AP_RangeFinder_ETRI::update(void)
+{
+    //Time out on incoming data; if we don't get new
+    //data in 500ms, dump it
+    if (AP_HAL::millis() - state.last_reading_ms > AP_RANGEFINDER_ETRI_TIMEOUT_MS) {
+        set_status(RangeFinder::RangeFinder_NoData);
+        state.distance_cm = 0;
+    } else {
+        //state.distance_cm = distance_cm;
+        update_status();
+    }
+}
+#else
 /*
    The constructor also initialises the rangefinder. Note that this
    constructor is not called until detect() returns true, so we
@@ -130,3 +183,4 @@ void AP_RangeFinder_ETRI::update(void)
         set_status(RangeFinder::RangeFinder_NoData);
     }
 }
+#endif

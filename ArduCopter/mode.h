@@ -1362,7 +1362,7 @@ protected:
 };
 
 class ModeZigZag : public Mode {        
-
+    friend class ModeCNDN;
 public:
 
     // Inherit constructor

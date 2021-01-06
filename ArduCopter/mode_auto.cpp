@@ -785,7 +785,7 @@ void ModeAuto::wp_run()
 
     // call z-axis position controller (wpnav should have already updated it's alt target)
     pos_control->update_z_controller();
-
+#if 1
     // call attitude controller
     if (auto_yaw.mode() == AUTO_YAW_HOLD) {
         // roll & pitch from waypoint controller, yaw rate from pilot
@@ -794,6 +794,24 @@ void ModeAuto::wp_run()
         // roll, pitch from waypoint controller, yaw heading from auto_heading()
         attitude_control->input_euler_angle_roll_pitch_yaw(wp_nav->get_roll(), wp_nav->get_pitch(), auto_yaw.yaw(), true);
     }
+#else
+    float target_roll = wp_nav->get_roll();
+    float target_pitch = wp_nav->get_pitch();
+
+#if AC_AVOID_ENABLED == ENABLED
+        // apply avoidance
+    copter.avoid.adjust_roll_pitch(target_roll, target_pitch, copter.aparm.angle_max);
+#endif
+
+    // call attitude controller
+    if (auto_yaw.mode() == AUTO_YAW_HOLD) {
+        // roll & pitch from waypoint controller, yaw rate from pilot
+        attitude_control->input_euler_angle_roll_pitch_euler_rate_yaw(target_roll, target_pitch, target_yaw_rate);
+    } else {
+        // roll, pitch from waypoint controller, yaw heading from auto_heading()
+        attitude_control->input_euler_angle_roll_pitch_yaw(target_roll, target_pitch, auto_yaw.yaw(), true);
+    }
+#endif
 }
 
 // auto_spline_run - runs the auto spline controller

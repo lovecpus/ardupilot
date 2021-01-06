@@ -110,6 +110,7 @@ private:
     AP_Int8         _pump_min_pct;          ///< minimum pump rate (expressed as a percentage from 0 to 100)
     AP_Int16        _spinner_pwm;           ///< pwm rate of spinner
     AP_Float        _speed_min;             ///< minimum speed in cm/s above which the sprayer will be started
+    AP_Int16        _pump_back_rate;        ///< pwm rate of spinner
 
     /// flag bitmask
     struct sprayer_flags_type {
