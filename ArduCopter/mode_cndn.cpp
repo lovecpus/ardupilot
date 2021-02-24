@@ -124,21 +124,25 @@ bool ModeCNDN::init(bool ignore_checks)
     last_yaw_ms = 0;
     stage = MANUAL;
 
-    if (copter.init_mode_reason != ModeReason::MISSION_STOP && copter.init_mode_reason != ModeReason::MISSION_END) {
-        RC_Channel* cnauto = rc().find_channel_for_option(RC_Channel::AUX_FUNC::CNDN_AUTO);
-        if (cnauto && cnauto->norm_input() >= 0.9f) {
-            if (resume_mission())
-                return true;
+    // 무장상태에서 자동방재ON 상태로 모드 변경이면 자동방재 계속
+    if (AP::arming().is_armed()) {
+        if (copter.init_mode_reason != ModeReason::MISSION_STOP && copter.init_mode_reason != ModeReason::MISSION_END) {
+            RC_Channel* cnauto = rc().find_channel_for_option(RC_Channel::AUX_FUNC::CNDN_AUTO);
+            if (cnauto && cnauto->norm_input() >= 0.9f) {
+                if (resume_mission())
+                    return true;
+            }
         }
-    }
-
-    if (AP_Notify::flags.failsafe_battery) {
-        AP::battery().reset_remaining(0xffff, 100.0f);
-        AP::battery().read();
-        if (!AP_Notify::flags.failsafe_battery) {
-            if (g2.proximity.get_status() != AP_Proximity::Status::Good) {
-                // proximity reinitializing
-                g2.proximity.init();
+    } else {
+        // 비무장이고 배터리 경고인 상태에서 배터리 리셋
+        if (AP_Notify::flags.failsafe_battery) {
+            AP::battery().reset_remaining(0xffff, 100.0f);
+            AP::battery().read();
+            if (!AP_Notify::flags.failsafe_battery) {
+                if (g2.proximity.get_status() != AP_Proximity::Status::Good) {
+                    // proximity reinitializing
+                    g2.proximity.init();
+                }
             }
         }
     }
@@ -273,7 +277,8 @@ bool ModeCNDN::set_destination(const Vector3f &destination, bool use_yaw, float 
 bool ModeCNDN::getResume(Mode::CNMIS& cms) {
     float alt_cm = 0.0f;
     if (wp_nav->get_terrain_alt(alt_cm)) {
-        cms.misAlt = alt_cm;
+        //cms.misAlt = alt_cm;
+        copter.surface_tracking.set_target_alt_cm(alt_cm);
         cms.misFrame = Location::AltFrame::ABOVE_TERRAIN;
     } else {
         cms.misFrame = Location::AltFrame::ABOVE_HOME;
@@ -284,7 +289,8 @@ bool ModeCNDN::getResume(Mode::CNMIS& cms) {
     AP_Mission::Mission_Command cmd;
 
     if (wp_nav->get_terrain_alt(alt_cm)) {
-        cms.misAlt = alt_cm;
+        //cms.misAlt = alt_cm;
+        copter.surface_tracking.set_target_alt_cm(alt_cm);
         cms.misFrame = Location::AltFrame::ABOVE_TERRAIN;
     }
 
@@ -604,6 +610,25 @@ void ModeCNDN::processAB()
     data_wpos = 0;
     uint16_t nCMDs = *(uint16_t*)(data_buff+data_wpos); data_wpos += 2;
 
+    int32_t misAlt = _mission_alt_cm.get();
+    Location::AltFrame misFrame = Location::AltFrame::ABOVE_HOME;
+    if (_method.get() == 2) {
+        int32_t altCm = 0;
+        if (copter.current_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME, altCm))
+            misAlt = altCm;
+
+        if (wp_nav->get_terrain_alt(alt_cm)) {
+            copter.surface_tracking.set_target_alt_cm(alt_cm);
+            misFrame = Location::AltFrame::ABOVE_TERRAIN;
+        }
+    } else if (copter.rangefinder_state.alt_healthy) {
+        misFrame = Location::AltFrame::ABOVE_TERRAIN;
+        if (wp_nav->get_terrain_alt(alt_cm)) {
+            misFrame = Location::AltFrame::ABOVE_TERRAIN;
+            copter.surface_tracking.set_target_alt_cm(alt_cm);
+        }
+    }
+
     int nCmds = 0, nWays = 0;
     AP_Mission::Mission_Command cmd;
     Vector2f locA, locB;
@@ -633,7 +658,7 @@ void ModeCNDN::processAB()
                             nWays = nWays;
 
                         if (cmd.content.location.get_vector_xy_from_origin_NE(locA)) {
-                            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_TERRAIN);
+                            cmd.content.location.set_alt_cm(misAlt, misFrame);
                             v2 = locA;
                         } else {
                             logdebug("failed %d\n", nWays);
@@ -645,7 +670,7 @@ void ModeCNDN::processAB()
                             nWays = nWays;
 
                         if (cmd.content.location.get_vector_xy_from_origin_NE(locB)) {
-                            cmd.content.location.set_alt_cm(300, Location::AltFrame::ABOVE_TERRAIN);
+                            cmd.content.location.set_alt_cm(misAlt, misFrame);
                             v2 = locB;
                         } else {
                             logdebug("failed %d\n", nWays);
@@ -721,10 +746,15 @@ void ModeCNDN::processArea()
 
         if (wp_nav->get_terrain_alt(alt_cm)) {
             misFrame = Location::AltFrame::ABOVE_TERRAIN;
-            misAlt = alt_cm;
+            copter.surface_tracking.set_target_alt_cm(alt_cm);
+            //misAlt = alt_cm;
         }
     } else if (copter.rangefinder_state.alt_healthy) {
         misFrame = Location::AltFrame::ABOVE_TERRAIN;
+        if (wp_nav->get_terrain_alt(alt_cm)) {
+            misFrame = Location::AltFrame::ABOVE_TERRAIN;
+            copter.surface_tracking.set_target_alt_cm(alt_cm);
+        }
     }
 
     for(int i=data_wpos; i < data_size; ) {

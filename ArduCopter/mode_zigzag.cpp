@@ -46,14 +46,13 @@ bool ModeZigZag::init(bool ignore_checks)
 
     stage = MANUAL;
 
-    if (copter.init_mode_reason != ModeReason::MISSION_STOP) {
+    if (AP::arming().is_armed() && copter.init_mode_reason != ModeReason::MISSION_STOP) {
         RC_Channel* cnauto = rc().find_channel_for_option(RC_Channel::AUX_FUNC::CNDN_AUTO);
         if (cnauto && cnauto->norm_input() >= 0.9f) {
             if (resume_mission())
                 stage = AUTO;
         }
     }
-
     return true;
 }
 
@@ -616,11 +615,23 @@ bool ModeZigZag::resume_mission() {
 void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     AP_Mission::Mission_Command cmd;
 
-    if (wp_nav->get_terrain_alt(misAlt)) {
+    int32_t altCm = 0;
+    misAlt = _mission_alt_cm.get();
+    misFrame = Location::AltFrame::ABOVE_HOME;
+    if (_method.get() == 2) {
+        if (copter.current_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME, altCm))
+            misAlt = altCm;
+
+        if (wp_nav->get_terrain_alt(alt_cm)) {
+            copter.surface_tracking.set_target_alt_cm(alt_cm);
+            misFrame = Location::AltFrame::ABOVE_TERRAIN;
+        }
+    } else if (copter.rangefinder_state.alt_healthy) {
         misFrame = Location::AltFrame::ABOVE_TERRAIN;
-    } else {
-        misFrame = Location::AltFrame::ABOVE_HOME;
-        misAlt = copter.mode_cndn._mission_alt_cm.get();
+        if (wp_nav->get_terrain_alt(alt_cm)) {
+            misFrame = Location::AltFrame::ABOVE_TERRAIN;
+            copter.surface_tracking.set_target_alt_cm(alt_cm);
+        }
     }
 
     float dist = (dstB - dstA).length();
