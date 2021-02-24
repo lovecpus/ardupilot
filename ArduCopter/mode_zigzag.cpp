@@ -615,10 +615,11 @@ bool ModeZigZag::resume_mission() {
 void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     AP_Mission::Mission_Command cmd;
 
-    int32_t altCm = 0;
-    misAlt = _mission_alt_cm.get();
+    float alt_cm = 0.0f;
+    misAlt = copter.mode_cndn._mission_alt_cm.get();
     misFrame = Location::AltFrame::ABOVE_HOME;
-    if (_method.get() == 2) {
+    if (copter.mode_cndn._method.get() == 2) {
+        int32_t altCm = 0;
         if (copter.current_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME, altCm))
             misAlt = altCm;
 

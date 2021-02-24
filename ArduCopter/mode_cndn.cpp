@@ -610,6 +610,7 @@ void ModeCNDN::processAB()
     data_wpos = 0;
     uint16_t nCMDs = *(uint16_t*)(data_buff+data_wpos); data_wpos += 2;
 
+    float alt_cm = 0.0f;
     int32_t misAlt = _mission_alt_cm.get();
     Location::AltFrame misFrame = Location::AltFrame::ABOVE_HOME;
     if (_method.get() == 2) {
