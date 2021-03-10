@@ -616,24 +616,25 @@ void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     AP_Mission::Mission_Command cmd;
 
     float alt_cm = 0.0f;
-    misAlt = copter.mode_cndn._mission_alt_cm.get();
-    misFrame = Location::AltFrame::ABOVE_HOME;
+    int32_t misAlt = copter.mode_cndn._mission_alt_cm.get();
+    Location::AltFrame misFrame = Location::AltFrame::ABOVE_HOME;
     if (copter.mode_cndn._method.get() == 2) {
         int32_t altCm = 0;
         if (copter.current_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME, altCm))
             misAlt = altCm;
 
         if (wp_nav->get_terrain_alt(alt_cm)) {
-            copter.surface_tracking.set_target_alt_cm(alt_cm);
             misFrame = Location::AltFrame::ABOVE_TERRAIN;
+            copter.surface_tracking.set_target_alt_cm(misAlt = alt_cm);
         }
     } else if (copter.rangefinder_state.alt_healthy) {
         misFrame = Location::AltFrame::ABOVE_TERRAIN;
         if (wp_nav->get_terrain_alt(alt_cm)) {
             misFrame = Location::AltFrame::ABOVE_TERRAIN;
-            copter.surface_tracking.set_target_alt_cm(alt_cm);
+            copter.surface_tracking.set_target_alt_cm(misAlt);
         }
     }
+    logdebug("method %d, mission_alt: %d, alt_cm: %0.0f\n", copter.mode_cndn._method.get(), misAlt, alt_cm);
 
     float dist = (dstB - dstA).length();
     if (dist < 1e-5f) {
@@ -644,11 +645,11 @@ void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     Vector2f delta = (dstB - dstA).normalized();
 
     float ang = degrees(atan2f(delta.y, delta.x)) + 180.0f;
-    cms.yawcd = ang;
     while (ang < 0) ang += 360.0f;
     while (ang >= 360) ang -= 360.0f;
-    float dir = bLeftRight ? -90.0f : +90.0f;
+    cms.yawcd = ang;
 
+    float dir = bLeftRight ? -90.0f : +90.0f;
     Location dloc_A(Vector3f(dstA.x, dstA.y, misAlt));
     Location dloc_B(Vector3f(dstB.x, dstB.y, misAlt));
     dloc_A.set_alt_cm(misAlt, misFrame);
@@ -767,21 +768,35 @@ void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
 void ModeZigZag::processAB(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     AP_Mission::Mission_Command cmd;
 
-    if (wp_nav->get_terrain_alt(misAlt)) {
+    float alt_cm = 0.0f;
+    int32_t misAlt = copter.mode_cndn._mission_alt_cm.get();
+    Location::AltFrame misFrame = Location::AltFrame::ABOVE_HOME;
+    if (copter.mode_cndn._method.get() == 2) {
+        int32_t altCm = 0;
+        if (copter.current_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME, altCm))
+            misAlt = altCm;
+
+        if (wp_nav->get_terrain_alt(alt_cm)) {
+            misFrame = Location::AltFrame::ABOVE_TERRAIN;
+            copter.surface_tracking.set_target_alt_cm(misAlt = alt_cm);
+        }
+    } else if (copter.rangefinder_state.alt_healthy) {
         misFrame = Location::AltFrame::ABOVE_TERRAIN;
-    } else {
-        misFrame = Location::AltFrame::ABOVE_HOME;
-        misAlt = copter.mode_cndn._mission_alt_cm.get();
+        if (wp_nav->get_terrain_alt(alt_cm)) {
+            misFrame = Location::AltFrame::ABOVE_TERRAIN;
+            copter.surface_tracking.set_target_alt_cm(misAlt);
+        }
     }
+    //logdebug("method %d, mission_alt: %d, alt_cm: %0.0f\n", copter.mode_cndn._method.get(), misAlt, alt_cm);
 
     Vector2f delta = (dstB - dstA).normalized();
 
     float ang = -degrees(atan2f(-delta.y, delta.x));
-    cms.yawcd = ang;
     while (ang < 0) ang += 360.0f;
     while (ang >= 360) ang -= 360.0f;
-    float dir = bLeftRight ? -90.0f : +90.0f;
+    cms.yawcd = ang;
 
+    float dir = bLeftRight ? -90.0f : +90.0f;
     Location dloc_A(Vector3f(dstA.x, dstA.y, misAlt));
     Location dloc_B(Vector3f(dstB.x, dstB.y, misAlt));
     dloc_A.set_alt_cm(misAlt, misFrame);
@@ -801,7 +816,7 @@ void ModeZigZag::processAB(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     cmd.content.location = AP::ahrs().get_home();
     AP::mission()->add_cmd(cmd);
 
-    logdebug("[CNDN] ang: %0.2f, %0.2f, %0.2f %s, p1: %d\n", ang, dir, ang+dir, bLeftRight? "LF":"RT", cmd.p1);
+    //logdebug("[CNDN] ang: %0.2f, %0.2f, %0.2f %s, p1: %d\n", ang, dir, ang+dir, bLeftRight? "LF":"RT", cmd.p1);
 
     cmd.id = MAV_CMD_NAV_TAKEOFF;
     cmd.p1 = bLeftRight ? 1 : 0;

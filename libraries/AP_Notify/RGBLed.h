@@ -91,14 +91,15 @@ private:
 #define RED    4
 #define YELLOW (RED|GREEN)
 #define WHITE (RED|GREEN|BLUE)
+#define PURPLE (RED|BLUE)
 
     const uint32_t sequence_initialising = DEFINE_COLOUR_SEQUENCE_ALTERNATE(RED,BLUE);
     const uint32_t sequence_trim_or_esc = DEFINE_COLOUR_SEQUENCE(RED,BLUE,GREEN,RED,BLUE,GREEN,RED,BLUE,GREEN,OFF);
-    const uint32_t sequence_failsafe_leak = DEFINE_COLOUR_SEQUENCE_FAILSAFE(WHITE);
+    const uint32_t sequence_failsafe_leak = DEFINE_COLOUR_SEQUENCE_FAILSAFE(PURPLE);
     const uint32_t sequence_failsafe_ekf = DEFINE_COLOUR_SEQUENCE_FAILSAFE(RED);
     const uint32_t sequence_failsafe_gps_glitching = DEFINE_COLOUR_SEQUENCE_FAILSAFE(BLUE);
     const uint32_t sequence_failsafe_radio_or_battery = DEFINE_COLOUR_SEQUENCE_FAILSAFE(OFF);
-    const uint32_t sequence_sprayer_empty = DEFINE_COLOUR_SEQUENCE_ALTERNATE_F(RED,GREEN,BLUE);
+    const uint32_t sequence_sprayer_empty = DEFINE_COLOUR_SEQUENCE_ALTERNATE(GREEN,YELLOW);
 
     const uint32_t sequence_armed = DEFINE_COLOUR_SEQUENCE_SOLID(GREEN);
     const uint32_t sequence_armed_nogps = DEFINE_COLOUR_SEQUENCE_SOLID(BLUE);

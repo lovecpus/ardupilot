@@ -7,9 +7,9 @@ class AP_FWVersion {
 
 public:
 
-    uint8_t major;
-    uint8_t minor;
-    uint8_t patch;
+    uint16_t major;
+    uint16_t minor;
+    uint16_t patch;
     FIRMWARE_VERSION_TYPE fw_type;
     const char *fw_string;
     const char *fw_hash_str;

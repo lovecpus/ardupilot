@@ -1405,8 +1405,6 @@ private:
     Vector2f dest_A;    // in NEU frame in cm relative to ekf origin
     Vector2f dest_B;    // in NEU frame in cm relative to ekf origin
     Vector2f direct;    // direction of flying zigzag
-    float    misAlt;    // mission altitute
-    Location::AltFrame  misFrame;
     CNMIS    cms;
 
     enum zigzag_state {

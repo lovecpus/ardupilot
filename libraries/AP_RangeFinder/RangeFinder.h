@@ -20,7 +20,7 @@
 #include <GCS_MAVLink/GCS.h>
 #include "AP_RangeFinder_Params.h"
 
-#define RF_ETRI_MAVLINK     1
+#define RF_ETRI_MAVLINK     0
 
 // Maximum number of range finder instances available on this platform
 #ifndef RANGEFINDER_MAX_INSTANCES

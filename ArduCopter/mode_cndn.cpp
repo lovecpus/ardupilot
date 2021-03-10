@@ -536,12 +536,10 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 
         if (dest_num > 0) {
             cmd_mode = dest_num;
-
             init_speed();
             Vector3f stopping_point;
             wp_nav->get_wp_stopping_point(stopping_point);
             wp_nav->set_wp_destination(stopping_point, false);
-
             Location loc(copter.current_loc);
             Location home(AP::ahrs().get_home());
             gcs().send_cndn_trigger(home, loc, _dst_eg_cm.get(), _spray_width_cm.get(), m_bZigZag?1:0, ahrs.yaw_sensor);
@@ -619,16 +617,17 @@ void ModeCNDN::processAB()
             misAlt = altCm;
 
         if (wp_nav->get_terrain_alt(alt_cm)) {
-            copter.surface_tracking.set_target_alt_cm(alt_cm);
             misFrame = Location::AltFrame::ABOVE_TERRAIN;
+            copter.surface_tracking.set_target_alt_cm(misAlt = alt_cm);
         }
     } else if (copter.rangefinder_state.alt_healthy) {
         misFrame = Location::AltFrame::ABOVE_TERRAIN;
         if (wp_nav->get_terrain_alt(alt_cm)) {
             misFrame = Location::AltFrame::ABOVE_TERRAIN;
-            copter.surface_tracking.set_target_alt_cm(alt_cm);
+            copter.surface_tracking.set_target_alt_cm(misAlt);
         }
     }
+    //logdebug("method %d, mission_alt: %d, alt_cm: %0.0f\n", _method.get(), misAlt, alt_cm);
 
     int nCmds = 0, nWays = 0;
     AP_Mission::Mission_Command cmd;
@@ -736,8 +735,8 @@ void ModeCNDN::processArea()
     AP::mission()->add_cmd(cmd);
     bool get_yaw = false;
     int nCmds = 0;
-    float alt_cm = 0.0f;
 
+    float alt_cm = 0.0f;
     int32_t misAlt = _mission_alt_cm.get();
     Location::AltFrame misFrame = Location::AltFrame::ABOVE_HOME;
     if (_method.get() == 2) {
@@ -747,16 +746,16 @@ void ModeCNDN::processArea()
 
         if (wp_nav->get_terrain_alt(alt_cm)) {
             misFrame = Location::AltFrame::ABOVE_TERRAIN;
-            copter.surface_tracking.set_target_alt_cm(alt_cm);
-            //misAlt = alt_cm;
+            copter.surface_tracking.set_target_alt_cm(misAlt = alt_cm);
         }
     } else if (copter.rangefinder_state.alt_healthy) {
         misFrame = Location::AltFrame::ABOVE_TERRAIN;
         if (wp_nav->get_terrain_alt(alt_cm)) {
             misFrame = Location::AltFrame::ABOVE_TERRAIN;
-            copter.surface_tracking.set_target_alt_cm(alt_cm);
+            copter.surface_tracking.set_target_alt_cm(misAlt);
         }
     }
+    //logdebug("method %d, mission_alt: %d, alt_cm: %0.0f\n", _method.get(), misAlt, alt_cm);
 
     for(int i=data_wpos; i < data_size; ) {
         switch ((uint8_t)data_buff[i++]) {
@@ -1173,7 +1172,7 @@ void ModeCNDN::inject() {
         GPIOSensor::get().resetTimeout(now);
 
     if (bNotEmpty) {
-        AP_Notify::flags.sprayer_empty = false;
+        //AP_Notify::flags.sprayer_empty = false;
         copter.sprayer.test_pump(false);
     } else if (GPIOSensor::get().isTimeout(now, 2000)) {
         if (copter.sprayer.is_active())
@@ -1199,10 +1198,11 @@ void ModeCNDN::inject() {
                 if (copter.mode_auto.mission.state() == AP_Mission::mission_state::MISSION_RUNNING) {
                     if (resumeLoc.is_zero()) {
                         resumeLoc = copter.current_loc;
-                        resumeLoc.alt += _take_alt_cm.get();
+                        resumeLoc.alt = inertial_nav.get_altitude() + _take_alt_cm.get();
                     } else {
                         resumeLoc.lat = copter.current_loc.lat;
                         resumeLoc.lng = copter.current_loc.lng;
+                        resumeLoc.alt = inertial_nav.get_altitude() + _take_alt_cm.get();
                     }
                     loiter_nav->init_target();
                     loiter_nav->clear_pilot_desired_acceleration();
