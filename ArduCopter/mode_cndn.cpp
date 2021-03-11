@@ -1143,7 +1143,7 @@ public:
             // ensure we are in input mode
             hal.gpio->pinMode(u_pin, HAL_GPIO_INPUT);
             // enable pullup
-            hal.gpio->write(u_pin, 0);
+            hal.gpio->write(u_pin, 1);
             return hal.gpio->read(u_pin) ? 0.0f : 1000.0f;
         }
         return 0.0f;
