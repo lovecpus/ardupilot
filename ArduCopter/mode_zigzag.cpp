@@ -459,7 +459,7 @@ bool ModeZigZag::getResume() {
             switch(cmd.id) {
                 case MAV_CMD_NAV_WAYPOINT:
                     if (i > cms.curr_idx) {
-                        if (cmd.p1 == 3) cms.repl_idx = i;
+                        if (cmd.p1 == 2) cms.repl_idx = i;
                     } else {
                         cms.misAlt = cmd.content.location.alt;
                         cms.misFrame = cmd.content.location.get_alt_frame();
@@ -500,11 +500,12 @@ void ModeZigZag::setResume() {
     AP_Mission::Mission_Command cmd;
 
     if (cms.addNew) {
-        cmd.id = MAV_CMD_NAV_TAKEOFF;
-        cmd.p1 = 3;
-        cmd.content.location.zero();
+        cmd.id = MAV_CMD_NAV_WAYPOINT;
+        cmd.p1 = 2;
+        cmd.content.location = copter.current_loc;
         cmd.content.location.set_alt_cm(cms.misAlt, cms.misFrame);
         AP::mission()->add_cmd(cmd);
+        cms.repl_idx = cmd.index;
 
         cmd.id = MAV_CMD_DO_SET_RELAY;
         cmd.p1 = 0;
@@ -522,11 +523,11 @@ void ModeZigZag::setResume() {
         AP::mission()->add_cmd(cmd);
 
         cmd.id = MAV_CMD_NAV_WAYPOINT;
-        cmd.p1 = 3;
+        cmd.p1 = 1;
         cmd.content.location = copter.current_loc;
         cmd.content.location.set_alt_cm(cms.misAlt, cms.misFrame);
         AP::mission()->add_cmd(cmd);
-        cms.repl_idx = cmd.index;
+        //cms.repl_idx = cmd.index;
 
         cmd.id = MAV_CMD_DO_CHANGE_SPEED;
         cmd.p1 = 0;
@@ -550,22 +551,28 @@ void ModeZigZag::setResume() {
         cms.jump_idx = cmd.index;
         cms.addNew = false;
     } else {
-        if (AP::mission()->read_cmd_from_storage(cms.repl_idx-1, cmd) && cmd.id==MAV_CMD_CONDITION_YAW) {
-            cmd.content.yaw.angle_deg = cms.yawcd;
-            AP::mission()->replace_cmd(cmd.index, cmd);
-        }
-
         if (AP::mission()->read_cmd_from_storage(cms.repl_idx+0, cmd) && cmd.id==MAV_CMD_NAV_WAYPOINT) {
             cmd.content.location = copter.current_loc;
             cmd.content.location.set_alt_cm(cms.misAlt, cms.misFrame);
             AP::mission()->replace_cmd(cmd.index, cmd);
         }
 
-        if (AP::mission()->read_cmd_from_storage(cms.repl_idx+1, cmd) && cmd.id==MAV_CMD_DO_CHANGE_SPEED) {
+        if (AP::mission()->read_cmd_from_storage(cms.repl_idx+2, cmd) && cmd.id==MAV_CMD_CONDITION_YAW) {
+            cmd.content.yaw.angle_deg = cms.yawcd;
+            AP::mission()->replace_cmd(cmd.index, cmd);
+        }
+
+        if (AP::mission()->read_cmd_from_storage(cms.repl_idx+3, cmd) && cmd.id==MAV_CMD_NAV_WAYPOINT) {
+            cmd.content.location = copter.current_loc;
+            cmd.content.location.set_alt_cm(cms.misAlt, cms.misFrame);
+            AP::mission()->replace_cmd(cmd.index, cmd);
+        }
+
+        if (AP::mission()->read_cmd_from_storage(cms.repl_idx+4, cmd) && cmd.id==MAV_CMD_DO_CHANGE_SPEED) {
             cmd.content.speed.target_ms = cms.spdcm;
             AP::mission()->replace_cmd(cmd.index, cmd);
         }
-        if (AP::mission()->read_cmd_from_storage(cms.repl_idx+2, cmd) && cmd.id==MAV_CMD_DO_SET_RELAY) {
+        if (AP::mission()->read_cmd_from_storage(cms.repl_idx+5, cmd) && cmd.id==MAV_CMD_DO_SET_RELAY) {
             cmd.content.relay.state = cms.spryr;
             AP::mission()->replace_cmd(cmd.index, cmd);
         }
@@ -579,11 +586,11 @@ void ModeZigZag::setResume() {
 
 bool ModeZigZag::hasResume(uint16_t &resumeIdx) {
     AP_Mission::Mission_Command cmd;
-    for(uint16_t i=0; i<AP::mission()->num_commands(); i++) {
-        if (AP::mission()->read_cmd_from_storage(i, cmd) && cmd.id == MAV_CMD_NAV_TAKEOFF && cmd.p1 == 3) {
-            if (!AP::mission()->read_cmd_from_storage(i+1, cmd) || cmd.id != MAV_CMD_DO_SET_RELAY) return false;
-            if (!AP::mission()->read_cmd_from_storage(i+2, cmd) || cmd.id != MAV_CMD_CONDITION_YAW) return false;
-            if (!AP::mission()->read_cmd_from_storage(i+3, cmd) || cmd.id != MAV_CMD_NAV_WAYPOINT || cmd.p1 != 3) return false;
+    for(uint16_t i=1; i<AP::mission()->num_commands(); i++) {
+        if (AP::mission()->read_cmd_from_storage(i, cmd) && cmd.id == MAV_CMD_NAV_WAYPOINT && cmd.p1 == 2) {
+            if (!AP::mission()->read_cmd_from_storage(i+1, cmd) || cmd.id != MAV_CMD_DO_SET_RELAY) continue;
+            if (!AP::mission()->read_cmd_from_storage(i+2, cmd) || cmd.id != MAV_CMD_CONDITION_YAW) continue;
+            if (!AP::mission()->read_cmd_from_storage(i+3, cmd) || cmd.id != MAV_CMD_NAV_WAYPOINT || cmd.p1 != 1) return false;
             if (!AP::mission()->read_cmd_from_storage(i+4, cmd) || cmd.id != MAV_CMD_DO_CHANGE_SPEED) return false;
             if (!AP::mission()->read_cmd_from_storage(i+6, cmd) || cmd.id != MAV_CMD_DO_JUMP) return false;
             resumeIdx = i;
@@ -595,6 +602,7 @@ bool ModeZigZag::hasResume(uint16_t &resumeIdx) {
 
 bool ModeZigZag::isOwnMission() {
     AP_Mission::Mission_Command cmd;
+    if (!AP::mission()->read_cmd_from_storage(0, cmd) || cmd.id != MAV_CMD_NAV_WAYPOINT || cmd.p1 != 2) return false;
     if (!AP::mission()->read_cmd_from_storage(1, cmd) || cmd.id != MAV_CMD_NAV_TAKEOFF) return false;
     if (!AP::mission()->read_cmd_from_storage(2, cmd) || cmd.id != MAV_CMD_CONDITION_YAW) return false;
     if (!AP::mission()->read_cmd_from_storage(3, cmd) || cmd.id != MAV_CMD_DO_CHANGE_SPEED) return false;
@@ -667,7 +675,7 @@ void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     AP::mission()->clear();
 
     cmd.id = MAV_CMD_NAV_WAYPOINT;
-    cmd.p1 = 0;
+    cmd.p1 = 2;
     cmd.content.location = AP::ahrs().get_home();
     cmd.content.location.set_alt_cm(0, bLeftRight ? Location::AltFrame::ABOVE_TERRAIN : cmd.content.location.get_alt_frame());
     AP::mission()->add_cmd(cmd);
