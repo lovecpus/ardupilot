@@ -35,6 +35,7 @@ bool ModeLoiter::init(bool ignore_checks)
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
 
+#if 0
     if (!AP::arming().is_armed()) {
         // 비무장이고 배터리 경고인 상태에서 배터리 리셋
         if (AP_Notify::flags.failsafe_battery) {
@@ -48,6 +49,7 @@ bool ModeLoiter::init(bool ignore_checks)
             }
         }
     }
+#endif
 
     copter.mode_cndn.initMissionResume();
 

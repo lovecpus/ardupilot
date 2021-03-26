@@ -84,26 +84,11 @@ ModeCNDN::ModeCNDN()
     cmd_mode = 0;
     m_bZigZag = false;
     data_buff = NULL;
+    toBAT.disable();
 }
 
 bool ModeCNDN::init(bool ignore_checks)
 {
-/*
-    if (!copter.failsafe.radio) {
-        float target_roll, target_pitch;
-        // apply SIMPLE mode transform to pilot inputs
-        update_simple_mode();
-
-        // convert pilot input to lean angles
-        get_pilot_desired_lean_angles(target_roll, target_pitch, loiter_nav->get_angle_max_cd(), attitude_control->get_althold_lean_angle_max());
-
-        // process pilot's roll and pitch input
-        loiter_nav->set_pilot_desired_acceleration(target_roll, target_pitch, G_Dt);
-    } else {
-        // clear out pilot desired acceleration in case radio failsafe event occurs and we do not switch to RTL for some reason
-        loiter_nav->clear_pilot_desired_acceleration();
-    }
-*/
     // initialise position and desired velocity
     if (!pos_control->is_active_z()) {
         pos_control->set_alt_target_to_current_alt();
@@ -133,6 +118,7 @@ bool ModeCNDN::init(bool ignore_checks)
                     return true;
             }
         }
+#if 0        
     } else {
         // 비무장이고 배터리 경고인 상태에서 배터리 리셋
         if (AP_Notify::flags.failsafe_battery) {
@@ -145,12 +131,14 @@ bool ModeCNDN::init(bool ignore_checks)
                 }
             }
         }
+#endif
     }
 
     if (stage == MANUAL) {
         if (isZigZag()) {
             RC_Channel* cnzigzag = rc().find_channel_for_option(RC_Channel::AUX_FUNC::RANGEFINDER);
-            uint8_t rtv = (cnzigzag ? cnzigzag->percent_input() : 0); 
+            uint8_t rtv = (cnzigzag ? cnzigzag->percent_input() : 0);
+            gcsdebug("RANGE FINDER: %d", rtv);
             if (rtv >= 40 && rtv <= 60) {
                 stage = PREPARE_ABLINE;
                 return true;
@@ -239,8 +227,8 @@ void ModeCNDN::run()
 
         case PREPARE_ABLINE: {
             manual_control();
-            copter.set_mode(Mode::Number::ZIGZAG, ModeReason::RC_COMMAND);
             stage = MANUAL;
+            copter.set_mode(Mode::Number::ZIGZAG, ModeReason::RC_COMMAND);
         } break;
 
         default:
@@ -1193,6 +1181,7 @@ void ModeCNDN::inject() {
 #endif
 
     if (copter.motors->armed() && (AP_Notify::flags.failsafe_battery || AP_Notify::flags.sprayer_empty)) {
+        toBAT.reset(now);
         switch (copter.control_mode) {
             case Mode::Number::AUTO:
                 if (copter.mode_auto.mission.state() == AP_Mission::mission_state::MISSION_RUNNING) {
@@ -1212,6 +1201,26 @@ void ModeCNDN::inject() {
 
             default:
             break;
+        }
+    }
+
+    if (!copter.motors->armed() && AP_Notify::flags.failsafe_battery) {
+        if (toBAT.isTimeout(now, 1000)) {
+            AP_BattMonitor::BatteryFailsafe type = AP::battery().check_battery();
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+            float volt = AP::battery().voltage();
+            logdebug("Battery: %0.2f V, type: %d\n", volt, (int)type);
+#endif
+            if (type == AP_BattMonitor::BatteryFailsafe::BatteryFailsafe_None) {
+                AP::battery().reset_remaining(0xffff, 100.0f);
+                AP::battery().read();
+                if (!AP_Notify::flags.failsafe_battery) {
+                    if (g2.proximity.get_status() != AP_Proximity::Status::Good) {
+                        // proximity reinitializing
+                        g2.proximity.init();
+                    }
+                }
+            }
         }
     }
 }

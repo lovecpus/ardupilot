@@ -125,6 +125,7 @@ public:
  
     /// returns true if a battery failsafe has ever been triggered
     bool has_failsafed(void) const { return _has_triggered_failsafe; };
+    AP_BattMonitor::BatteryFailsafe check_battery();
 
     /// returns the highest failsafe action that has been triggered
     int8_t get_highest_failsafe_priority(void) const { return _highest_failsafe_priority; };

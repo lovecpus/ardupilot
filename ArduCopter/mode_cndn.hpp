@@ -15,7 +15,7 @@
 
 #define CNDN_WP_RADIUS_CM 100
 #define CASE_CNDN_MODE() case Mode::Number::CNDN: ret = &mode_cndn; mode_cndn.setZigZag(false);  break; \
-    case Mode::Number::CNDN2: ret = &mode_cndn; mode_cndn.setZigZag(true);  break;
+    case Mode::Number::CNDN2: ret = &mode_cndn; mode_cndn.setZigZag(true); break;
 
 #define CASE_CNDN_AUX_INIT()  case AUX_FUNC::CNDN: case AUX_FUNC::CNDN_AUTO:  case AUX_FUNC::CNDN_PUMP: \
         case AUX_FUNC::CNDN_SPD_UP: case AUX_FUNC::CNDN_SPD_DN: case AUX_FUNC::CNDN_SPR_UP: case AUX_FUNC::CNDN_SPR_DN: \
@@ -87,6 +87,8 @@ public:
     CNTimeout toDBG;
 #endif
 
+    Mode *switch_zigzag();
+
 protected:
     const char *name() const override { return "CNDN_AW"; }
     const char *name4() const override { return "CNDN"; }
@@ -131,7 +133,7 @@ private:
     Vector2f        m_target_pos;
     uint32_t        _rate_dt = 0;
     Location        resumeLoc;
-    CNTimeout       toYAW;
+    CNTimeout       toYAW, toBAT;
     uint32_t        m_missionReset = 0;
 
     // parameters

@@ -333,6 +333,13 @@ int32_t AP_BattMonitor::pack_capacity_mah(uint8_t instance) const
     }
 }
 
+AP_BattMonitor::BatteryFailsafe AP_BattMonitor::check_battery()
+ {
+     if (drivers[AP_BATT_PRIMARY_INSTANCE] != nullptr)
+        return drivers[AP_BATT_PRIMARY_INSTANCE]->update_failsafes();
+    return BatteryFailsafe::BatteryFailsafe_None;
+}
+
 void AP_BattMonitor::check_failsafes(void)
 {
     if (hal.util->get_soft_armed()) {
