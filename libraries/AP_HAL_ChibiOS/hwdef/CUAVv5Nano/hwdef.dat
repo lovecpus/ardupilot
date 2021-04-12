@@ -24,19 +24,6 @@ undef UART8_TX
 undef UART8_RX
 undef AP_FEATURE_SBUS_OUT
 
-# allow the first 3 capture ports to be used as PWM outputs or GPIOs
-undef PA5
-undef PB3
-undef PB11
-undef FMU_CAP1
-undef FMU_CAP2
-undef FMU_CAP3
-
-PA5  TIM2_CH1 TIM2 GPIO(58)
-PB3  TIM2_CH2 TIM2 GPIO(59)
-PB11 TIM2_CH4 TIM2 GPIO(60)
-define HAL_PUMP_SENSOR_PIN  59
-
 undef BOARD_PWM_COUNT_DEFAULT
 define BOARD_PWM_COUNT_DEFAULT 8
 

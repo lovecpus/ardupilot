@@ -250,7 +250,7 @@ public:
 
     // end pass-through functions
     struct CNMIS {
-        float   yawcd;
+        float   yaw_deg;
         float   spdcm;
         uint8_t spryr;
         uint8_t edge;

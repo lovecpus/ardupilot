@@ -1634,7 +1634,7 @@ bool AP_GPS::is_healthy(uint8_t instance) const
         return false;
     }
 
-    const uint16_t gps_max_delta_ms = 245; // 200 ms (5Hz) + 45 ms buffer
+    const uint16_t gps_max_delta_ms = 265; // 200 ms (5Hz) + 45 ms buffer
 
     bool last_msg_valid = last_message_delta_time_ms(instance) < gps_max_delta_ms;
 

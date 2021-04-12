@@ -119,13 +119,12 @@ private:
         FINISHED,
     } stage;
 
-    int32_t         yaw_sensor = 0;
+    float           yaw_deg = 0;
     uint32_t        reach_wp_time_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
     char*           data_buff = NULL;
     uint16_t        data_size = 0;
     uint16_t        data_wpos = 0;
-    float           last_yaw_cd = 0.0f;
-    uint32_t        last_yaw_ms = 0;
+    float           last_yaw_deg = 0.0f;
     bool            edge_mode = false;
     bool            m_bZigZag;
     uint8_t         cmd_mode;

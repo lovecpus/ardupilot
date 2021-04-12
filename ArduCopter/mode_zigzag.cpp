@@ -81,7 +81,7 @@ void ModeZigZag::run()
             if (arv != 0) {
                 auto_yaw.set_mode(AUTO_YAW_HOLD);
                 processAB(dest_A, dest_B, arv < 0);
-                auto_yaw.set_fixed_yaw(cms.yawcd, 0.0f, 0, false);
+                auto_yaw.set_fixed_yaw(cms.yaw_deg, 0.0f, 0, false);
                 pos_control->set_alt_target_to_current_alt();
                 wp_nav->wp_and_spline_init();
                 stage = WAIT_MOVE;
@@ -443,7 +443,7 @@ bool ModeZigZag::getResume() {
 
     cms.edge = 0;
     cms.spdcm = copter.mode_cndn._spd_auto_cm.get() * 1e-2f;
-    cms.yawcd = ahrs.yaw_sensor * 1e-2f;
+    cms.yaw_deg = ahrs.yaw;
     cms.repl_idx = cms.jump_idx = 0;
     uint16_t resumeIdx = 0;
     cms.addNew = true;
@@ -457,10 +457,13 @@ bool ModeZigZag::getResume() {
     for(uint16_t i=1; i<AP::mission()->num_commands(); i++) {
         if (AP::mission()->read_cmd_from_storage(i, cmd)) {
             switch(cmd.id) {
+                case MAV_CMD_NAV_TAKEOFF:
+                    if (i > cms.curr_idx &&cmd.p1 == 2)
+                        cms.repl_idx = i;
+                break;
+
                 case MAV_CMD_NAV_WAYPOINT:
-                    if (i > cms.curr_idx) {
-                        if (cmd.p1 == 2) cms.repl_idx = i;
-                    } else {
+                    if (i < cms.curr_idx) {
                         cms.misAlt = cmd.content.location.alt;
                         cms.misFrame = cmd.content.location.get_alt_frame();
                     }
@@ -468,7 +471,7 @@ bool ModeZigZag::getResume() {
 
                 case MAV_CMD_CONDITION_YAW:
                     if (i > cms.curr_idx) break;
-                    cms.yawcd = cmd.content.yaw.angle_deg;
+                    cms.yaw_deg = cmd.content.yaw.angle_deg;
                 break;
 
                 case MAV_CMD_DO_CHANGE_SPEED:
@@ -500,7 +503,9 @@ void ModeZigZag::setResume() {
     AP_Mission::Mission_Command cmd;
 
     if (cms.addNew) {
-        cmd.id = MAV_CMD_NAV_WAYPOINT;
+        logdebug("SET RESUME POINT ZIGZAG: %d\n", 0);
+
+        cmd.id = MAV_CMD_NAV_TAKEOFF;
         cmd.p1 = 2;
         cmd.content.location = copter.current_loc;
         cmd.content.location.set_alt_cm(cms.misAlt, cms.misFrame);
@@ -516,7 +521,7 @@ void ModeZigZag::setResume() {
 
         cmd.id = MAV_CMD_CONDITION_YAW;
         cmd.p1 = 0;
-        cmd.content.yaw.angle_deg = cms.yawcd;
+        cmd.content.yaw.angle_deg = cms.yaw_deg;
         cmd.content.yaw.turn_rate_dps = 0;
         cmd.content.yaw.direction = 0;
         cmd.content.yaw.relative_angle = 0;
@@ -551,14 +556,16 @@ void ModeZigZag::setResume() {
         cms.jump_idx = cmd.index;
         cms.addNew = false;
     } else {
-        if (AP::mission()->read_cmd_from_storage(cms.repl_idx+0, cmd) && cmd.id==MAV_CMD_NAV_WAYPOINT) {
+        logdebug("SET RESUME POINT ZIGZAG: %d\n", 1);
+
+        if (AP::mission()->read_cmd_from_storage(cms.repl_idx+0, cmd) && cmd.id==MAV_CMD_NAV_TAKEOFF) {
             cmd.content.location = copter.current_loc;
             cmd.content.location.set_alt_cm(cms.misAlt, cms.misFrame);
             AP::mission()->replace_cmd(cmd.index, cmd);
         }
 
         if (AP::mission()->read_cmd_from_storage(cms.repl_idx+2, cmd) && cmd.id==MAV_CMD_CONDITION_YAW) {
-            cmd.content.yaw.angle_deg = cms.yawcd;
+            cmd.content.yaw.angle_deg = cms.yaw_deg;
             AP::mission()->replace_cmd(cmd.index, cmd);
         }
 
@@ -587,10 +594,10 @@ void ModeZigZag::setResume() {
 bool ModeZigZag::hasResume(uint16_t &resumeIdx) {
     AP_Mission::Mission_Command cmd;
     for(uint16_t i=1; i<AP::mission()->num_commands(); i++) {
-        if (AP::mission()->read_cmd_from_storage(i, cmd) && cmd.id == MAV_CMD_NAV_WAYPOINT && cmd.p1 == 2) {
+        if (AP::mission()->read_cmd_from_storage(i, cmd) && cmd.id == MAV_CMD_NAV_TAKEOFF && cmd.p1 == 2) {
             if (!AP::mission()->read_cmd_from_storage(i+1, cmd) || cmd.id != MAV_CMD_DO_SET_RELAY) continue;
             if (!AP::mission()->read_cmd_from_storage(i+2, cmd) || cmd.id != MAV_CMD_CONDITION_YAW) continue;
-            if (!AP::mission()->read_cmd_from_storage(i+3, cmd) || cmd.id != MAV_CMD_NAV_WAYPOINT || cmd.p1 != 1) return false;
+            if (!AP::mission()->read_cmd_from_storage(i+3, cmd) || cmd.id != MAV_CMD_NAV_WAYPOINT) return false;
             if (!AP::mission()->read_cmd_from_storage(i+4, cmd) || cmd.id != MAV_CMD_DO_CHANGE_SPEED) return false;
             if (!AP::mission()->read_cmd_from_storage(i+6, cmd) || cmd.id != MAV_CMD_DO_JUMP) return false;
             resumeIdx = i;
@@ -602,12 +609,30 @@ bool ModeZigZag::hasResume(uint16_t &resumeIdx) {
 
 bool ModeZigZag::isOwnMission() {
     AP_Mission::Mission_Command cmd;
-    if (!AP::mission()->read_cmd_from_storage(0, cmd) || cmd.id != MAV_CMD_NAV_WAYPOINT || cmd.p1 != 2) return false;
-    if (!AP::mission()->read_cmd_from_storage(1, cmd) || cmd.id != MAV_CMD_NAV_TAKEOFF) return false;
-    if (!AP::mission()->read_cmd_from_storage(2, cmd) || cmd.id != MAV_CMD_CONDITION_YAW) return false;
-    if (!AP::mission()->read_cmd_from_storage(3, cmd) || cmd.id != MAV_CMD_DO_CHANGE_SPEED) return false;
-    if (!AP::mission()->read_cmd_from_storage(4, cmd) || cmd.id != MAV_CMD_DO_SET_RELAY) return false;
-    if (!AP::mission()->read_cmd_from_storage(14, cmd) || cmd.id != MAV_CMD_DO_JUMP) return false;
+    if (!AP::mission()->read_cmd_from_storage(0, cmd) || cmd.id != MAV_CMD_NAV_WAYPOINT || cmd.p1 != 2) {
+        logdebug("Zigzag own mission failed %d, id:%d, p1:%d\n", cmd.index, cmd.id, cmd.p1);
+        return false;
+    }
+    if (!AP::mission()->read_cmd_from_storage(1, cmd) || cmd.id != MAV_CMD_NAV_TAKEOFF) {
+        logdebug("Zigzag own mission failed %d, id:%d, p1:%d\n", cmd.index, cmd.id, cmd.p1);
+        return false;
+    }
+    if (!AP::mission()->read_cmd_from_storage(2, cmd) || cmd.id != MAV_CMD_CONDITION_YAW) {
+        logdebug("Zigzag own mission failed %d, id:%d, p1:%d\n", cmd.index, cmd.id, cmd.p1);
+        return false;
+    }
+    if (!AP::mission()->read_cmd_from_storage(3, cmd) || cmd.id != MAV_CMD_DO_CHANGE_SPEED) {
+        logdebug("Zigzag own mission failed %d, id:%d, p1:%d\n", cmd.index, cmd.id, cmd.p1);
+        return false;
+    }
+    if (!AP::mission()->read_cmd_from_storage(4, cmd) || cmd.id != MAV_CMD_DO_SET_RELAY) {
+        logdebug("Zigzag own mission failed %d, id:%d, p1:%d\n", cmd.index, cmd.id, cmd.p1);
+        return false;
+    }
+    if (!AP::mission()->read_cmd_from_storage(14, cmd) || cmd.id != MAV_CMD_DO_JUMP) {
+        logdebug("Zigzag own mission failed %d, id:%d, p1:%d\n", cmd.index, cmd.id, cmd.p1);
+        return false;
+    }
     return true;
 }
 
@@ -642,7 +667,6 @@ void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
             copter.surface_tracking.set_target_alt_cm(misAlt);
         }
     }
-    logdebug("method %d, mission_alt: %d, alt_cm: %0.0f\n", copter.mode_cndn._method.get(), misAlt, alt_cm);
 
     float dist = (dstB - dstA).length();
     if (dist < 1e-5f) {
@@ -655,7 +679,9 @@ void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     float ang = degrees(atan2f(delta.y, delta.x)) + 180.0f;
     while (ang < 0) ang += 360.0f;
     while (ang >= 360) ang -= 360.0f;
-    cms.yawcd = ang;
+    cms.yaw_deg = ang;
+
+    logdebug("[지적AB] method %d, mission_alt: %d, alt_cm: %0.0f, deg: %0.2f\n", copter.mode_cndn._method.get(), misAlt, alt_cm, ang);
 
     float dir = bLeftRight ? -90.0f : +90.0f;
     Location dloc_A(Vector3f(dstA.x, dstA.y, misAlt));
@@ -677,7 +703,6 @@ void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     cmd.id = MAV_CMD_NAV_WAYPOINT;
     cmd.p1 = 2;
     cmd.content.location = AP::ahrs().get_home();
-    cmd.content.location.set_alt_cm(0, bLeftRight ? Location::AltFrame::ABOVE_TERRAIN : cmd.content.location.get_alt_frame());
     AP::mission()->add_cmd(cmd);
 
     cmd.id = MAV_CMD_NAV_TAKEOFF;
@@ -795,14 +820,13 @@ void ModeZigZag::processAB(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
             copter.surface_tracking.set_target_alt_cm(misAlt);
         }
     }
-    //logdebug("method %d, mission_alt: %d, alt_cm: %0.0f\n", copter.mode_cndn._method.get(), misAlt, alt_cm);
 
     Vector2f delta = (dstB - dstA).normalized();
 
     float ang = -degrees(atan2f(-delta.y, delta.x));
     while (ang < 0) ang += 360.0f;
     while (ang >= 360) ang -= 360.0f;
-    cms.yawcd = ang;
+    cms.yaw_deg = ang;
 
     float dir = bLeftRight ? -90.0f : +90.0f;
     Location dloc_A(Vector3f(dstA.x, dstA.y, misAlt));
@@ -820,11 +844,11 @@ void ModeZigZag::processAB(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
     AP::mission()->clear();
 
     cmd.id = MAV_CMD_NAV_WAYPOINT;
-    cmd.p1 = 0;
+    cmd.p1 = 2;
     cmd.content.location = AP::ahrs().get_home();
     AP::mission()->add_cmd(cmd);
 
-    //logdebug("[CNDN] ang: %0.2f, %0.2f, %0.2f %s, p1: %d\n", ang, dir, ang+dir, bLeftRight? "LF":"RT", cmd.p1);
+    logdebug("[일반AB] ang: %0.2f, %0.2f, %0.2f %s, p1: %d\n", ang, dir, ang+dir, bLeftRight? "LF":"RT", cmd.p1);
 
     cmd.id = MAV_CMD_NAV_TAKEOFF;
     cmd.p1 = bLeftRight ? 1 : 0;

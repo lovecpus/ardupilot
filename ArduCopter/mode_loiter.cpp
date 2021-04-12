@@ -35,22 +35,6 @@ bool ModeLoiter::init(bool ignore_checks)
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
 
-#if 0
-    if (!AP::arming().is_armed()) {
-        // 비무장이고 배터리 경고인 상태에서 배터리 리셋
-        if (AP_Notify::flags.failsafe_battery) {
-            AP::battery().reset_remaining(0xffff, 100.0f);
-            AP::battery().read();
-            if (!AP_Notify::flags.failsafe_battery) {
-                if (g2.proximity.get_status() != AP_Proximity::Status::Good) {
-                    // proximity reinitializing
-                    g2.proximity.init();
-                }
-            }
-        }
-    }
-#endif
-
     copter.mode_cndn.initMissionResume();
 
     return true;
