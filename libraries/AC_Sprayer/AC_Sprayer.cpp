@@ -225,8 +225,8 @@ void AC_Sprayer::update()
 
     // if spraying or testing update the pump servo position
     if (should_be_spraying) {
-        float pos = ground_speed * _pump_pct_1ms;
-        pos = MAX(pos, 100 * _pump_min_pct); // ensure min pump speed
+        float pos = ground_speed * _pump_pct_1ms.get();
+        pos = MAX(pos, 100 * _pump_min_pct.get()); // ensure min pump speed
         pos = MIN(pos, 10000); // clamp to range
         float back = _pump_back_rate.get() * 100;
         back = MAX(back, 0); // ensure min pump speed
@@ -234,12 +234,12 @@ void AC_Sprayer::update()
 
         if (_flags.fullspray != 0 || _flags.testing) {
             // 전후방 분사
-            SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
             SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
+            SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
         } else if (should_foreback) {
             // 후방 문사
-            SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
             SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, back, 0, 10000);
+            SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
         } else {
             // 전방 분사
             SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
@@ -247,7 +247,7 @@ void AC_Sprayer::update()
         }
 
         _flags.spraying = true;
-        _flags.test_empty = pos >= (100 * _pump_min_pct + (_pump_pct_1ms * _speed_min));
+        _flags.test_empty = pos >= (100 * _pump_min_pct.get() + (_pump_pct_1ms.get() * _speed_min.get()));
     } else {
         _flags.test_empty = false;
         stop_spraying();

@@ -499,7 +499,14 @@ void ModeCNDN::mission_command(uint8_t dest_num)
         return;
     } else if (copter.flightmode != &copter.mode_cndn) {
         // 씨엔디엔 모드가 아닐 때
-        return;
+    }
+
+    switch (dest_num) {
+        case 20: {
+            //AP::gps().inject_data((const uint8_t*)"-REBOOT\r\n", 9);
+            gcsinfo("RTK:-REBOOT\r\n");
+            logdebug("RTK: reboot %d\n", 0);
+        } return;
     }
 
     if (dest_num > 2)
@@ -519,8 +526,10 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             wp_nav->set_wp_destination(stopping_point, false);
             Location loc(copter.current_loc);
             Location home(AP::ahrs().get_home());
-            gcs().send_cndn_trigger(home, loc, _dst_eg_cm.get(), _spray_width_cm.get(), m_bZigZag?1:0, ahrs.yaw_sensor);
-            gcsdebug("[방제검색] %d,%d", (int)loc.lat, (int)loc.lng);
+            int32_t yaws = wrap_180_cd(ahrs.yaw_sensor);
+
+            gcs().send_cndn_trigger(home, loc, _dst_eg_cm.get(), _spray_width_cm.get(), m_bZigZag?1:0, yaws);
+            gcsdebug("[방제검색] %d,%d,%d", (int)loc.lat, (int)loc.lng, yaws);
             copter.rangefinder_state.alt_cm_filt.set_cutoff_frequency(_radar_flt_hz.get());
 
             float alt_cm = 0.0f;

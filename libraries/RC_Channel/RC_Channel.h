@@ -187,6 +187,7 @@ public:
         CNDN_SPR_UP =        125, // CNDN Sprayer rate up
         CNDN_SPR_DN =        126, // CNDN Sprayer rate down
         CNDN_SPR_FF =        127, // CNDN Sprayer fully
+        CNDN_RTK_RB =        128, // CNDN RTK Reboot
 
         // inputs eventually used to replace RCMAP
         MAINSAIL =           207, // mainsail input

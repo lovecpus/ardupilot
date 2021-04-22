@@ -674,14 +674,11 @@ void ModeZigZag::processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
         return;
     }
 
-    Vector2f delta = (dstB - dstA).normalized();
-
+    Vector2f delta = (dstB - dstA);
     float ang = degrees(atan2f(delta.y, delta.x)) + 180.0f;
-    while (ang < 0) ang += 360.0f;
-    while (ang >= 360) ang -= 360.0f;
-    cms.yaw_deg = ang;
+    cms.yaw_deg = wrap_360(ang);
 
-    logdebug("[지적AB] method %d, mission_alt: %d, alt_cm: %0.0f, deg: %0.2f\n", copter.mode_cndn._method.get(), misAlt, alt_cm, ang);
+    logdebug("[지적AB] method %d, mission_alt:%d, alt_cm:%0.0f, dx:%0.2f, dy:%0.2f, deg:%0.2f\n", copter.mode_cndn._method.get(), misAlt, alt_cm,  delta.x, delta.y, ang);
 
     float dir = bLeftRight ? -90.0f : +90.0f;
     Location dloc_A(Vector3f(dstA.x, dstA.y, misAlt));
@@ -823,9 +820,7 @@ void ModeZigZag::processAB(Vector2f& dstA,Vector2f& dstB, bool bLeftRight) {
 
     Vector2f delta = (dstB - dstA).normalized();
 
-    float ang = -degrees(atan2f(-delta.y, delta.x));
-    while (ang < 0) ang += 360.0f;
-    while (ang >= 360) ang -= 360.0f;
+    float ang = wrap_360(-degrees(atan2f(-delta.y, delta.x)));
     cms.yaw_deg = ang;
 
     float dir = bLeftRight ? -90.0f : +90.0f;

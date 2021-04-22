@@ -35,7 +35,8 @@
     case AUX_FUNC::CNDN_SPD_DN: if (ch_flag != LOW) copter.mode_cndn.mission_command(7); break;\
     case AUX_FUNC::CNDN_SPR_UP: if (ch_flag != LOW) copter.mode_cndn.mission_command(8); break;\
     case AUX_FUNC::CNDN_SPR_DN: if (ch_flag != LOW) copter.mode_cndn.mission_command(9); break;\
-    case AUX_FUNC::CNDN_PUMP: break;
+    case AUX_FUNC::CNDN_PUMP: break; \
+    case AUX_FUNC::CNDN_RTK_RB: if (ch_flag == HIGH) copter.mode_cndn.mission_command(20); break;
 
 #define CNDN_HANDLE_MESSAGE() \
     copter.mode_cndn.handle_message(msg);
