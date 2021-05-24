@@ -139,6 +139,9 @@ bool AP_RangeFinder_ETRI::get_reading(uint16_t &reading_cm)
                 } else {
                     count_out_of_range ++;
                 }
+            } else if (linebuf[0] == 'E') {
+                count ++;
+                sum_cm += 10;
             }
             // clear buffer
             linebuf_len = 0;
@@ -156,19 +159,16 @@ bool AP_RangeFinder_ETRI::get_reading(uint16_t &reading_cm)
         reading_cm = (uint16_t)(sum_cm / count);
         return true;
     }
-#if 0
-    return true;
-#else
+
     if (count_out_of_range > 0) {
         // if only out of range readings return larger of
         // driver defined maximum range for the model and user defined max range + 1m
-        reading_cm = max_distance_cm() + 100.0f;
+        reading_cm = (max_distance_cm() + 1) + 100.0f;
         return true;
     }
 
     // no readings so return false
     return false;
-#endif    
 }
 /*
    update the state of the sensor
@@ -179,7 +179,7 @@ void AP_RangeFinder_ETRI::update(void)
         // update range_valid state based on distance measured
         state.last_reading_ms = AP_HAL::millis();
         update_status();
-    } else if (AP_HAL::millis() - state.last_reading_ms > 200) {
+    } else if (AP_HAL::millis() - state.last_reading_ms > 500) {
         set_status(RangeFinder::RangeFinder_NoData);
     }
 }

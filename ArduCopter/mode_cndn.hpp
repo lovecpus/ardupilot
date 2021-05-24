@@ -82,11 +82,7 @@ public:
     bool hoverMissionResume();
 
     static const struct AP_Param::GroupInfo var_info[];
-    CNTimeout toAUTO;
-
-#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-    CNTimeout toDBG;
-#endif
+    CNTimeout toAUTO, toDBG;
 
     Mode *switch_zigzag();
 

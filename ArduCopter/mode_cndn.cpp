@@ -529,7 +529,7 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             int32_t yaws = wrap_180_cd(ahrs.yaw_sensor);
 
             gcs().send_cndn_trigger(home, loc, _dst_eg_cm.get(), _spray_width_cm.get(), m_bZigZag?1:0, yaws);
-            gcsdebug("[방제검색] %d,%d,%d", (int)loc.lat, (int)loc.lng, yaws);
+            gcsdebug("[방제검색] %d,%d,%d", (int)loc.lat, (int)loc.lng, (int)yaws);
             copter.rangefinder_state.alt_cm_filt.set_cutoff_frequency(_radar_flt_hz.get());
 
             float alt_cm = 0.0f;
@@ -1200,44 +1200,72 @@ void ModeCNDN::inject() {
     // }
 #endif
 
-    if (copter.motors->armed() && (AP_Notify::flags.failsafe_battery || AP_Notify::flags.sprayer_empty)) {
-        toBAT.reset(now);
-        switch (copter.control_mode) {
-            case Mode::Number::AUTO:
-                if (copter.mode_auto.mission.state() == AP_Mission::mission_state::MISSION_RUNNING) {
-                    if (resumeLoc.is_zero()) {
-                        resumeLoc = copter.current_loc;
-                        resumeLoc.alt = inertial_nav.get_altitude() + _take_alt_cm.get();
-                    } else {
-                        resumeLoc.lat = copter.current_loc.lat;
-                        resumeLoc.lng = copter.current_loc.lng;
-                        resumeLoc.alt = inertial_nav.get_altitude() + _take_alt_cm.get();
+    if (copter.motors->armed()) {
+        if (AP_Notify::flags.failsafe_battery || AP_Notify::flags.sprayer_empty) {
+            toBAT.reset(now);
+            switch (copter.control_mode) {
+                case Mode::Number::AUTO:
+                    if (copter.mode_auto.mission.state() == AP_Mission::mission_state::MISSION_RUNNING) {
+                        if (resumeLoc.is_zero()) {
+                            resumeLoc = copter.current_loc;
+                            resumeLoc.alt = inertial_nav.get_altitude() + _take_alt_cm.get();
+                        } else {
+                            resumeLoc.lat = copter.current_loc.lat;
+                            resumeLoc.lng = copter.current_loc.lng;
+                            resumeLoc.alt = inertial_nav.get_altitude() + _take_alt_cm.get();
+                        }
+                        loiter_nav->init_target();
+                        loiter_nav->clear_pilot_desired_acceleration();
+                        copter.set_mode(Mode::Number::LOITER, ModeReason::MISSION_STOP);
                     }
-                    loiter_nav->init_target();
-                    loiter_nav->clear_pilot_desired_acceleration();
-                    copter.set_mode(Mode::Number::LOITER, ModeReason::MISSION_STOP);
-                }
-            break;
+                break;
 
-            default:
-            break;
+                default:
+                break;
+            }
         }
-    }
-
-    if (!copter.motors->armed() && AP_Notify::flags.failsafe_battery) {
-        if (toBAT.isTimeout(now, 1000)) {
-            AP_BattMonitor::BatteryFailsafe type = AP::battery().check_battery();
-#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-            float volt = AP::battery().voltage();
-            logdebug("Battery: %0.2f V, type: %d\n", volt, (int)type);
+#if AC_AVOID_ENABLED == ENABLED
+        if (copter.control_mode == Mode::Number::AUTO) {
+            float angle, distance;
+            if (copter.avoid.enabled() && copter.avoid.proximity_avoidance_enabled() && copter.g2.proximity.get_closest_object(angle, distance)) {
+ #if 0
+                if (toDBG.isTimeout(now, 500))
+                    gcsdebug("FR: %.2f-%0.2f", angle, distance);
 #endif
-            if (type == AP_BattMonitor::BatteryFailsafe::BatteryFailsafe_None) {
-                AP::battery().reset_remaining(0xffff, 100.0f);
-                AP::battery().read();
-                if (!AP_Notify::flags.failsafe_battery) {
-                    if (g2.proximity.get_status() != AP_Proximity::Status::Good) {
-                        // proximity reinitializing
-                        g2.proximity.init();
+                if (distance <= copter.avoid.get_margin()) {
+                    if (copter.mode_auto.mission.state() == AP_Mission::mission_state::MISSION_RUNNING) {
+                        if (resumeLoc.is_zero()) {
+                            resumeLoc = copter.current_loc;
+                            resumeLoc.alt = inertial_nav.get_altitude();
+                        } else {
+                            resumeLoc.lat = copter.current_loc.lat;
+                            resumeLoc.lng = copter.current_loc.lng;
+                            resumeLoc.alt = inertial_nav.get_altitude();
+                        }
+                        loiter_nav->init_target();
+                        loiter_nav->clear_pilot_desired_acceleration();
+                        copter.set_mode(Mode::Number::BRAKE, ModeReason::AVOIDANCE);
+                    }
+                }
+            }
+        }
+#endif
+    } else {
+        if (AP_Notify::flags.failsafe_battery) {
+            if (toBAT.isTimeout(now, 1000)) {
+                AP_BattMonitor::BatteryFailsafe type = AP::battery().check_battery();
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+                float volt = AP::battery().voltage();
+                logdebug("Battery: %0.2f V, type: %d\n", volt, (int)type);
+#endif
+                if (type == AP_BattMonitor::BatteryFailsafe::BatteryFailsafe_None) {
+                    AP::battery().reset_remaining(0xffff, 100.0f);
+                    AP::battery().read();
+                    if (!AP_Notify::flags.failsafe_battery) {
+                        if (g2.proximity.get_status() != AP_Proximity::Status::Good) {
+                            // proximity reinitializing
+                            g2.proximity.init();
+                        }
                     }
                 }
             }
