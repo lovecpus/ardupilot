@@ -422,6 +422,11 @@ void Copter::twentyfive_hz_logging()
         g2.arot.Log_Write_Autorotation();
     }
 #endif
+
+#ifndef CNDN_MODE_INJECT25
+#define CNDN_MODE_INJECT25()
+#endif
+    CNDN_MODE_INJECT25();
 }
 
 // three_hz_loop - 3.3hz loop
@@ -502,6 +507,11 @@ void Copter::update_GPS(void)
         camera.update();
 #endif
     }
+
+#ifndef CNDN_MODE_INJECT50
+#define CNDN_MODE_INJECT50()
+#endif
+    CNDN_MODE_INJECT50();
 }
 
 void Copter::init_simple_bearing()

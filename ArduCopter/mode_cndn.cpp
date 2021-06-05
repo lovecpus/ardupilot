@@ -9,7 +9,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @DisplayName: Mode using method
     // @Description: Mode using method of CNDN & ETRI Mission computer
     // @Values: 0: Disable, 1: All enable, 2: Take picture only, 2: Edge follow only, 3: Take picture after Edge following
-    // @User: Standard
+    // @User: Advance
     AP_GROUPINFO_FLAGS("METHOD", 0, ModeCNDN, _method, 2, AP_PARAM_FLAG_ENABLE),
 
     // @Param: TAKE_ALT
@@ -17,7 +17,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Description: Altitute of take picture
     // @Units: cm
     // @Range: 100 2000
-    // @User: Standard
+    // @User: Advance
     AP_GROUPINFO("TAKEOFF_ALT", 1, ModeCNDN, _take_alt_cm, 300),
 
     // @Param: MISSION_ALT
@@ -25,7 +25,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Description: Altitute of mission planning
     // @Units: cm
     // @Range: 200 1000
-    // @User: Standard
+    // @User: Advance
     AP_GROUPINFO("MISSION_ALT", 2, ModeCNDN, _mission_alt_cm, 300),
 
     // @Param: SPRAY_WIDTH
@@ -33,7 +33,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Description: Mission planning width of spraying
     // @Units: cm
     // @Range: 3000 8000
-    // @User: Standard
+    // @User: Advance
     AP_GROUPINFO("SPRAY_WIDTH", 3, ModeCNDN, _spray_width_cm, 400),
 
     // @Param: DIS_EDGE
@@ -41,7 +41,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Description: Distance from Edge
     // @Units: cms
     // @Range: 100 800
-    // @User: Standard
+    // @User: Advance
     AP_GROUPINFO("DIS_EDGE", 4, ModeCNDN, _dst_eg_cm, 400),
 
     // @Param: SPD_EDGE mission
@@ -49,7 +49,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Description: Mission speed for Edge
     // @Units: cm
     // @Range: 100 1000
-    // @User: Standard
+    // @User: Advance
     AP_GROUPINFO("SPD_EDGE", 5, ModeCNDN, _spd_edge_cm, 350),
 
     // @Param: SPD_AUTO
@@ -57,7 +57,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Description: Mission speed for Auto
     // @Units: cm
     // @Range: 100 1000
-    // @User: Standard
+    // @User: Advance
     AP_GROUPINFO("SPD_AUTO", 6, ModeCNDN, _spd_auto_cm, 500),
 
     // @Param: RADAR_FLT_HZ
@@ -65,15 +65,22 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Description: Radar low pass filter frequency
     // @Units: Hz
     // @Range: 0.0 1.0
-    // @User: Standard
+    // @User: Advance
     AP_GROUPINFO("RADAR_HZ", 7, ModeCNDN, _radar_flt_hz, 0.25),
 
     // @Param: LEVEL_PIN
     // @DisplayName: Level sensor gpio pin
     // @Description: Level sensor gpio pin
     // @Range: 0.0 1.0
-    // @User: Standard
+    // @User: Advance
     AP_GROUPINFO("LEVEL_PIN", 8, ModeCNDN, _sensor_pin, 59),
+
+    // @Param: AVOID_CM
+    // @DisplayName: AVOIDANCE DISTANCE CM
+    // @Description: Avoidance distance for break mode
+    // @Range: 200 1000
+    // @User: Advance
+    AP_GROUPINFO("AVOID_CM", 9, ModeCNDN, _avoid_cm, 500),
 
     AP_GROUPEND
 };
@@ -277,43 +284,37 @@ bool ModeCNDN::getResume(Mode::CNMIS& cms) {
         if (cms.curr_idx >= resumeIdx)
             cms.curr_idx = cmd.content.jump.target;
         cms.addNew = false;
+        cms.repl_idx = resumeIdx;
+        cms.jump_idx = resumeIdx + 7;
     }
 
     for(uint16_t i=1; i<AP::mission()->num_commands(); i++) {
         if (AP::mission()->read_cmd_from_storage(i, cmd)) {
             switch(cmd.id) {
                 case MAV_CMD_NAV_WAYPOINT:
-                    if (i > cms.curr_idx) {
-                        if (cmd.p1 == 2) cms.repl_idx = i;
-                    } else {
-                        cms.misAlt = cmd.content.location.alt;
-                        cms.misFrame = cmd.content.location.get_alt_frame();
-                    }
+                    if (i > cms.curr_idx) break;
+                    cms.misAlt = cmd.content.location.alt;
+                    cms.misFrame = cmd.content.location.get_alt_frame();
                 break;
 
                 case MAV_CMD_CONDITION_YAW:
-                    if (i >= cms.curr_idx) break;
+                    if (i > cms.curr_idx) break;
                     cms.yaw_deg = cmd.content.yaw.angle_deg;
                 break;
 
                 case MAV_CMD_DO_CHANGE_SPEED:
-                    if (i >= cms.curr_idx) break;
+                    if (i > cms.curr_idx) break;
                     cms.spdcm = ((cms.edge == 4)?_spd_edge_cm.get():_spd_auto_cm.get()) * 1e-2f;
                 break;
 
                 case MAV_CMD_DO_SET_RELAY:
-                    if (i >= cms.curr_idx) break;
+                    if (i > cms.curr_idx) break;
                     if (cmd.content.relay.num == 254) {
                         switch (cmd.content.relay.state) {
                             case 0: case 1: cms.spryr = cmd.content.relay.state; break;
                             case 3: case 4: cms.edge = cmd.content.relay.state; break;
                         }
                     }
-                break;
-
-                case MAV_CMD_DO_JUMP:
-                    if (i <= cms.curr_idx) break;
-                    cms.jump_idx = i;
                 break;
             }
         }
@@ -335,7 +336,6 @@ void ModeCNDN::setResume(Mode::CNMIS& cms) {
 
         cmd.id = MAV_CMD_DO_SET_RELAY;
         cmd.p1 = 0;
-        cmd.content.location = Location();
         cmd.content.relay.num = 254;
         cmd.content.relay.state = 0;
         AP::mission()->add_cmd(cmd);
@@ -364,14 +364,12 @@ void ModeCNDN::setResume(Mode::CNMIS& cms) {
 
         cmd.id = MAV_CMD_DO_SET_RELAY;
         cmd.p1 = 0;
-        cmd.content.location = Location();
         cmd.content.relay.num = 254;
         cmd.content.relay.state = cms.edge;
         AP::mission()->add_cmd(cmd);
 
         cmd.id = MAV_CMD_DO_SET_RELAY;
         cmd.p1 = 0;
-        cmd.content.location = Location();
         cmd.content.relay.num = 254;
         cmd.content.relay.state = cms.spryr;
         AP::mission()->add_cmd(cmd);
@@ -384,39 +382,37 @@ void ModeCNDN::setResume(Mode::CNMIS& cms) {
         cms.jump_idx = cmd.index;
         cms.addNew = false;
     } else {
-        logdebug("SET RESUME POINT CNDN: %d\n", 1);
-        for(uint16_t i=cms.repl_idx; i < cms.jump_idx+1; i++) {
-            if (AP::mission()->read_cmd_from_storage(i, cmd)) {
-                switch (cmd.id) {
-                    case MAV_CMD_NAV_TAKEOFF:
-                    case MAV_CMD_NAV_WAYPOINT:
-                        cmd.content.location = copter.current_loc;
-                        cmd.content.location.set_alt_cm(cms.misAlt, cms.misFrame);
-                        AP::mission()->replace_cmd(cmd.index, cmd);
-                    break;
-                    case MAV_CMD_CONDITION_YAW:
-                        cmd.content.yaw.angle_deg = cms.yaw_deg;
-                        AP::mission()->replace_cmd(cmd.index, cmd);
-                    break;
-                    case MAV_CMD_DO_CHANGE_SPEED:
-                        cmd.content.speed.target_ms = cms.spdcm;
-                        AP::mission()->replace_cmd(cmd.index, cmd);
-                    break;
-                    case MAV_CMD_DO_SET_RELAY:
-                        if (cmd.content.relay.num != 254) break;
-                        switch (cmd.content.relay.state) {
-                            case 0: case 1: cmd.content.relay.state = cms.spryr; break;
-                            case 3: case 4: cmd.content.relay.state = cms.edge; break;
-                        }
-                        AP::mission()->replace_cmd(cmd.index, cmd);
-                    break;
-                    case MAV_CMD_DO_JUMP:
-                        cmd.content.jump.target = cms.curr_idx;
-                        cmd.content.jump.num_times = -1;
-                        AP::mission()->replace_cmd(cmd.index, cmd);
-                    break;
-                }
-            }
+        logdebug("SET RESUME POINT CNDN: %d, repl: %d\n", 1, cms.repl_idx);
+        if (AP::mission()->read_cmd_from_storage(cms.repl_idx+0, cmd) && cmd.id == MAV_CMD_NAV_TAKEOFF) {
+            cmd.content.location = copter.current_loc;
+            cmd.content.location.set_alt_cm(cms.misAlt, cms.misFrame);
+            AP::mission()->replace_cmd(cmd.index, cmd);
+        }
+        if (AP::mission()->read_cmd_from_storage(cms.repl_idx+2, cmd) && cmd.id == MAV_CMD_CONDITION_YAW) {
+            cmd.content.yaw.angle_deg = cms.yaw_deg;
+            AP::mission()->replace_cmd(cmd.index, cmd);
+        }
+        if (AP::mission()->read_cmd_from_storage(cms.repl_idx+3, cmd) && cmd.id == MAV_CMD_NAV_WAYPOINT) {
+            cmd.content.location = copter.current_loc;
+            cmd.content.location.set_alt_cm(cms.misAlt, cms.misFrame);
+            AP::mission()->replace_cmd(cmd.index, cmd);
+        }
+        if (AP::mission()->read_cmd_from_storage(cms.repl_idx+4, cmd) && cmd.id == MAV_CMD_DO_CHANGE_SPEED) {
+            cmd.content.speed.target_ms = cms.spdcm;
+            AP::mission()->replace_cmd(cmd.index, cmd);
+        }
+        if (AP::mission()->read_cmd_from_storage(cms.repl_idx+5, cmd) && cmd.id == MAV_CMD_DO_SET_RELAY) {
+            cmd.content.relay.state = cms.edge;
+            AP::mission()->replace_cmd(cmd.index, cmd);
+        }
+        if (AP::mission()->read_cmd_from_storage(cms.repl_idx+6, cmd) && cmd.id == MAV_CMD_DO_SET_RELAY) {
+            cmd.content.relay.state = cms.spryr;
+            AP::mission()->replace_cmd(cmd.index, cmd);
+        }
+        if (AP::mission()->read_cmd_from_storage(cms.jump_idx, cmd) && cmd.id == MAV_CMD_DO_JUMP) {
+            cmd.content.jump.target = cms.curr_idx;
+            cmd.content.jump.num_times = -1;
+            AP::mission()->replace_cmd(cmd.index, cmd);
         }
     }
 }
@@ -1072,7 +1068,9 @@ void ModeCNDN::stop_mission() {
         if (copter.mode_zigzag.isOwnMission()) {
             copter.mode_zigzag.getResume();
             copter.mode_zigzag.setResume();
+            logdebug("setResume ZigZag(%d).\n", 0);
         } else if (isOwnMission()) {
+            logdebug("setResume Auto(%d).\n", 0);
             getResume(cms);
             setResume(cms);
         } else {
@@ -1224,31 +1222,6 @@ void ModeCNDN::inject() {
                 break;
             }
         }
-#if AC_AVOID_ENABLED == ENABLED
-        if (copter.control_mode == Mode::Number::AUTO) {
-            float angle, distance;
-            if (copter.avoid.enabled() && copter.avoid.proximity_avoidance_enabled() && copter.g2.proximity.get_closest_object(angle, distance)) {
- #if 0
-                if (toDBG.isTimeout(now, 500))
-                    gcsdebug("FR: %.2f-%0.2f", angle, distance);
-#endif
-                if (distance <= copter.avoid.get_margin()) {
-                    if (copter.mode_auto.mission.state() == AP_Mission::mission_state::MISSION_RUNNING) {
-                        if (resumeLoc.is_zero()) {
-                            resumeLoc = copter.current_loc;
-                            resumeLoc.alt = inertial_nav.get_altitude();
-                        } else {
-                            resumeLoc.lat = copter.current_loc.lat;
-                            resumeLoc.lng = copter.current_loc.lng;
-                            resumeLoc.alt = inertial_nav.get_altitude();
-                        }
-                        loiter_nav->init_target();
-                        loiter_nav->clear_pilot_desired_acceleration();
-                        copter.set_mode(Mode::Number::BRAKE, ModeReason::AVOIDANCE);
-                    }
-                }
-            }
-        }
 #endif
     } else {
         if (AP_Notify::flags.failsafe_battery) {
@@ -1271,6 +1244,42 @@ void ModeCNDN::inject() {
             }
         }
     }
+}
+
+void ModeCNDN::inject_25hz() {
+}
+
+void ModeCNDN::inject_50hz() {
+    if (copter.motors->armed()) {
+#if AC_AVOID_ENABLED == ENABLED
+        if (copter.control_mode == Mode::Number::AUTO) {
+            float angle, distance;
+            if (copter.avoid.enabled() && copter.avoid.proximity_avoidance_enabled() && copter.g2.proximity.get_closest_object(angle, distance)) {
+ #if 0
+                if (toDBG.isTimeout(now, 500))
+                    gcsdebug("FR: %.2f-%0.2f", angle, distance);
+#endif
+                if (distance <= _avoid_cm.get() * 0.01f) {
+                    if (copter.mode_auto.mission.state() == AP_Mission::mission_state::MISSION_RUNNING) {
+                        if (resumeLoc.is_zero()) {
+                            resumeLoc = copter.current_loc;
+                            resumeLoc.alt = inertial_nav.get_altitude();
+                        } else {
+                            resumeLoc.lat = copter.current_loc.lat;
+                            resumeLoc.lng = copter.current_loc.lng;
+                            resumeLoc.alt = inertial_nav.get_altitude();
+                        }
+                        loiter_nav->init_target();
+                        loiter_nav->clear_pilot_desired_acceleration();
+                        copter.set_mode(Mode::Number::BRAKE, ModeReason::MISSION_STOP);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void ModeCNDN::inject_400hz() {
 }
 
 void ModeCNDN::initMissionResume() {
@@ -1353,10 +1362,6 @@ bool ModeCNDN::hoverMissionResume() {
         attitude_control->input_euler_angle_roll_pitch_yaw(target_roll, target_pitch, auto_yaw.yaw(), true);
     }
     return true;
-}
-
-void ModeCNDN::inject_400hz() {
-    //GPIOSensor::get().update(AP_HAL::millis());
 }
 
 void ModeCNDN::zigzag_manual() {

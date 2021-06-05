@@ -42,6 +42,8 @@
     copter.mode_cndn.handle_message(msg);
 
 #define CNDN_MODE_INJECT()  mode_cndn.inject()
+#define CNDN_MODE_INJECT25()  mode_cndn.inject_25hz()
+#define CNDN_MODE_INJECT50()  mode_cndn.inject_50hz()
 #define CNDN_MODE_INJECT400()  mode_cndn.inject_400hz()
 
 /*
@@ -73,6 +75,8 @@ public:
     void handle_message(const mavlink_message_t &msg) override;
     void do_set_relay(const AP_Mission::Mission_Command& cmd);
     void inject();
+    void inject_25hz();
+    void inject_50hz();
     void inject_400hz();
     void stop_mission();
     bool resume_mission();
@@ -143,6 +147,7 @@ private:
     AP_Float        _radar_flt_hz;          ///< RADAR Lowpass filter apply frequency
     AP_Int16        _spray_backs;           ///< Sprayer minimum steps
     AP_Int8         _sensor_pin;            ///< CNDN Level sensor gpio pin
+    AP_Int16        _avoid_cm;              ///< avoid 10cm
 };
 
 #endif
