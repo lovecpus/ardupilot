@@ -1252,7 +1252,7 @@ void ModeCNDN::inject_25hz() {
 void ModeCNDN::inject_50hz() {
     if (copter.motors->armed()) {
 #if AC_AVOID_ENABLED == ENABLED
-        if (copter.control_mode == Mode::Number::AUTO) {
+        if (copter.control_mode == Mode::Number::AUTO && copter.mode_auto.mission.state() == AP_Mission::mission_state::MISSION_RUNNING) {
             float angle, distance;
             if (copter.avoid.enabled() && copter.avoid.proximity_avoidance_enabled() && copter.g2.proximity.get_closest_object(angle, distance)) {
  #if 0
@@ -1260,19 +1260,17 @@ void ModeCNDN::inject_50hz() {
                     gcsdebug("FR: %.2f-%0.2f", angle, distance);
 #endif
                 if (distance <= _avoid_cm.get() * 0.01f) {
-                    if (copter.mode_auto.mission.state() == AP_Mission::mission_state::MISSION_RUNNING) {
-                        if (resumeLoc.is_zero()) {
-                            resumeLoc = copter.current_loc;
-                            resumeLoc.alt = inertial_nav.get_altitude();
-                        } else {
-                            resumeLoc.lat = copter.current_loc.lat;
-                            resumeLoc.lng = copter.current_loc.lng;
-                            resumeLoc.alt = inertial_nav.get_altitude();
-                        }
-                        loiter_nav->init_target();
-                        loiter_nav->clear_pilot_desired_acceleration();
-                        copter.set_mode(Mode::Number::BRAKE, ModeReason::MISSION_STOP);
+                    if (resumeLoc.is_zero()) {
+                        resumeLoc = copter.current_loc;
+                        resumeLoc.alt = inertial_nav.get_altitude();
+                    } else {
+                        resumeLoc.lat = copter.current_loc.lat;
+                        resumeLoc.lng = copter.current_loc.lng;
+                        resumeLoc.alt = inertial_nav.get_altitude();
                     }
+                    loiter_nav->init_target();
+                    loiter_nav->clear_pilot_desired_acceleration();
+                    copter.set_mode(Mode::Number::BRAKE, ModeReason::MISSION_STOP);
                 }
             }
         }

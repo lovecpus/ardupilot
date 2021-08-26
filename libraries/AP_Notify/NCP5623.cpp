@@ -63,7 +63,7 @@ bool NCP5623::write_pwm(uint8_t _rgb[3])
 
 bool NCP5623::hw_init(void)
 {
-    uint8_t addrs[] = { NCP5623_LED_I2C_ADDR, NCP5623_C_LED_I2C_ADDR };
+    uint8_t addrs[] = { NCP5623_LED_I2C_ADDR /*, NCP5623_C_LED_I2C_ADDR*/ };
     for (uint8_t i=0; i<ARRAY_SIZE(addrs); i++) {
         // first look for led on external bus
         _dev = std::move(hal.i2c_mgr->get_device(_bus, addrs[i]));
@@ -76,6 +76,10 @@ bool NCP5623::hw_init(void)
 
         // enable the led
         bool ret = write(NCP5623_LED_ENABLE, 0x1f);
+
+        // always enabled @lovecpus
+        ret = true;
+        
         if (!ret) {
             _dev->get_semaphore()->give();
             continue;
@@ -84,6 +88,9 @@ bool NCP5623::hw_init(void)
         // update the red, green and blue values to zero
         uint8_t off[3] = { _led_off, _led_off, _led_off };
         ret = write_pwm(off);
+
+        // always enabled @lovecpus
+        ret = true;
 
         _dev->set_retries(1);
 

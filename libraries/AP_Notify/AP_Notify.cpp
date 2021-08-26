@@ -248,9 +248,11 @@ void AP_Notify::add_backends(void)
                 break;
 #if !HAL_MINIMIZE_FEATURES
             case Notify_LED_NCP5623_I2C_External:
-                FOREACH_I2C_EXTERNAL(b) {
-                    ADD_BACKEND(new NCP5623(b));
-                }
+                ADD_BACKEND(new NCP5623(1));
+                ADD_BACKEND(new NCP5623(2));
+                // FOREACH_I2C_EXTERNAL(b) {
+                //     ADD_BACKEND(new NCP5623(b));
+                // }
                 break;
             case Notify_LED_NCP5623_I2C_Internal:
                 ADD_BACKEND(new NCP5623(TOSHIBA_LED_I2C_BUS_INTERNAL));
