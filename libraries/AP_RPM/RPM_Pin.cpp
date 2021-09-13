@@ -40,7 +40,7 @@ void AP_RPM_Pin::irq_handler(uint8_t pin, bool pin_state, uint32_t timestamp)
     // we don't accept pulses less than 100us. Using an irq for such
     // high RPM is too inaccurate, and it is probably just bounce of
     // the signal which we should ignore
-    if (dt > 100 && dt < 1000*1000) {
+    if (dt > 100 && dt < 5000*1000) {
         irq_state[state.instance].dt_sum += dt;
         irq_state[state.instance].dt_count++;
     }
@@ -100,11 +100,11 @@ void AP_RPM_Pin::update(void)
         } else {
             quality = 0;
         }
-        state.signal_quality = (0.1 * quality) + (0.9 * state.signal_quality);
+        state.signal_quality = (0.02 * quality) + (0.98 * state.signal_quality);
     }
     
     // assume we get readings at at least 1Hz, otherwise reset quality to zero
-    if (AP_HAL::millis() - state.last_reading_ms > 1000) {
+    if (AP_HAL::millis() - state.last_reading_ms > 5000) {
         state.signal_quality = 0;
         state.rate_rpm = 0;
     }

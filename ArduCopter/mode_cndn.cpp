@@ -1153,6 +1153,10 @@ public:
         }
         return 0.0f;
     }
+
+    float getRPM() {
+        return AP::rpm()->get_rpm(0);
+    }
 };
 
 void ModeCNDN::inject() {
@@ -1172,7 +1176,7 @@ void ModeCNDN::inject() {
     }
 
     GPIOSensor::get().set_pin(_sensor_pin.get());
-    float ss_count = GPIOSensor::get().getCount();
+    float ss_count = (_sensor_pin.get() == 59) ? GPIOSensor::get().getCount() : GPIOSensor::get().getRPM();
     bool bNotEmpty = copter.sprayer.test_sensor(ss_count);
     if (!copter.sprayer.running() || !copter.sprayer.is_test_empty() || !copter.sprayer.is_active() || bNotEmpty)
         GPIOSensor::get().resetTimeout(now);
