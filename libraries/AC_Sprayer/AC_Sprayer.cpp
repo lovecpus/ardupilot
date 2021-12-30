@@ -243,21 +243,27 @@ void AC_Sprayer::update()
         back = MAX(back, 0); // ensure min pump speed
         back = MIN(back, 10000); // clamp to range
 
-        if (bFull || _flags.testing) {
+        if (_pump_back_rate.get() < 0) {
             // 전후방 분사
             SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
             SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
-        } else if (should_foreback == -1) {
-            // 후방 문사
-            SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, back, 0, 10000);
-            SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
-        } else if (should_foreback == +1) {
-            // 전방 분사
-            SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
-            SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, back, 0, 10000);
         } else {
-            SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, 0, 0, 10000);
-            SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, 0, 0, 10000);
+            if (bFull || _flags.testing) {
+                // 전후방 분사
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
+            } else if (should_foreback == -1) {
+                // 후방 문사
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, back, 0, 10000);
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
+            } else if (should_foreback == +1) {
+                // 전방 분사
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, back, 0, 10000);
+            } else {
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, 0, 0, 10000);
+                SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, 0, 0, 10000);
+            }
         }
 
         _flags.spraying = true;

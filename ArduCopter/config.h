@@ -308,8 +308,7 @@
 //////////////////////////////////////////////////////////////////////////////
 // Follow - follow another vehicle or GCS
 #ifndef MODE_FOLLOW_ENABLED
-//# define MODE_FOLLOW_ENABLED !HAL_MINIMIZE_FEATURES
-# define MODE_FOLLOW_ENABLED DISABLED
+# define MODE_FOLLOW_ENABLED !HAL_MINIMIZE_FEATURES
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
@@ -351,8 +350,7 @@
 //////////////////////////////////////////////////////////////////////////////
 // Sport - fly vehicle in rate-controlled (earth-frame) mode
 #ifndef MODE_SPORT_ENABLED
-//# define MODE_SPORT_ENABLED !HAL_MINIMIZE_FEATURES
-# define MODE_SPORT_ENABLED DISABLED
+# define MODE_SPORT_ENABLED !HAL_MINIMIZE_FEATURES
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
@@ -492,14 +490,14 @@
 // CAMERA TRIGGER AND CONTROL
 //
 #ifndef CAMERA
- # define CAMERA        DISABLED
+ # define CAMERA        ENABLED
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
 // MOUNT (ANTENNA OR CAMERA)
 //
 #ifndef MOUNT
- # define MOUNT         DISABLED
+ # define MOUNT         ENABLED
 #endif
 
 

@@ -141,7 +141,7 @@ bool ModeCNDN::init(bool ignore_checks)
         }
 
         if (copter.init_mode_reason == ModeReason::MISSION_END) {
-            gcswarning("자동 방제가 종료 되었습니다");
+            gcswarning("자동방제가 종료 되었습니다");
             return_to_manual_control(false);
         } else if (copter.init_mode_reason != ModeReason::MISSION_STOP) {
             // initialise waypoint state
@@ -632,6 +632,12 @@ void ModeCNDN::processAB()
                 nCmds ++;
             } break;
 
+            case MAV_CMD_DO_SET_ROI: {
+                i += 4;
+                i += 4;
+                nCmds ++;
+            } break;
+
             case MAV_CMD_NAV_WAYPOINT: {
                 // create edge navigation
                 cmd.id = MAV_CMD_NAV_WAYPOINT;
@@ -833,12 +839,14 @@ void ModeCNDN::processArea()
             } break;
 
             case MAV_CMD_DO_SET_ROI: {
-                cmd.id = MAV_CMD_DO_SET_ROI;
-                cmd.p1 = 0;
-                cmd.content.location.lat = ((uint32_t*)(data_buff+i))[0]; i += 4;
-                cmd.content.location.lng = ((uint32_t*)(data_buff+i))[0]; i += 4;
-                cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
-                AP::mission()->add_cmd(cmd);
+                // cmd.id = MAV_CMD_DO_SET_ROI;
+                // cmd.p1 = 0;
+                // cmd.content.location.lat = ((uint32_t*)(data_buff+i))[0]; i += 4;
+                // cmd.content.location.lng = ((uint32_t*)(data_buff+i))[0]; i += 4;
+                // cmd.content.location.set_alt_cm(_mission_alt_cm.get(), Location::AltFrame::ABOVE_HOME);
+                // AP::mission()->add_cmd(cmd);
+                i += 4;
+                i += 4;
                 nCmds ++;
             } break;
 
@@ -868,58 +876,67 @@ void ModeCNDN::processArea()
 void ModeCNDN::handle_message(const mavlink_message_t &msg)
 {
     switch (msg.msgid) {
-    case MAVLINK_MSG_ID_CNDN_CONNECT: {
-        mavlink_cndn_connect_t packet;
-        mavlink_msg_cndn_connect_decode(&msg, &packet);
-        gcsdebug("[MC] CONNECTED(No. %d)", int(packet.type));
-    } break;
+        case MAVLINK_MSG_ID_CNDN_CONNECT: {
+            mavlink_cndn_connect_t packet;
+            mavlink_msg_cndn_connect_decode(&msg, &packet);
+            gcsdebug("[MC] CONNECTED(No. %d)", int(packet.type));
+        } break;
 
-    case MAVLINK_MSG_ID_CNDN_DETECT: {
-        if (copter.flightmode != &copter.mode_cndn) 
-            return;
+        case MAVLINK_MSG_ID_CNDN_DETECT: {
+            if (copter.flightmode != &copter.mode_cndn) 
+                return;
 
-        mavlink_cndn_detect_t packet;
-        mavlink_msg_cndn_detect_decode(&msg, &packet);
-        gcsdebug("[MC] RECEIVED(%d bytes)", int(packet.result));
+            mavlink_cndn_detect_t packet;
+            mavlink_msg_cndn_detect_decode(&msg, &packet);
+            gcsdebug("[MC] RECEIVED(%d bytes)", int(packet.result));
 
-        data_size = packet.result;
-        if (data_buff != NULL) {
-            delete[] data_buff;
-            data_buff = NULL;
-        }
-
-        if (data_size > 0) {
-            data_buff = new char[data_size];
-            data_wpos = 0;
-            gcs().send_cndn_request(1, MIN(data_size, 120), 0);
-        }
-    } break;
-
-    case MAVLINK_MSG_ID_CNDN_DATA: {
-        if (copter.flightmode != &copter.mode_cndn) 
-            return;
-
-        mavlink_cndn_data_t packet;
-        mavlink_msg_cndn_data_decode(&msg, &packet);
-        if (packet.size == 0) {
-            data_wpos = 0;
-            break;
-        }
-        memcpy((void*)(data_buff+packet.offset), packet.data, packet.size);
-        data_wpos = packet.offset + packet.size;
-        if (data_wpos < data_size) {
-            uint16_t dlen = data_size - data_wpos;
-            gcs().send_cndn_request(1, MIN(dlen, 120), data_wpos);
-        } else {
-            if (isZigZag()) {
-                processAB();
-                resumeLoc.zero();
-            } else {
-                processArea();
-                resumeLoc.zero();
+            data_size = packet.result;
+            if (data_buff != NULL) {
+                delete[] data_buff;
+                data_buff = NULL;
             }
-        }
-    } break;
+
+            if (data_size > 0) {
+                data_buff = new char[data_size];
+                data_wpos = 0;
+                gcs().send_cndn_request(1, MIN(data_size, 120), 0);
+            }
+        } break;
+
+        case MAVLINK_MSG_ID_CNDN_DATA: {
+            if (copter.flightmode != &copter.mode_cndn) 
+                return;
+
+            mavlink_cndn_data_t packet;
+            mavlink_msg_cndn_data_decode(&msg, &packet);
+            if (packet.size == 0) {
+                data_wpos = 0;
+                break;
+            }
+            memcpy((void*)(data_buff+packet.offset), packet.data, packet.size);
+            data_wpos = packet.offset + packet.size;
+            if (data_wpos < data_size) {
+                uint16_t dlen = data_size - data_wpos;
+                gcs().send_cndn_request(1, MIN(dlen, 120), data_wpos);
+            } else {
+                if (isZigZag()) {
+                    processAB();
+                    resumeLoc.zero();
+                } else {
+                    processArea();
+                    resumeLoc.zero();
+                }
+            }
+        } break;
+
+        case MAVLINK_MSG_ID_CNDN_F_OPEN:
+        case MAVLINK_MSG_ID_CNDN_F_CLOSE:
+        case MAVLINK_MSG_ID_CNDN_F_SESS:
+        case MAVLINK_MSG_ID_CNDN_F_READ:
+        case MAVLINK_MSG_ID_CNDN_F_WRITE:
+        case MAVLINK_MSG_ID_CNDN_F_DATA:
+        case MAVLINK_MSG_ID_CNDN_F_RESULT:
+        break;
     }
 }
 
