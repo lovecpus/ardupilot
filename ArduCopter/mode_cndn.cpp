@@ -85,6 +85,111 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     AP_GROUPEND
 };
 
+class GPIOSensor
+{
+private:
+    GPIOSensor() {
+        toTICK.reset(0);
+    }
+#ifdef HAL_PUMP_SENSOR_PIN
+    uint8_t u_pin = HAL_PUMP_SENSOR_PIN;
+    uint8_t l_pin = HAL_PUMP_SENSOR_PIN;
+#else
+    uint8_t u_pin = 0;
+    uint8_t l_pin = 0;
+#endif
+    uint32_t l_ms = 0;
+    uint32_t l_cn = 0;
+    uint32_t l_en = 0;
+    uint32_t l_dt = 0;
+    uint32_t m_count = 0;
+    uint32_t l_count = 0;
+    bool m_init = false;
+    bool m_set = false;
+    bool m_pin_state = false;
+
+public:
+    CNTimeout toTICK;
+
+    static GPIOSensor& get() {
+        static GPIOSensor sgpio;
+        return sgpio;
+    }
+ 
+    void set_pin(uint8_t pin) {
+        u_pin = pin;
+        if (l_pin != u_pin) {
+            l_pin = u_pin;
+            m_init = false;
+        }
+    }
+
+    bool isTimeout(uint32_t now, uint32_t tout) {
+        if (l_ms == 0) l_ms = now;
+        return (now - l_ms) > tout;
+    }
+
+    void resetTimeout(uint32_t now) { l_ms = now; }
+
+    bool stateChanged(bool bSet) {
+        if (m_set != bSet) {
+            m_set = bSet;
+            return true;
+        }
+        return false;
+    }
+
+    bool update(uint32_t now) {
+        if (u_pin) {
+            // ensure we are in input mode
+            if (!m_init) {
+                m_init = true;
+                hal.gpio->pinMode(u_pin, HAL_GPIO_INPUT);
+            }
+            bool bState = hal.gpio->read(u_pin);
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+            static bool gpSet = false;
+            static int gpVal = 0;
+            static CNTimeout toGPSET;
+            if (toGPSET.isTimeout(now, 1)) {
+                gpVal ++;
+                if (gpVal > 7) {
+                    gpSet = true;
+                    if (gpVal >= 8) gpVal = 0;
+                } else {
+                    gpSet = false;
+                }
+            }
+            bState = gpSet;
+#endif
+            if (m_pin_state != bState) {
+                m_pin_state = bState;
+                if (bState) {
+                    resetTimeout(now);
+                    m_count ++;
+                }
+            }
+            return bState;
+        }
+        return false;
+    }
+
+    uint32_t getPulse() { return m_count; }
+    void resetCount() { m_count = 0; }
+
+    float getCount() {
+        if (l_count != m_count) {
+            l_count = m_count;
+            return 1000.0f;
+        }
+        return 0.0f;
+    }
+
+    float getRPM() {
+        return AP::rpm()->get_rpm(0);
+    }
+};
+
 ModeCNDN::ModeCNDN()
 {
     AP_Param::setup_object_defaults(this, var_info);
@@ -499,9 +604,10 @@ void ModeCNDN::mission_command(uint8_t dest_num)
 
     switch (dest_num) {
         case 20: {
-            //AP::gps().inject_data((const uint8_t*)"-REBOOT\r\n", 9);
-            gcsinfo("RTK:-REBOOT\r\n");
-            logdebug("RTK: reboot %d\n", 0);
+            Location loc(copter.current_loc);
+            Location home(AP::ahrs().get_home());
+            int32_t yaws = wrap_180_cd(ahrs.yaw_sensor);
+            gcs().send_cndn_trigger(home, loc, 0, 0, 2, yaws);
         } return;
     }
 
@@ -623,12 +729,8 @@ void ModeCNDN::processAB()
     for(int i=data_wpos; i < data_size; ) {
         switch ((uint8_t)data_buff[i++]) {
             case MAV_CMD_DO_SET_PARAMETER: {
-                uint8_t txt[128];
                 uint8_t len = ((uint8_t*)data_buff)[i++];
-                for(uint8_t x=0; x<len; x++)
-                    txt[x] = ((uint8_t*)data_buff)[i++];
-                txt[len] = 0;
-                gcsdebug("%s", txt);
+                i += len;
                 nCmds ++;
             } break;
 
@@ -757,12 +859,8 @@ void ModeCNDN::processArea()
     for(int i=data_wpos; i < data_size; ) {
         switch ((uint8_t)data_buff[i++]) {
             case MAV_CMD_DO_SET_PARAMETER: {
-                uint8_t txt[128];
-                uint8_t len = ((uint8_t*)data_buff)[i++];
-                for(uint8_t x=0; x<len; x++)
-                    txt[x] = ((uint8_t*)data_buff)[i++];
-                txt[len] = 0;
-                gcsdebug("%s", txt);
+                uint8_t len = (uint8_t)(data_buff[i++]);
+                i += len;
                 nCmds ++;
             } break;
 
@@ -888,7 +986,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
             mavlink_cndn_detect_t packet;
             mavlink_msg_cndn_detect_decode(&msg, &packet);
-            gcsdebug("[MC] RECEIVED(%d bytes)", int(packet.result));
+            gcsdebug("[MC] RECEIVING(%d bytes)", int(packet.result));
 
             data_size = packet.result;
             if (data_buff != NULL) {
@@ -899,7 +997,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             if (data_size > 0) {
                 data_buff = new char[data_size];
                 data_wpos = 0;
-                gcs().send_cndn_request(1, MIN(data_size, 120), 0);
+                gcs().send_cndn_request(msg.sysid, msg.compid, 1, MIN(data_size, 120), 0);
             }
         } break;
 
@@ -909,15 +1007,12 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
 
             mavlink_cndn_data_t packet;
             mavlink_msg_cndn_data_decode(&msg, &packet);
-            if (packet.size == 0) {
-                data_wpos = 0;
-                break;
-            }
+            if (packet.size == 0 || packet.sess != 1) { data_wpos = 0; break; }
             memcpy((void*)(data_buff+packet.offset), packet.data, packet.size);
             data_wpos = packet.offset + packet.size;
             if (data_wpos < data_size) {
                 uint16_t dlen = data_size - data_wpos;
-                gcs().send_cndn_request(1, MIN(dlen, 120), data_wpos);
+                gcs().send_cndn_request(msg.sysid, msg.compid, 1, MIN(dlen, 120), data_wpos);
             } else {
                 if (isZigZag()) {
                     processAB();
@@ -926,6 +1021,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
                     processArea();
                     resumeLoc.zero();
                 }
+                gcsinfo("[MC] MISSION CREATED");
             }
         } break;
 
@@ -937,6 +1033,15 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         case MAVLINK_MSG_ID_CNDN_F_DATA:
         case MAVLINK_MSG_ID_CNDN_F_RESULT:
         break;
+
+        case MAVLINK_MSG_ID_NAMED_VALUE_INT: {
+            mavlink_named_value_int_t packet;
+            mavlink_msg_named_value_int_decode(&msg, &packet);
+            if (strncmp(packet.name,"FLOWCOUNT",9) == 0) {
+                if (packet.value == 0) GPIOSensor::get().resetCount();
+                gcs().send_named_float("FLOWCOUNT", GPIOSensor::get().getPulse()*1.0f);
+            }
+        } break;
     }
 }
 
@@ -1118,64 +1223,6 @@ bool ModeCNDN::resume_mission() {
     return false;
 }
 
-class GPIOSensor
-{
-private:
-    GPIOSensor() {
-        toTICK.reset(0);
-    }
-#ifdef HAL_PUMP_SENSOR_PIN
-    uint8_t u_pin = HAL_PUMP_SENSOR_PIN;
-#else
-    uint8_t u_pin = 0;
-#endif
-    uint32_t l_ms = 0;
-    uint32_t l_cn = 0;
-    uint32_t l_en = 0;
-    uint32_t l_dt = 0;
-    bool m_set = false;
-
-public:
-    CNTimeout toTICK;
-
-    static GPIOSensor& get() {
-        static GPIOSensor sgpio;
-        return sgpio;
-    }
- 
-    void set_pin(uint8_t pin) {
-        u_pin = pin;
-    }
-
-    bool isTimeout(uint32_t now, uint32_t tout) {
-        if (l_ms == 0) l_ms = now;
-        return (now - l_ms) > tout;
-    }
-
-    void resetTimeout(uint32_t now) { l_ms = now; }
-
-    bool stateChanged(bool bSet) {
-        if (m_set != bSet) {
-            m_set = bSet;
-            return true;
-        }
-        return false;
-    }
-
-    float getCount() {
-        if (u_pin) {
-            // ensure we are in input mode
-            hal.gpio->pinMode(u_pin, HAL_GPIO_INPUT);
-            return hal.gpio->read(u_pin) ? 0.0f : 1000.0f;
-        }
-        return 0.0f;
-    }
-
-    float getRPM() {
-        return AP::rpm()->get_rpm(0);
-    }
-};
-
 void ModeCNDN::inject() {
     uint32_t now = AP_HAL::millis();
 #if SPRAYER_ENABLED == ENABLED
@@ -1192,8 +1239,12 @@ void ModeCNDN::inject() {
         }
     }
 
-    GPIOSensor::get().set_pin(_sensor_pin.get());
-    float ss_count = (_sensor_pin.get() == 59) ? GPIOSensor::get().getCount() : GPIOSensor::get().getRPM();
+    float ss_count = 0;
+    if (_sensor_pin.get() == 59) {
+        ss_count = GPIOSensor::get().getCount();
+    } else {
+        ss_count = GPIOSensor::get().getRPM();
+    }
     bool bNotEmpty = copter.sprayer.test_sensor(ss_count);
     if (!copter.sprayer.running() || !copter.sprayer.is_test_empty() || !copter.sprayer.is_active() || bNotEmpty)
         GPIOSensor::get().resetTimeout(now);
@@ -1299,6 +1350,8 @@ void ModeCNDN::inject_50hz() {
 }
 
 void ModeCNDN::inject_400hz() {
+    GPIOSensor::get().set_pin(59);
+    GPIOSensor::get().update(AP_HAL::millis());
 }
 
 void ModeCNDN::initMissionResume() {

@@ -220,7 +220,7 @@ public:
     bool locked() const;
 
     void send_cndn_trigger(const Location& home, const Location& loc, uint16_t dist_edge_cm, uint16_t spray_width_cm, uint8_t _mode, int16_t heading);
-    void send_cndn_request(uint8_t sess, uint16_t size, uint16_t offset);
+    void send_cndn_request(uint8_t tgtid, uint8_t tgtcmp, uint8_t sess, uint16_t size, uint16_t offset);
 
     // return a bitmap of active channels. Used by libraries to loop
     // over active channels to send to all active channels    
@@ -881,7 +881,7 @@ public:
     void send_local_position_ned(float px=0.0f, float py=0.0f, float pz=0.0f, float vx=0.0f, float vy=0.0f, float vz=0.0f);
 
     void send_cndn_trigger(const Location& home, const Location& loc, uint16_t dist_edge_cm, uint16_t spray_width_cm, uint8_t mode, int16_t heading);
-    void send_cndn_request(uint8_t sess, uint16_t size, uint16_t offset);
+    void send_cndn_request(uint8_t tgtid, uint8_t tgtcmp, uint8_t sess, uint16_t size, uint16_t offset);
 
 protected:
 

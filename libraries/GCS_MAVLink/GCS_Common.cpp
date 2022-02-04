@@ -4725,17 +4725,17 @@ void GCS_MAVLINK::send_cndn_trigger(const Location& home, const Location& loc, u
     }
 }
 
-void GCS::send_cndn_request(uint8_t sess, uint16_t size, uint16_t offset)
+void GCS::send_cndn_request(uint8_t tgtid, uint8_t tgtcmp, uint8_t sess, uint16_t size, uint16_t offset)
 {
     for (uint8_t i=0; i<num_gcs(); i++) {
-        chan(i)->send_cndn_request(sess, size, offset);
+        chan(i)->send_cndn_request(tgtid, tgtcmp, sess, size, offset);
     }
 }
 
-void  GCS_MAVLINK::send_cndn_request(uint8_t sess, uint16_t size, uint16_t offset)
+void  GCS_MAVLINK::send_cndn_request(uint8_t tgtid, uint8_t tgtcmp, uint8_t sess, uint16_t size, uint16_t offset)
 {
     if (HAVE_PAYLOAD_SPACE(chan, CNDN_REQUEST)) {
-        mavlink_msg_cndn_request_send(chan, sess, size, offset);
+        mavlink_msg_cndn_request_send(chan, tgtid, tgtcmp, sess, size, offset);
     }
 }
 
