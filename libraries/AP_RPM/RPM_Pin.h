@@ -38,6 +38,7 @@ private:
         uint32_t dt_sum;
         uint32_t dt_count;
     };
+
     static struct IrqState irq_state[RPM_MAX_INSTANCES];
 
     void irq_handler(uint8_t pin,

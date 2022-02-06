@@ -76,6 +76,7 @@ void AP_RPM_Pin::update(void)
         // disable interrupts to prevent race with irq_handler
         void *irqstate = hal.scheduler->disable_interrupts_save();
         dt_avg = irq_state[state.instance].dt_sum / irq_state[state.instance].dt_count;
+        state.counter += irq_state[state.instance].dt_count;
         irq_state[state.instance].dt_count = 0;
         irq_state[state.instance].dt_sum = 0;
         hal.scheduler->restore_interrupts(irqstate);

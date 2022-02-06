@@ -139,48 +139,16 @@ public:
         return false;
     }
 
-    bool update(uint32_t now) {
-        if (u_pin) {
-            // ensure we are in input mode
-            if (!m_init) {
-                m_init = true;
-                hal.gpio->pinMode(u_pin, HAL_GPIO_INPUT);
-            }
-            bool bState = hal.gpio->read(u_pin);
-#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
-            static bool gpSet = false;
-            static int gpVal = 0;
-            static CNTimeout toGPSET;
-            if (toGPSET.isTimeout(now, 1)) {
-                gpVal ++;
-                if (gpVal > 7) {
-                    gpSet = true;
-                    if (gpVal >= 8) gpVal = 0;
-                } else {
-                    gpSet = false;
-                }
-            }
-            bState = gpSet;
-#endif
-            if (m_pin_state != bState) {
-                m_pin_state = bState;
-                if (bState) {
-                    resetTimeout(now);
-                    m_count ++;
-                }
-            }
-            return bState;
-        }
-        return false;
-    }
+    uint32_t getPulse() { return AP::rpm()->get_counter(0); }
 
-    uint32_t getPulse() { return m_count; }
-    void resetCount() { m_count = 0; }
+    void resetCount() { AP::rpm()->reset_counter(0); }
 
     float getCount() {
-        if (l_count != m_count) {
-            l_count = m_count;
-            return 1000.0f;
+        if (u_pin) {
+            // ensure we are in input mode
+            hal.gpio->pinMode(u_pin, HAL_GPIO_INPUT);
+            bool bState = hal.gpio->read(u_pin); // Active Low
+            return bState ? 0.0f : 1000.0f;
         }
         return 0.0f;
     }
@@ -1239,8 +1207,10 @@ void ModeCNDN::inject() {
         }
     }
 
+
     float ss_count = 0;
     if (_sensor_pin.get() == 59) {
+        GPIOSensor::get().set_pin(_sensor_pin.get());
         ss_count = GPIOSensor::get().getCount();
     } else {
         ss_count = GPIOSensor::get().getRPM();
@@ -1350,8 +1320,6 @@ void ModeCNDN::inject_50hz() {
 }
 
 void ModeCNDN::inject_400hz() {
-    GPIOSensor::get().set_pin(59);
-    GPIOSensor::get().update(AP_HAL::millis());
 }
 
 void ModeCNDN::initMissionResume() {

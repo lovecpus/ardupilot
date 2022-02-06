@@ -47,7 +47,8 @@ public:
         uint8_t                instance;        // the instance number of this RPM
         float                  rate_rpm;        // measured rate in revs per minute
         uint32_t               last_reading_ms; // time of last reading
-        float                  signal_quality;  // synthetic quality metric 
+        float                  signal_quality;  // synthetic quality metric
+        uint32_t               counter;         // rpm counter
     };
 
     // parameters for each instance
@@ -79,6 +80,14 @@ public:
             return -1;
         }
         return state[instance].rate_rpm;
+    }
+
+    uint32_t get_counter(uint8_t instance) const {
+        return state[instance].counter;
+    }
+ 
+    void reset_counter(uint8_t instance) {
+        state[instance].counter = 0;
     }
 
     /*
