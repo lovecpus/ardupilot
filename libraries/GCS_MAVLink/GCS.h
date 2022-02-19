@@ -870,6 +870,7 @@ public:
 
     virtual bool simple_input_active() const { return false; }
     virtual bool supersimple_input_active() const { return false; }
+    virtual uint16_t get_errors3() const { return 0; }
 
     // set message interval for a given serial port and message id
     // this function is for use by lua scripts, most consumers should use the channel level function

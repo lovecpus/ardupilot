@@ -35,7 +35,7 @@ bool ModeLoiter::init(bool ignore_checks)
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
 
-    copter.mode_cndn.initMissionResume();
+    // copter.mode_cndn.initMissionResume();
 
     return true;
 }
@@ -80,11 +80,11 @@ void ModeLoiter::precision_loiter_xy()
 // should be called at 100hz or more
 void ModeLoiter::run()
 {
-    if (copter.init_mode_reason == ModeReason::MISSION_STOP) {
-        if (copter.mode_cndn.hoverMissionResume())
-            return;
-        copter.init_mode_reason = ModeReason::RC_COMMAND;
-    }
+    // if (copter.init_mode_reason == ModeReason::MISSION_STOP) {
+    //     if (copter.mode_cndn.hoverMissionResume())
+    //         return;
+    //     copter.init_mode_reason = ModeReason::MISSION_STOPED;
+    // }
 
     float target_roll, target_pitch;
     float target_yaw_rate = 0.0f;

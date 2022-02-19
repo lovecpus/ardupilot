@@ -84,6 +84,9 @@ public:
 
     bool is_test_empty() { return _flags.test_empty; }
 
+    void set_empty(bool true_false) { _flags.empty = true_false; }
+    bool is_empty() { return _flags.empty; }
+
     /// increase/decrease percentage of the pumps maximum rate
     float inc_pump_rate(float percentage) {
         float pcs = _pump_pct_1ms.get() + percentage;
@@ -121,6 +124,7 @@ private:
         uint8_t test_empty  : 1;            ///< 1 if we are permitted to manual sprayer
         uint8_t fullspray   : 1;            ///< 1 if we are permitted to arm motors
         uint8_t active      : 1;            ///< 1 if we are permitted to run sprayer
+        uint8_t empty       : 1;            ///< 1 if we are permitted to empty
     } _flags;
 
     // internal variables

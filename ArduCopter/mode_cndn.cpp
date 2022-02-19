@@ -165,6 +165,7 @@ ModeCNDN::ModeCNDN()
     m_bZigZag = false;
     data_buff = NULL;
     toBAT.disable();
+    toGUIDED.disable();
 }
 
 bool ModeCNDN::init(bool ignore_checks)
@@ -190,7 +191,9 @@ bool ModeCNDN::init(bool ignore_checks)
 
     // 무장상태에서 자동방재ON 상태로 모드 변경이면 자동방재 계속
     if (AP::arming().is_armed()) {
-        if (copter.init_mode_reason != ModeReason::MISSION_STOP && copter.init_mode_reason != ModeReason::MISSION_END) {
+        if ((copter.init_mode_reason != ModeReason::MISSION_STOP)
+            && (copter.init_mode_reason != ModeReason::MISSION_STOPED)
+            && (copter.init_mode_reason != ModeReason::MISSION_END)) {
             RC_Channel* cnauto = rc().find_channel_for_option(RC_Channel::AUX_FUNC::CNDN_AUTO);
             if (cnauto && cnauto->norm_input() >= 0.9f) {
                 if (resume_mission())
@@ -764,6 +767,8 @@ void ModeCNDN::processAB()
             last_yaw_deg = copter.mode_zigzag.cms.yaw_deg;
             auto_yaw.set_fixed_yaw(last_yaw_deg, 0.0f, 0, false);
             stage = PREPARE_AUTO;
+            toYAW.reset(AP_HAL::millis());
+            toAUTO.reset(AP_HAL::millis());
         }
     } else {
         gcsdebug("[CNDN] Create mission failed(%d/%d)", nCmds, nCMDs);
@@ -932,6 +937,8 @@ void ModeCNDN::processArea()
         if (AP::arming().is_armed()) {
             auto_yaw.set_fixed_yaw(last_yaw_deg, 0.0f, 0, false);
             stage = PREPARE_AUTO;
+            toYAW.reset(AP_HAL::millis());
+            toAUTO.reset(AP_HAL::millis());
         }
     } else {
         gcsdebug("[CNDN] Create mission failed(%d/%d)", nCmds, nCMDs);
@@ -993,14 +1000,20 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             }
         } break;
 
+        case MAVLINK_MSG_ID_CNDN_REQUEST:
+        break;
+
         case MAVLINK_MSG_ID_CNDN_F_OPEN:
         case MAVLINK_MSG_ID_CNDN_F_CLOSE:
-        case MAVLINK_MSG_ID_CNDN_F_SESS:
         case MAVLINK_MSG_ID_CNDN_F_READ:
-        case MAVLINK_MSG_ID_CNDN_F_WRITE:
         case MAVLINK_MSG_ID_CNDN_F_DATA:
         case MAVLINK_MSG_ID_CNDN_F_RESULT:
         break;
+
+        case MAVLINK_MSG_ID_CNDN_F_SESS: {
+            mavlink_cndn_request_t packet;
+            mavlink_msg_cndn_request_decode(&msg, &packet);
+        } break;
 
         case MAVLINK_MSG_ID_NAMED_VALUE_INT: {
             mavlink_named_value_int_t packet;
@@ -1207,7 +1220,6 @@ void ModeCNDN::inject() {
         }
     }
 
-
     float ss_count = 0;
     if (_sensor_pin.get() == 59) {
         GPIOSensor::get().set_pin(_sensor_pin.get());
@@ -1223,8 +1235,10 @@ void ModeCNDN::inject() {
         //AP_Notify::flags.sprayer_empty = false;
         copter.sprayer.test_pump(false);
     } else if (GPIOSensor::get().isTimeout(now, 2000)) {
-        if (copter.sprayer.is_active())
+        if (copter.sprayer.is_active()) {
+            copter.sprayer.set_empty(true);
             AP_Notify::flags.sprayer_empty = true;
+        }
         copter.sprayer.test_pump(false);
     }
 
@@ -1256,7 +1270,29 @@ void ModeCNDN::inject() {
                         }
                         loiter_nav->init_target();
                         loiter_nav->clear_pilot_desired_acceleration();
+                        toGUIDED.reset(AP_HAL::millis());
+                        copter.mode_cndn.initMissionResume();
                         copter.set_mode(Mode::Number::LOITER, ModeReason::MISSION_STOP);
+                    }
+                break;
+
+                case Mode::Number::LOITER:
+                    if (toGUIDED.isTimeout(AP_HAL::millis(), 5000)) {
+                        toGUIDED.reset(AP_HAL::millis());
+                        copter.set_mode(Mode::Number::GUIDED, ModeReason::MISSION_STOPED);
+                    }
+                break;
+
+                case Mode::Number::GUIDED:
+                    if (copter.init_mode_reason != ModeReason::MISSION_STOPED) {
+                        toGUIDED.disable();
+                        break;
+                    }
+                    if (toGUIDED.isTimeout(AP_HAL::millis(), 200)) {
+                        toGUIDED.disable();
+                        Location targetLoc = copter.current_loc;
+                        targetLoc.alt += _take_alt_cm.get();
+                        copter.mode_guided.set_destination(targetLoc, false, 0.0f, false, 0.0f, false);
                     }
                 break;
 

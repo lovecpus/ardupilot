@@ -4046,6 +4046,7 @@ void GCS_MAVLINK::send_sys_status()
     const uint32_t errors = AP::internalerror().errors();
     const uint16_t errors1 = errors & 0xffff;
     const uint16_t errors2 = (errors>>16) & 0xffff;
+    const uint16_t errors3 = gcs().get_errors3();
     const uint16_t errors4 = AP::internalerror().count() & 0xffff;
 
     mavlink_msg_sys_status_send(
@@ -4061,7 +4062,7 @@ void GCS_MAVLINK::send_sys_status()
         0,  // comm drops in pkts,
         errors1,
         errors2,
-        0,  // errors3
+        errors3,  // errors3
         errors4); // errors4
 }
 

@@ -17,6 +17,10 @@ bool GCS_Copter::supersimple_input_active() const
     return copter.ap.simple_mode == 2;
 }
 
+uint16_t GCS_Copter::get_errors3() const {
+    return (uint16_t)copter.init_mode_reason;
+}
+
 void GCS_Copter::update_vehicle_sensor_status_flags(void)
 {
     control_sensors_present |=
@@ -163,6 +167,16 @@ void GCS_Copter::update_vehicle_sensor_status_flags(void)
         control_sensors_enabled |= MAV_SYS_STATUS_SENSOR_LASER_POSITION;
         if (rangefinder && rangefinder->has_data_orient(ROTATION_PITCH_270)) {
             control_sensors_health |= MAV_SYS_STATUS_SENSOR_LASER_POSITION;
+        }
+    }
+#endif
+
+#if SPRAYER_ENABLED == ENABLED
+    control_sensors_present |= 0x20000000;
+    if (copter.sprayer.is_active()) {
+        control_sensors_enabled |= 0x20000000;
+        if (!copter.sprayer.is_empty()) {
+            control_sensors_health |= 0x20000000;
         }
     }
 #endif

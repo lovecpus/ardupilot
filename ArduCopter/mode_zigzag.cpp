@@ -43,7 +43,7 @@ bool ModeZigZag::init(bool ignore_checks)
     copter.rangefinder_state.enabled = false;
     dest_A.zero();
     dest_B.zero();
-
+    toAUTO.reset(AP_HAL::millis());
     stage = MANUAL;
 
     if (AP::arming().is_armed() && copter.init_mode_reason != ModeReason::MISSION_STOP) {
@@ -105,7 +105,6 @@ void ModeZigZag::run()
             }
             copter.rangefinder_state.enabled = true;
             if (toAUTO.isTimeout(now, 1000)) {
-                toAUTO.disable();
                 copter.wp_nav->set_speed_xy(copter.mode_cndn._spd_auto_cm.get());
                 copter.set_mode(Mode::Number::AUTO, ModeReason::MISSION_RESUME);
                 stage = MANUAL;

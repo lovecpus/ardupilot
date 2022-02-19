@@ -6,12 +6,12 @@
 
 #include "ap_version.h"
 
-#define THISFIRMWARE "AUTO-10 V22.206.403-CNDN"
+#define THISFIRMWARE "AUTO-10 V22.218.403-CNDN"
 
 // the following line is parsed by the autotest scripts
-#define FIRMWARE_VERSION 22,206,403,FIRMWARE_VERSION_TYPE_RC
+#define FIRMWARE_VERSION 22,218,403,FIRMWARE_VERSION_TYPE_RC
 
 #define FW_MAJOR 22
-#define FW_MINOR 206
+#define FW_MINOR 218
 #define FW_PATCH 403
 #define FW_TYPE FIRMWARE_VERSION_TYPE_RC

@@ -86,7 +86,7 @@ public:
     bool hoverMissionResume();
 
     static const struct AP_Param::GroupInfo var_info[];
-    CNTimeout toAUTO, toDBG;
+    CNTimeout toAUTO, toDBG, toGUIDED;
 
     Mode *switch_zigzag();
 

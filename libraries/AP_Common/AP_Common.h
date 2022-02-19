@@ -143,11 +143,12 @@ private:
     bool        b_disabled;
 
 public:
-    CNTimeout() : m_s(0), b_disabled(false) {}
+    CNTimeout(bool _disab=false) : m_s(0), b_disabled(_disab) {}
     void reset(uint32_t s) { m_s = s; b_disabled = false; }
     void disable() { b_disabled = true; }
     bool isEnabled() { return !b_disabled; }
     bool isTimeout(uint32_t s, uint32_t tio) {
+        if (b_disabled) return false;
         if (s > m_s + tio) {
             m_s = s + tio;
             return true;

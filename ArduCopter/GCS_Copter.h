@@ -36,6 +36,8 @@ public:
 
     bool simple_input_active() const override;
     bool supersimple_input_active() const override;
+    uint16_t get_errors3() const override;
+
 
 protected:
 
