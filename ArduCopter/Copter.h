@@ -620,11 +620,12 @@ private:
 
     enum Failsafe_Action {
         Failsafe_Action_None           = 0,
-        Failsafe_Action_Land           = 1,
-        Failsafe_Action_RTL            = 2,
-        Failsafe_Action_SmartRTL       = 3,
-        Failsafe_Action_SmartRTL_Land  = 4,
-        Failsafe_Action_Terminate      = 5
+        Failsafe_Action_Hover          = 1,
+        Failsafe_Action_Land           = 2,
+        Failsafe_Action_RTL            = 3,
+        Failsafe_Action_SmartRTL       = 4,
+        Failsafe_Action_SmartRTL_Land  = 5,
+        Failsafe_Action_Terminate      = 6
     };
 
     enum class FailsafeOption {
@@ -641,6 +642,7 @@ private:
                                                       Failsafe_Action_RTL,
                                                       Failsafe_Action_SmartRTL_Land,
                                                       Failsafe_Action_SmartRTL,
+                                                      Failsafe_Action_Hover,
                                                       Failsafe_Action_None,
                                                       -1 // the priority list must end with a sentinel of -1
                                                      };

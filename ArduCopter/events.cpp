@@ -362,6 +362,9 @@ void Copter::do_failsafe_action(Failsafe_Action action, ModeReason reason){
     switch (action) {
         case Failsafe_Action_None:
             return;
+        case Failsafe_Action_Hover:
+            set_mode(Mode::Number::POSHOLD, reason);
+            break;
         case Failsafe_Action_Land:
             set_mode_land_with_pause(reason);
             break;
