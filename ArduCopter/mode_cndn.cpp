@@ -18,7 +18,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Units: cm
     // @Range: 100 2000
     // @User: Advance
-    AP_GROUPINFO("TAKEOFF_ALT", 1, ModeCNDN, _take_alt_cm, 300),
+    AP_GROUPINFO("TAKEOFF_ALT", 1, ModeCNDN, _take_alt_cm, 200),
 
     // @Param: MISSION_ALT
     // @DisplayName: Mission altitute
@@ -42,7 +42,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Units: cms
     // @Range: 100 800
     // @User: Advance
-    AP_GROUPINFO("DIS_EDGE", 4, ModeCNDN, _dst_eg_cm, 400),
+    AP_GROUPINFO("DIS_EDGE", 4, ModeCNDN, _dst_eg_cm, 250),
 
     // @Param: SPD_EDGE mission
     // @DisplayName: Speed edge
@@ -80,7 +80,7 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @Description: Avoidance distance for break mode
     // @Range: 200 1000
     // @User: Advance
-    AP_GROUPINFO("AVOID_CM", 9, ModeCNDN, _avoid_cm, 500),
+    AP_GROUPINFO("AVOID_CM", 9, ModeCNDN, _avoid_cm, 600),
 
     AP_GROUPEND
 };

@@ -55,7 +55,7 @@ const AP_Param::GroupInfo AC_Sprayer::var_info[] = {
     // @Units: %
     // @Range: 0 100
     // @User: Standard
-    AP_GROUPINFO("PUMP_BACK",   5, AC_Sprayer, _pump_back_rate, 10),
+    AP_GROUPINFO("PUMP_BACK",   5, AC_Sprayer, _pump_back_rate, 12),
 
     AP_GROUPEND
 };
