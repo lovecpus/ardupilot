@@ -246,7 +246,7 @@ void AP_Notify::add_backends(void)
             case Notify_LED_ToshibaLED_I2C_External:
                 ADD_BACKEND(new ToshibaLED_I2C(TOSHIBA_LED_I2C_BUS_EXTERNAL));
                 break;
-#if !HAL_MINIMIZE_FEATURES
+#if !HAL_MINIMIZE_FEATURES | TRUE
             case Notify_LED_NCP5623_I2C_External:
                 ADD_BACKEND(new NCP5623(1));
                 ADD_BACKEND(new NCP5623(2));
