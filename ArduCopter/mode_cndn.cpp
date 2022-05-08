@@ -675,7 +675,8 @@ void ModeCNDN::processAB()
     float alt_cm = 0.0f;
     int32_t misAlt = _mission_alt_cm.get();
     Location::AltFrame misFrame = Location::AltFrame::ABOVE_HOME;
-    if (_method.get() == 2) {
+    int8_t mValue = _method.get();
+    if (mValue == 2 || mValue == 4) {
         int32_t altCm = 0;
         if (copter.current_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME, altCm))
             misAlt = altCm;
@@ -811,7 +812,8 @@ void ModeCNDN::processArea()
     int nCmds = 0;
 
     Location::AltFrame misFrame = Location::AltFrame::ABOVE_HOME;
-    if (_method.get() == 2) {
+    int8_t mValue = _method.get();
+    if (mValue == 2 || mValue == 4) {
         int32_t altCm = 0;
         if (copter.current_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME, altCm))
             misAlt = altCm;
