@@ -1,0 +1,31 @@
+# hw definition file for processing by chibios_hwdef.py
+# for CUAVv5 hardware.
+
+include ../fmuv5/hwdef.dat
+
+# order of UARTs (and USB).
+UART_ORDER OTG1 USART1 USART2 USART3 UART4 USART6 UART7 OTG2
+
+# RCInput on the PPM pin, for all protocols
+undef PG9
+undef USART6_RX
+PI5 TIM8_CH1 TIM8 RCININT PULLUP LOW
+
+# extra LEDs, active low, used using the pixracer LED scheme
+PH10 LED_R1 OUTPUT OPENDRAIN HIGH GPIO(0)
+PH11 LED_G1 OUTPUT OPENDRAIN HIGH GPIO(1)
+PH12 LED_B1 OUTPUT OPENDRAIN HIGH GPIO(2)
+
+undef HAL_GPIO_A_LED_PIN
+undef HAL_GPIO_B_LED_PIN
+
+define HAL_GPIO_A_LED_PIN 0
+define HAL_GPIO_B_LED_PIN 1
+define HAL_GPIO_C_LED_PIN 2
+
+define HAL_GPIO_LED_ON  0
+define HAL_GPIO_LED_OFF 1
+
+define HAL_HAVE_PIXRACER_LED
+
+

@@ -219,14 +219,14 @@ void AC_Sprayer::update()
 
     float pct = _pump_pct_1ms.get();
     // if testing pump output speed as if traveling at 1m/s
-    if (_flags.testing) {
+    if (_flags.testing && !is_spreader()) {
         ground_speed = 200.0f;
         should_be_spraying = true;
         should_foreback = 1;
         pct = 20.0f;
     }
 
-    bool bFull = _flags.fullspray != 0;
+    bool bFull = is_fullspray();
     if (_flags.manual) {
         ground_speed = _manual_speed;
         should_be_spraying = true;
@@ -243,31 +243,40 @@ void AC_Sprayer::update()
         back = MAX(back, 0); // ensure min pump speed
         back = MIN(back, 10000); // clamp to range
 
-        if (_pump_back_rate.get() < 0) {
-            // 전후방 분사
+        if (is_spreader()) {
+            _flags.test_empty = false;
             SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
-            SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
+            SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, back, 0, 10000);
         } else {
-            if (bFull || _flags.testing) {
+            if (_pump_back_rate.get() < 0) {
                 // 전후방 분사
                 SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
                 SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
-            } else if (should_foreback == -1) {
-                // 후방 문사
-                SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, back, 0, 10000);
-                SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
-            } else if (should_foreback == +1) {
-                // 전방 분사
-                SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
-                SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, back, 0, 10000);
             } else {
-                SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, 0, 0, 10000);
-                SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, 0, 0, 10000);
+                if (bFull || _flags.testing) {
+                    // 전후방 분사
+                    SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
+                    SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
+                } else if (should_foreback == -1) {
+                    // 후방 문사
+                    SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, back, 0, 10000);
+                    SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, pos, 0, 10000);
+                } else if (should_foreback == +1) {
+                    // 전방 분사
+                    SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
+                    SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, back, 0, 10000);
+                } else {
+                    SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, 0, 0, 10000);
+                    SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, 0, 0, 10000);
+                }
             }
+            _flags.test_empty = pos >= (100 * _pump_min_pct.get() + (_pump_pct_1ms.get() * _speed_min.get()));
         }
-
         _flags.spraying = true;
-        _flags.test_empty = pos >= (100 * _pump_min_pct.get() + (_pump_pct_1ms.get() * _speed_min.get()));
+    } else if (is_spreader()) {
+        _flags.test_empty = false;
+        SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, 0, 0, 10000);
+        _flags.spraying = false;
     } else {
         _flags.test_empty = false;
         stop_spraying();

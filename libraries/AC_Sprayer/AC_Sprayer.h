@@ -87,6 +87,9 @@ public:
     void set_empty(bool true_false) { _flags.empty = true_false; }
     bool is_empty() { return _flags.empty; }
 
+    void set_spreader(bool true_false) { _flags.spreader = true_false; }
+    bool is_spreader() { return _flags.spreader; }
+
     /// increase/decrease percentage of the pumps maximum rate
     float inc_pump_rate(float percentage) {
         float pcs = _pump_pct_1ms.get() + percentage;
@@ -117,14 +120,15 @@ private:
 
     /// flag bitmask
     struct sprayer_flags_type {
-        uint8_t spraying    : 1;            ///< 1 if we are currently spraying
-        uint8_t testing     : 1;            ///< 1 if we are testing the sprayer and should output a minimum value
-        uint8_t running     : 1;            ///< 1 if we are permitted to run sprayer
-        uint8_t manual      : 1;            ///< 1 if we are permitted to manual sprayer
-        uint8_t test_empty  : 1;            ///< 1 if we are permitted to manual sprayer
-        uint8_t fullspray   : 1;            ///< 1 if we are permitted to arm motors
-        uint8_t active      : 1;            ///< 1 if we are permitted to run sprayer
-        uint8_t empty       : 1;            ///< 1 if we are permitted to empty
+        uint16_t spraying    : 1;            ///< 1 if we are currently spraying
+        uint16_t testing     : 1;            ///< 1 if we are testing the sprayer and should output a minimum value
+        uint16_t running     : 1;            ///< 1 if we are permitted to run sprayer
+        uint16_t manual      : 1;            ///< 1 if we are permitted to manual sprayer
+        uint16_t test_empty  : 1;            ///< 1 if we are permitted to manual sprayer
+        uint16_t fullspray   : 1;            ///< 1 if we are permitted to arm motors
+        uint16_t active      : 1;            ///< 1 if we are permitted to run sprayer
+        uint16_t empty       : 1;            ///< 1 if we are permitted to empty
+        uint16_t spreader    : 1;            ///< 1 if we are permitted to spreader
     } _flags;
 
     // internal variables

@@ -1220,31 +1220,35 @@ void ModeCNDN::inject() {
         }
     }
 
-    float ss_count = 0;
-    if (_sensor_pin.get() == 59) {
-        GPIOSensor::get().set_pin(_sensor_pin.get());
-        ss_count = GPIOSensor::get().getCount();
-    } else {
-        ss_count = GPIOSensor::get().getRPM();
-    }
-    bool bNotEmpty = copter.sprayer.test_sensor(ss_count);
-    if (!copter.sprayer.running() || !copter.sprayer.is_test_empty() || !copter.sprayer.is_active() || bNotEmpty)
-        GPIOSensor::get().resetTimeout(now);
+    copter.sprayer.set_spreader(_method == 3 || _method == 4);
 
-    if (bNotEmpty) {
-        //AP_Notify::flags.sprayer_empty = false;
-        copter.sprayer.test_pump(false);
-    } else if (GPIOSensor::get().isTimeout(now, 2000)) {
-        if (copter.sprayer.is_active()) {
-            copter.sprayer.set_empty(true);
-            AP_Notify::flags.sprayer_empty = true;
+    if (!copter.sprayer.is_spreader()) {
+        float ss_count = 0;
+        if (_sensor_pin.get() == 59) {
+            GPIOSensor::get().set_pin(_sensor_pin.get());
+            ss_count = GPIOSensor::get().getCount();
+        } else {
+            ss_count = GPIOSensor::get().getRPM();
         }
-        copter.sprayer.test_pump(false);
-    }
+        bool bNotEmpty = copter.sprayer.test_sensor(ss_count);
+        if (!copter.sprayer.running() || !copter.sprayer.is_test_empty() || !copter.sprayer.is_active() || bNotEmpty)
+            GPIOSensor::get().resetTimeout(now);
 
-    if (GPIOSensor::get().stateChanged(AP_Notify::flags.sprayer_empty)) {
-        if (AP_Notify::flags.sprayer_empty)
-            gcswarning("농약이 없습니다");
+        if (bNotEmpty) {
+            //AP_Notify::flags.sprayer_empty = false;
+            copter.sprayer.test_pump(false);
+        } else if (GPIOSensor::get().isTimeout(now, 2000)) {
+            if (copter.sprayer.is_active()) {
+                copter.sprayer.set_empty(true);
+                AP_Notify::flags.sprayer_empty = true;
+            }
+            copter.sprayer.test_pump(false);
+        }
+
+        if (GPIOSensor::get().stateChanged(AP_Notify::flags.sprayer_empty)) {
+            if (AP_Notify::flags.sprayer_empty)
+                gcswarning("농약이 없습니다");
+        }
     }
 #endif
 
