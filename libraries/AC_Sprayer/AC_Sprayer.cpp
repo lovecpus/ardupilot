@@ -235,14 +235,14 @@ void AC_Sprayer::update()
     }
 
     // if spraying or testing update the pump servo position
-    if (should_be_spraying) {
-        float pos = ground_speed * pct;
-        pos = MAX(pos, 100 * _pump_min_pct.get()); // ensure min pump speed
-        pos = MIN(pos, 10000); // clamp to range
-        float back = _pump_back_rate.get() * 100;
-        back = MAX(back, 0); // ensure min pump speed
-        back = MIN(back, 10000); // clamp to range
+    float back = _pump_back_rate.get() * 100;
+    back = MAX(back, 0); // ensure min pump speed
+    back = MIN(back, 10000); // clamp to range
+    float pos = ground_speed * pct;
+    pos = MAX(pos, 100 * _pump_min_pct.get()); // ensure min pump speed
+    pos = MIN(pos, 10000); // clamp to range
 
+    if (should_be_spraying) {
         if (is_spreader()) {
             _flags.test_empty = false;
             SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, pos, 0, 10000);
@@ -276,6 +276,7 @@ void AC_Sprayer::update()
     } else if (is_spreader()) {
         _flags.test_empty = false;
         SRV_Channels::move_servo(SRV_Channel::k_sprayer_pump, 0, 0, 10000);
+        SRV_Channels::move_servo(SRV_Channel::k_sprayer_spinner, back, 0, 10000);
         _flags.spraying = false;
     } else {
         _flags.test_empty = false;
