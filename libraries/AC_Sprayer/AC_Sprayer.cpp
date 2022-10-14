@@ -114,6 +114,8 @@ void AC_Sprayer::run(const bool true_false)
     if (!_flags.running) {
         stop_spraying();
     }
+
+    logdebug("SPRAYER %s\n", _flags.running?"T":"F");
 }
 
 void AC_Sprayer::stop_spraying()

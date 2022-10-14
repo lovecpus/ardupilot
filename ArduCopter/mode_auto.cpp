@@ -48,6 +48,7 @@ bool ModeAuto::init(bool ignore_checks)
         copter.mode_guided.limit_clear();
 
         // start/resume the mission (based on MIS_RESTART parameter)
+        copter.mode_cndn.u32_runSpray = 0;
         mission.start_or_resume();
         return true;
     } else {

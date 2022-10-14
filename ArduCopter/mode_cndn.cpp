@@ -161,6 +161,7 @@ public:
 ModeCNDN::ModeCNDN()
 {
     AP_Param::setup_object_defaults(this, var_info);
+    u32_runSpray = 0;
     cmd_mode = 0;
     m_bZigZag = false;
     data_buff = NULL;
@@ -1023,6 +1024,17 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
             if (strncmp(packet.name,"FLOWCOUNT",9) == 0) {
                 if (packet.value == 0) GPIOSensor::get().resetCount();
                 gcs().send_named_float("FLOWCOUNT", GPIOSensor::get().getPulse()*1.0f);
+            } else if (strncmp(packet.name,"FLOWLEVEL",9) == 0) {
+                if (packet.value == 0) {
+                    // mission break
+#if SPRAYER_ENABLED == ENABLED
+                    if (copter.sprayer.is_active()) {
+                        copter.sprayer.set_empty(true);
+                        AP_Notify::flags.sprayer_empty = true;
+                    }
+                    copter.sprayer.test_pump(false);
+#endif
+                }
             }
         } break;
     }
@@ -1157,6 +1169,7 @@ void ModeCNDN::do_set_relay(const AP_Mission::Mission_Command& cmd) {
             case 0:
             case 1: {
                 bool bRun = (cmd.content.relay.state == 1);
+                u32_runSpray = bRun ? 1 : 0;
 #if SPRAYER_ENABLED == ENABLED
                 copter.sprayer.run(bRun);
 #endif
@@ -1210,12 +1223,12 @@ void ModeCNDN::inject() {
     uint32_t now = AP_HAL::millis();
 #if SPRAYER_ENABLED == ENABLED
     copter.sprayer.set_fullspray(is_disarmed_or_landed() ? 1 : 0);
-    RC_Channel* cnfull = rc().find_channel_for_option(RC_Channel::AUX_FUNC::CNDN_SPR_FF);
-    if (cnfull && cnfull->norm_input() >= 0.8f)
-        copter.sprayer.set_fullspray(true);
+    // RC_Channel* cnfull = rc().find_channel_for_option(RC_Channel::AUX_FUNC::CNDN_SPR_FF);
+    // if (cnfull && cnfull->norm_input() >= 0.8f)
+    //     copter.sprayer.set_fullspray(true);
 
     if (copter.sprayer.is_manual()) {
-        cnfull = rc().find_channel_for_option(RC_Channel::AUX_FUNC::CNDN_PUMP);
+        RC_Channel* cnfull = rc().find_channel_for_option(RC_Channel::AUX_FUNC::CNDN_PUMP);
         if (cnfull) {
             int pcts = cnfull->percent_input();
             copter.sprayer.set_manual_speed((pcts * 500.0f) / 100.0f);
@@ -1609,6 +1622,32 @@ void ModeCNDN::zigzag_manual() {
         pos_control->update_z_controller();
         break;
     }
+}
+
+void ModeCNDN::do_aux_function_sprayer(const uint8_t ch_flag)
+{
+    AC_Sprayer *sprayer = AP::sprayer();
+    if (sprayer == nullptr) {
+        return;
+    }
+
+    RC_Channel* cnauto = rc().find_channel_for_option(RC_Channel::AUX_FUNC::CNDN_AUTO);
+    bool bMission = (cnauto && cnauto->norm_input() >= 0.9f);
+
+    sprayer->active((ch_flag == HIGH) || (ch_flag == MIDDLE));
+
+    if (bMission) {
+        sprayer->run((ch_flag == HIGH) || (u32_runSpray && (ch_flag == MIDDLE)));
+    } else {
+        sprayer->run(ch_flag >= MIDDLE);
+    }
+    sprayer->manual_pump(ch_flag == HIGH);
+    if (AP_Notify::flags.sprayer_empty && ch_flag == LOW) {
+        AP_Notify::flags.sprayer_empty = false;
+        sprayer->set_empty(false);
+    }
+    // if we are disarmed the pilot must want to test the pump
+    sprayer->test_pump((ch_flag == MIDDLE) && !hal.util->get_soft_armed());
 }
 
 #endif

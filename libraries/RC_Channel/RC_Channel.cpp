@@ -593,13 +593,6 @@ void RC_Channel::do_aux_function_sprayer(const aux_switch_pos_t ch_flag)
     sprayer->active((ch_flag == HIGH) || (ch_flag == MIDDLE));
     sprayer->run((ch_flag == HIGH) || (ch_flag == MIDDLE));
     sprayer->manual_pump(ch_flag == HIGH);
-    if (AP_Notify::flags.sprayer_empty && ch_flag == LOW) {
-        AP_Notify::flags.sprayer_empty = false;
-        sprayer->set_empty(false);
-    }
-    // sprayer power down for manual mode
-    // if (sprayer->is_manual())
-    //     sprayer->set_manual_speed(500.0f);
     // if we are disarmed the pilot must want to test the pump
     sprayer->test_pump((ch_flag == MIDDLE) && !hal.util->get_soft_armed());
 }

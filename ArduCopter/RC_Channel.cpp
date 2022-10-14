@@ -582,7 +582,12 @@ void RC_Channel_Copter::do_aux_function(const aux_func_t ch_option, const aux_sw
                 break;
             }
             break;
+
 #if MODE_CNDN_ENABLED == ENABLED
+        case AUX_FUNC::SPRAYER:
+            copter.mode_cndn.do_aux_function_sprayer(ch_flag);
+            break;
+
         CASE_CNDN_AUX_FUNC()
 #endif
     default:

@@ -51,10 +51,17 @@ int degNE(const Vector2f& pp);
 int degNE(const Vector2f& p1, const Vector2f& p2);
 Vector3f locNEU(float latf, float lngf, float altf);
 */
+// auxillary switch handling (n.b.: we store this as 2-bits!):
+
 class ModeCNDN : public Mode
 {
     friend class ModeZigZag;
 public:
+    enum aux_switch_pos_t : uint8_t {
+        LOW,       // indicates auxiliary switch is in the low position (pwm <1200)
+        MIDDLE,    // indicates auxiliary switch is in the middle position (pwm >1200, <1800)
+        HIGH       // indicates auxiliary switch is in the high position (pwm >1800)
+    };
     // inherit constructor
     using Mode::Mode;
     ModeCNDN();
@@ -84,9 +91,11 @@ public:
     bool isZigZag() { return m_bZigZag; }
     void initMissionResume();
     bool hoverMissionResume();
+    void do_aux_function_sprayer(const uint8_t ch_flag);
 
     static const struct AP_Param::GroupInfo var_info[];
     CNTimeout toAUTO, toDBG, toGUIDED;
+    uint32_t    u32_runSpray;
 
     Mode *switch_zigzag();
 

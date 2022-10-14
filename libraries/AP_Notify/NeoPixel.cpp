@@ -21,7 +21,7 @@
 #define AP_NOTIFY_NEOPIXEL_MAX_INSTANCES        4
 
 #ifndef HAL_NEOPIXEL_COUNT
-#define HAL_NEOPIXEL_COUNT 1
+#define HAL_NEOPIXEL_COUNT 4
 #endif
 
 // Datasheet: https://cdn-shop.adafruit.com/datasheets/WS2812B.pdf

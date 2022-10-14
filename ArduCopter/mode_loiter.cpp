@@ -85,7 +85,6 @@ void ModeLoiter::run()
     //         return;
     //     copter.init_mode_reason = ModeReason::MISSION_STOPED;
     // }
-
     float target_roll, target_pitch;
     float target_yaw_rate = 0.0f;
     float target_climb_rate = 0.0f;
