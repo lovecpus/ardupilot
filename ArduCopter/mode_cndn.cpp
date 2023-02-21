@@ -598,14 +598,14 @@ void ModeCNDN::mission_command(uint8_t dest_num)
             Vector3f stopping_point;
             wp_nav->get_wp_stopping_point(stopping_point);
             wp_nav->set_wp_destination(stopping_point, false);
+
             Location loc(copter.current_loc);
             Location home(AP::ahrs().get_home());
             int32_t yaws = wrap_180_cd(ahrs.yaw_sensor);
-
             gcs().send_cndn_trigger(home, loc, _dst_eg_cm.get(), _spray_width_cm.get(), m_bZigZag?1:0, yaws);
             gcsdebug("[방제검색] %d,%d,%d", (int)loc.lat, (int)loc.lng, (int)yaws);
-            copter.rangefinder_state.alt_cm_filt.set_cutoff_frequency(_radar_flt_hz.get());
 
+            copter.rangefinder_state.alt_cm_filt.set_cutoff_frequency(_radar_flt_hz.get());
             float alt_cm = 0.0f;
             if (wp_nav->get_terrain_alt(alt_cm)) {
                 copter.surface_tracking.set_target_alt_cm(alt_cm);
@@ -1012,6 +1012,26 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         case MAVLINK_MSG_ID_CNDN_F_DATA:
         case MAVLINK_MSG_ID_CNDN_F_RESULT:
         break;
+
+        case MAVLINK_MSG_ID_CNDN_REMOTE: {
+            mavlink_cndn_remote_t packet;
+            mavlink_msg_cndn_remote_decode(&msg, &packet);
+            switch (packet.cmdid) {
+                case 1: // remote command trigger
+                {
+                    uint32_t *p = (uint32_t *)(packet.param);
+                    uint32_t lat = p[0];
+                    uint32_t lng = p[1];
+
+                    Location loc(lat, lng, 3.0f, Location::AltFrame::ABOVE_HOME);
+                    Location home(loc);
+                    int32_t yaws = wrap_180_cd(ahrs.yaw_sensor);
+                    gcs().send_cndn_trigger(home, loc, _dst_eg_cm.get(), _spray_width_cm.get(), m_bZigZag?1:0, yaws);
+                    gcsdebug("[원격방제검색] %d,%d,%d", (int)loc.lat, (int)loc.lng, (int)yaws);
+
+                } break;
+            }
+        } break;
 
         case MAVLINK_MSG_ID_CNDN_F_SESS: {
             mavlink_cndn_request_t packet;
