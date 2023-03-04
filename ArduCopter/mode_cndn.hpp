@@ -1,9 +1,34 @@
 #include <deque>
 #include <algorithm>
 
-# define gcsdebug(FORM, ...) gcs().send_text(MAV_SEVERITY_INFO, FORM, __VA_ARGS__)
-# define gcsinfo(FORM) gcs().send_text(MAV_SEVERITY_INFO, FORM)
-# define gcswarning(FORM) gcs().send_text(MAV_SEVERITY_WARNING, FORM)
+# define gcsdebug(FORM, ...)    gcs().send_text(MAV_SEVERITY_INFO, FORM, __VA_ARGS__)
+# define gcsinfo(FORM)          gcs().send_text(MAV_SEVERITY_INFO, FORM)
+# define gcswarning(FORM)       gcs().send_text(MAV_SEVERITY_WARNING, FORM)
+
+struct CNMIS {
+    float   yaw_deg;
+    float   spdcm;
+    uint8_t spryr;
+    uint8_t edge;
+    bool    addNew;
+    uint16_t curr_idx;
+    uint16_t repl_idx;
+    uint16_t jump_idx;
+    Location loctg;
+    int32_t  misAlt;
+    Location::AltFrame misFrame;
+};
+
+# define    CNDN_ZIGZAG_RESUME                                              \
+    CNMIS cms;                                                              \
+    bool getResume();                                                       \
+    void setResume();                                                       \
+    void processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight);       \
+    void processAB(Vector2f& dstA,Vector2f& dstB, bool bLeftRight);         \
+    void turnZigZag(uint8_t state);                                         \
+    bool resume_mission();                                                  \
+    bool isOwnMission();                                                    \
+    bool hasResume(uint16_t &resumeIdx);
 
 #define CN_UNUSED(_X)  ((_X)=(_X))
 
@@ -114,8 +139,8 @@ private:
     void set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool relative_angle);
     void processArea();
     void processAB();
-    bool getResume(Mode::CNMIS& dat);
-    void setResume(Mode::CNMIS& dat);
+    bool getResume(CNMIS& dat);
+    void setResume(CNMIS& dat);
     bool isOwnMission();
     bool hasResume(uint16_t &resumeIdx);
 

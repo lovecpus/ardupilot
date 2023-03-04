@@ -249,19 +249,6 @@ public:
     uint16_t get_pilot_speed_dn(void);
 
     // end pass-through functions
-    struct CNMIS {
-        float   yaw_deg;
-        float   spdcm;
-        uint8_t spryr;
-        uint8_t edge;
-        bool    addNew;
-        uint16_t curr_idx;
-        uint16_t repl_idx;
-        uint16_t jump_idx;
-        Location loctg;
-        int32_t  misAlt;
-        Location::AltFrame misFrame;
-    };
 };
 
 
@@ -338,8 +325,6 @@ private:
 
 
 class ModeAuto : public Mode {
-    friend class ModeCNDN;
-
 public:
     // inherit constructor
     using Mode::Mode;
@@ -889,7 +874,6 @@ private:
 
 
 class ModeLoiter : public Mode {
-friend class ModeCNDN;
 public:
     // inherit constructor
     using Mode::Mode;
@@ -1361,10 +1345,10 @@ protected:
     uint32_t last_log_ms;   // system time of last time desired velocity was logging
 };
 
-class ModeZigZag : public Mode {        
-    friend class ModeCNDN;
-public:
+#include "mode_cndn.hpp"
 
+class ModeZigZag : public Mode {        
+public:
     // Inherit constructor
     using Mode::Mode;
 
@@ -1382,6 +1366,9 @@ public:
     // return manual control to the pilot
     void return_to_manual_control(bool maintain_target);
 
+    CNDN_ZIGZAG_RESUME;
+#if (0)
+    CNMIS cms;
     bool getResume();
     void setResume();
     void processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight);
@@ -1390,9 +1377,9 @@ public:
     bool resume_mission();
     bool isOwnMission();
     bool hasResume(uint16_t &resumeIdx);
+#endif
 
 protected:
-
     const char *name() const override { return "ZIGZAG"; }
     const char *name4() const override { return "ZIGZ"; }
 
@@ -1405,7 +1392,6 @@ private:
     Vector2f dest_A;    // in NEU frame in cm relative to ekf origin
     Vector2f dest_B;    // in NEU frame in cm relative to ekf origin
     Vector2f direct;    // direction of flying zigzag
-    CNMIS    cms;
 
     enum zigzag_state {
         MANUAL,         // pilot toggle the switch to middle position, has manual control
@@ -1499,5 +1485,3 @@ private:
 
 };
 #endif
-
-#include "mode_cndn.hpp"

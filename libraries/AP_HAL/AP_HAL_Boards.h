@@ -185,7 +185,7 @@
 #endif
 
 #ifndef HAL_OS_FATFS_IO
-#define HAL_OS_FATFS_IO 0
+#define HAL_OS_FATFS_IO 1
 #endif
 
 #ifndef HAL_PX4_HAVE_PX4IO
