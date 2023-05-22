@@ -186,8 +186,6 @@ bool ModeCNDN::init(bool ignore_checks)
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
 
-    copter.rangefinder_state.enabled = false;
-
     stage = MANUAL;
 
     // 무장상태에서 자동방재ON 상태로 모드 변경이면 자동방재 계속
@@ -201,6 +199,10 @@ bool ModeCNDN::init(bool ignore_checks)
                     return true;
             }
         }
+    }
+    else
+    {
+        copter.rangefinder_state.enabled = false;
     }
 
     if (stage == MANUAL) {
@@ -1016,7 +1018,7 @@ void ModeCNDN::handle_message(const mavlink_message_t &msg)
         case MAVLINK_MSG_ID_CNDN_REMOTE: {
             mavlink_cndn_remote_t packet;
             mavlink_msg_cndn_remote_decode(&msg, &packet);
-            switch (packet.cmdid) {
+            switch (packet.command) {
                 case 1: // remote command trigger
                 {
                     uint32_t *p = (uint32_t *)(packet.param);
@@ -1220,6 +1222,7 @@ void ModeCNDN::stop_mission() {
 bool ModeCNDN::resume_mission() {
     if (isZigZag()) {
         if (copter.mode_zigzag.isOwnMission() && copter.mode_zigzag.resume_mission()) {
+            copter.rangefinder_state.enabled = true;
             stage = AUTO;
             return true;
         }
@@ -1232,6 +1235,7 @@ bool ModeCNDN::resume_mission() {
     }
 
     if (AP::mission()->set_current_cmd(resumeIndex)) {
+        copter.rangefinder_state.enabled = true;
         copter.sprayer.run(false);
         stage = AUTO;
         return true;
