@@ -1022,6 +1022,16 @@ void AP_GPS::send_mavlink_gps2_raw(mavlink_channel_t chan)
     last_send_time_ms[chan] = last_message_time_ms(1);
 
     const Location &loc = location(1);
+    float hacc = 0.0f;
+    float vacc = 0.0f;
+    float sacc = 0.0f;
+    float undulation = 0.0;
+    float height_elipsoid_mm = loc.alt*10 - undulation * 1000;
+
+    horizontal_accuracy(1, hacc);
+    vertical_accuracy(1, vacc);
+    speed_accuracy(1, sacc);
+
     mavlink_msg_gps2_raw_send(
         chan,
         last_fix_time_ms(1)*(uint64_t)1000,
@@ -1035,7 +1045,13 @@ void AP_GPS::send_mavlink_gps2_raw(mavlink_channel_t chan)
         ground_course(1)*100, // 1/100 degrees,
         num_sats(1),
         state[1].rtk_num_sats,
-        state[1].rtk_age_ms);
+        state[1].rtk_age_ms,
+        ground_course(1)*100,
+        height_elipsoid_mm,   // Elipsoid height in mm
+        hacc * 1000,          // one-sigma standard deviation in mm
+        vacc * 1000,          // one-sigma standard deviation in mm
+        sacc * 1000,          // one-sigma standard deviation in mm/s
+        0);                    // TODO one-sigma heading accuracy standard deviation
 }
 #endif // GPS_MAX_RECEIVERS
 

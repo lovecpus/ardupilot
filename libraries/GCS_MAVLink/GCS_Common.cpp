@@ -236,7 +236,10 @@ void GCS_MAVLINK::send_battery_status(const uint8_t instance) const
                                     consumed_wh,  // consumed energy in hJ (hecto-Joules)
                                     battery.capacity_remaining_pct(instance),
                                     0, // time remaining, seconds (not provided)
-                                    MAV_BATTERY_CHARGE_STATE_UNDEFINED);
+                                    MAV_BATTERY_CHARGE_STATE_UNDEFINED,
+                                    0,
+                                    0,
+                                    0);
 }
 
 // returns true if all battery instances were reported
@@ -271,7 +274,8 @@ void GCS_MAVLINK::send_distance_sensor(const AP_RangeFinder_Backend *sensor, con
         0,                                       // Measurement covariance in centimeters, 0 for unknown / invalid readings
         0,                                       // horizontal FOV
         0,                                       // vertical FOV
-        (const float *)nullptr);                 // quaternion of sensor orientation for MAV_SENSOR_ROTATION_CUSTOM
+        (const float *)nullptr,                  // quaternion of sensor orientation for MAV_SENSOR_ROTATION_CUSTOM
+        0);                                      // Signal quality of the sensor. 0 = unknown/unset signal quality, 1 = invalid signal, 100 = perfect signal.
 }
 // send any and all distance_sensor messages.  This starts by sending
 // any distance sensors not used by a Proximity sensor, then sends the
@@ -350,16 +354,17 @@ void GCS_MAVLINK::send_proximity() const
                     return;
                 }
                 mavlink_msg_distance_sensor_send(
-                        chan,
-                        AP_HAL::millis(),                               // time since system boot
-                        dist_min,                                       // minimum distance the sensor can measure in centimeters
-                        dist_max,                                       // maximum distance the sensor can measure in centimeters
-                        (uint16_t)(dist_array.distance[i] * 100.0f),    // current distance reading
-                        MAV_DISTANCE_SENSOR_LASER,                      // type from MAV_DISTANCE_SENSOR enum
-                        PROXIMITY_SENSOR_ID_START + i,                  // onboard ID of the sensor
-                        dist_array.orientation[i],                      // direction the sensor faces from MAV_SENSOR_ORIENTATION enum
-                        0,                                              // Measurement covariance in centimeters, 0 for unknown / invalid readings
-                        0, 0, nullptr);
+                    chan,
+                    AP_HAL::millis(),                               // time since system boot
+                    dist_min,                                       // minimum distance the sensor can measure in centimeters
+                    dist_max,                                       // maximum distance the sensor can measure in centimeters
+                    (uint16_t)(dist_array.distance[i] * 100.0f),    // current distance reading
+                    MAV_DISTANCE_SENSOR_LASER,                      // type from MAV_DISTANCE_SENSOR enum
+                    PROXIMITY_SENSOR_ID_START + i,                  // onboard ID of the sensor
+                    dist_array.orientation[i],                      // direction the sensor faces from MAV_SENSOR_ORIENTATION enum
+                    0,                                              // Measurement covariance in centimeters, 0 for unknown / invalid readings
+                    0, 0, nullptr, 0
+                );
             }
         }
     }
@@ -380,7 +385,7 @@ void GCS_MAVLINK::send_proximity() const
                 PROXIMITY_SENSOR_ID_START + PROXIMITY_MAX_DIRECTION + 1,  // onboard ID of the sensor
                 MAV_SENSOR_ROTATION_PITCH_90,                             // direction upwards
                 0,                                                        // Measurement covariance in centimeters, 0 for unknown / invalid readings
-                0, 0, nullptr);
+                0, 0, nullptr, 0);
     }
 }
 
@@ -1653,7 +1658,7 @@ void GCS_MAVLINK::send_scaled_imu(uint8_t instance, void (*send_fn)(mavlink_chan
 // send data for barometer and airspeed sensors instances.  In the
 // case that we run out of instances of one before the other we send
 // the relevant fields as 0.
-void GCS_MAVLINK::send_scaled_pressure_instance(uint8_t instance, void (*send_fn)(mavlink_channel_t chan, uint32_t time_boot_ms, float press_abs, float press_diff, int16_t temperature))
+void GCS_MAVLINK::send_scaled_pressure_instance(uint8_t instance, void (*send_fn)(mavlink_channel_t chan, uint32_t time_boot_ms, float press_abs, float press_diff, int16_t temperature, int16_t temperature_press_diff))
 {
     const AP_Baro &barometer = AP::baro();
 
@@ -1661,6 +1666,7 @@ void GCS_MAVLINK::send_scaled_pressure_instance(uint8_t instance, void (*send_fn
 
     float press_abs = 0.0f;
     float temperature = 0.0f;
+    int16_t temperature_press_diff = 0; // Differential pressure temperature
     if (instance < barometer.num_instances()) {
         press_abs = barometer.get_pressure(instance) * 0.01f;
         temperature = barometer.get_temperature(instance)*100;
@@ -1668,13 +1674,22 @@ void GCS_MAVLINK::send_scaled_pressure_instance(uint8_t instance, void (*send_fn
     }
 
     float press_diff = 0; // pascal
+#if AP_AIRSPEED_ENABLED
     AP_Airspeed *airspeed = AP_Airspeed::get_singleton();
     if (airspeed != nullptr &&
         airspeed->enabled(instance)) {
         press_diff = airspeed->get_differential_pressure(instance) * 0.01f;
+        float temp;
+        if (airspeed->get_temperature(instance,temp)) {
+            temperature_press_diff = temp * 100;
+            if (temperature_press_diff == 0) {
+                // don't send zero as that is the value for 'no data'
+                temperature_press_diff = 1;
+            }
+        }
         have_data = true;
     }
-
+#endif
     if (!have_data) {
         return;
     }
@@ -1682,9 +1697,10 @@ void GCS_MAVLINK::send_scaled_pressure_instance(uint8_t instance, void (*send_fn
     send_fn(
         chan,
         AP_HAL::millis(),
-        press_abs, // hectopascal
-        press_diff, // hectopascal
-        temperature); // 0.01 degrees C
+        press_abs,                  // hectopascal
+        press_diff,                 // hectopascal
+        temperature,                // 0.01 degrees C
+        temperature_press_diff);    // 0.01 degrees C
 }
 
 void GCS_MAVLINK::send_scaled_pressure()
@@ -1833,7 +1849,12 @@ void GCS::service_statustext(void)
                 mavlink_channel_t chan_index = (mavlink_channel_t)(MAVLINK_COMM_0+i);
                 if (HAVE_PAYLOAD_SPACE(chan_index, STATUSTEXT)) {
                     // we have space so send then clear that channel bit on the mask
-                    mavlink_msg_statustext_send(chan_index, statustext->msg.severity, statustext->msg.text);
+                    mavlink_msg_statustext_send(chan_index
+                        , statustext->msg.severity
+                        , statustext->msg.text
+                        , statustext->msg.id
+                        , statustext->msg.chunk_seq
+                    );
                     statustext->bitmask &= ~chan_bit;
                 }
             }
@@ -2007,7 +2028,8 @@ void GCS_MAVLINK::handle_set_mode(const mavlink_message_t &msg)
     // exist, but if it did we'd probably be acking something
     // completely unrelated to setting modes.
     if (HAVE_PAYLOAD_SPACE(chan, MAVLINK_MSG_ID_COMMAND_ACK)) {
-        mavlink_msg_command_ack_send(chan, MAVLINK_MSG_ID_SET_MODE, result);
+        mavlink_msg_command_ack_send(chan, MAVLINK_MSG_ID_SET_MODE, result
+            , 0, 0, msg.sysid, msg.compid);
     }
 }
 
@@ -2528,7 +2550,8 @@ MAV_RESULT GCS_MAVLINK::handle_preflight_reboot(const mavlink_command_long_t &pa
     }
 
     // send ack before we reboot
-    mavlink_msg_command_ack_send(chan, packet.command, MAV_RESULT_ACCEPTED);
+    mavlink_msg_command_ack_send(chan, packet.command, MAV_RESULT_ACCEPTED
+            , 0, 0, 0, 0);
     // Notify might want to blink some LEDs:
     AP_Notify *notify = AP_Notify::get_singleton();
     if (notify) {
@@ -3810,7 +3833,8 @@ void GCS_MAVLINK::handle_command_long(const mavlink_message_t &msg)
     const MAV_RESULT result = handle_command_long_packet(packet);
 
     // send ACK or NAK
-    mavlink_msg_command_ack_send(chan, packet.command, result);
+    mavlink_msg_command_ack_send(chan, packet.command, result
+            , 0, 0, msg.sysid, msg.compid);
 
     // log the packet:
     mavlink_command_int_t packet_int;
@@ -3936,7 +3960,8 @@ void GCS_MAVLINK::handle_command_int(const mavlink_message_t &msg)
     const MAV_RESULT result = handle_command_int_packet(packet);
 
     // send ACK or NAK
-    mavlink_msg_command_ack_send(chan, packet.command, result);
+    mavlink_msg_command_ack_send(chan, packet.command, result
+            , 0, 0, msg.sysid, msg.compid);
 
     AP::logger().Write_Command(packet, result);
 

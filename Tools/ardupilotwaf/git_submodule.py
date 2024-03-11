@@ -158,6 +158,7 @@ def git_submodule_post_fun(bld):
     bld.add_post_fun(_post_fun)
 
 def _git_head_hash(ctx, path, short=False):
+    return "d4fce84e"
     cmd = [ctx.env.get_flat('GIT'), 'rev-parse']
     if short:
         cmd.append('--short=8')

@@ -1,7 +1,7 @@
 #include <deque>
 #include <algorithm>
 
-# define gcsdebug(FORM, ...)    gcs().send_text(MAV_SEVERITY_INFO, FORM, __VA_ARGS__)
+# define gcsdebug(FORM, ...)    gcs().send_text(MAV_SEVERITY_DEBUG, FORM, __VA_ARGS__)
 # define gcsinfo(FORM)          gcs().send_text(MAV_SEVERITY_INFO, FORM)
 # define gcswarning(FORM)       gcs().send_text(MAV_SEVERITY_WARNING, FORM)
 
@@ -23,8 +23,8 @@ struct CNMIS {
     CNMIS cms;                                                              \
     bool getResume();                                                       \
     void setResume();                                                       \
-    void processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight);       \
-    void processAB(Vector2f& dstA,Vector2f& dstB, bool bLeftRight);         \
+    bool processArea(Vector2f& dstA,Vector2f& dstB, bool bLeftRight);       \
+    bool processAB(Vector2f& dstA,Vector2f& dstB, bool bLeftRight);         \
     void turnZigZag(uint8_t state);                                         \
     bool resume_mission();                                                  \
     bool isOwnMission();                                                    \
@@ -137,10 +137,10 @@ private:
     void zigzag_manual();
     bool reached_destination();
     void set_yaw_state(bool use_yaw, float yaw_cd, bool use_yaw_rate, float yaw_rate_cds, bool relative_angle);
-    void processArea();
-    void processAB();
+    bool processArea();
+    bool processAB();
     bool getResume(CNMIS& dat);
-    void setResume(CNMIS& dat);
+    void setResume(CNMIS& dat, bool bRemote = false);
     bool isOwnMission();
     bool hasResume(uint16_t &resumeIdx);
 
@@ -156,9 +156,11 @@ private:
 
     float           yaw_deg = 0;
     uint32_t        reach_wp_time_ms = 0; // time since vehicle reached destination (or zero if not yet reached)
-    char*           data_buff = NULL;
+    uint8_t*        data_buff = NULL;
     uint16_t        data_size = 0;
     uint16_t        data_wpos = 0;
+    uint8_t         data_sysid = 0;
+    uint8_t         data_cmpid = 0;
     float           last_yaw_deg = 0.0f;
     bool            edge_mode = false;
     bool            m_bZigZag;

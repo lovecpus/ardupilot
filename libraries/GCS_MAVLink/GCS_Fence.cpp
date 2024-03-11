@@ -62,10 +62,13 @@ void GCS_MAVLINK::send_fence_status() const
         mavlink_breach_type = FENCE_BREACH_BOUNDARY;
     }
 
+    uint8_t breach_mitigation = FENCE_MITIGATE_UNKNOWN;
+
     // send status
     mavlink_msg_fence_status_send(chan,
                                   static_cast<int8_t>(fence->get_breaches() != 0),
                                   fence->get_breach_count(),
                                   mavlink_breach_type,
-                                  fence->get_breach_time());
+                                  fence->get_breach_time(),
+                                  breach_mitigation);
 }
