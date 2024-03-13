@@ -123,5 +123,3 @@ segv_*out
 /ArduPlane/scripts/
 /ArduSub/scripts/
 persistent.dat
-modules/*
-modules/mavlink
