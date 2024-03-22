@@ -46,6 +46,10 @@
 #include <AP_AHRS/AP_AHRS.h>
 #include <AP_Logger/AP_Logger.h>
 
+# define gcsdebug(FORM, ...)    gcs().send_text(MAV_SEVERITY_DEBUG, FORM, __VA_ARGS__)
+# define gcsinfo(FORM)          gcs().send_text(MAV_SEVERITY_INFO, FORM)
+# define gcswarning(FORM)       gcs().send_text(MAV_SEVERITY_WARNING, FORM)
+
 #define GPS_RTK_INJECT_TO_ALL 127
 #define GPS_MAX_RATE_MS 200 // maximum value of rate_ms (i.e. slowest update rate) is 5hz or 200ms
 #define GPS_BAUD_TIME_MS 1200
@@ -961,6 +965,7 @@ void AP_GPS::inject_data(const uint8_t *data, uint16_t len)
 void AP_GPS::inject_data(uint8_t instance, const uint8_t *data, uint16_t len)
 {
     if (instance < GPS_MAX_RECEIVERS && drivers[instance] != nullptr) {
+        //gcsdebug("GPS INJECT to %d", instance);
         drivers[instance]->inject_data(data, len);
     }
 }
