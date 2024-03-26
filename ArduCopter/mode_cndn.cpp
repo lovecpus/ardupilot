@@ -85,6 +85,13 @@ const AP_Param::GroupInfo ModeCNDN::var_info[] = {
     // @User: Advance
     AP_GROUPINFO("AVOID_CM", 9, ModeCNDN, _avoid_cm, 600),
 
+    // @Param: MC8_OPTION
+    // @DisplayName: MC8_OPTION
+    // @Description: Mission computer options
+    // @Range: 0
+    // @User: Advance
+    AP_GROUPINFO("MC8_OPTION", 10, ModeCNDN, _mc8_option, 0),
+
     AP_GROUPEND
 };
 

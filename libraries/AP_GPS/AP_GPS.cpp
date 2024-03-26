@@ -965,7 +965,6 @@ void AP_GPS::inject_data(const uint8_t *data, uint16_t len)
 void AP_GPS::inject_data(uint8_t instance, const uint8_t *data, uint16_t len)
 {
     if (instance < GPS_MAX_RECEIVERS && drivers[instance] != nullptr) {
-        //gcsdebug("GPS INJECT to %d", instance);
         drivers[instance]->inject_data(data, len);
     }
 }
@@ -1189,7 +1188,6 @@ void AP_GPS::handle_gps_rtcm_data(const mavlink_message_t &msg)
         // invalid packet
         return;
     }
-
     handle_gps_rtcm_fragment(packet.flags, packet.data, packet.len);
 }
 

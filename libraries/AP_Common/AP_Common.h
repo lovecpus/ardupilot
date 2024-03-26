@@ -144,8 +144,8 @@ private:
 
 public:
     CNTimeout(bool _disab=false) : m_s(0), b_disabled(_disab) {}
-    void reset(uint32_t s) { m_s = s; b_disabled = false; }
-    void disable() { b_disabled = true; }
+    CNTimeout& reset(uint32_t s) { m_s = s; b_disabled = false; return *this; }
+    CNTimeout& disable() { b_disabled = true; return *this; }
     bool isEnabled() { return !b_disabled; }
     bool isTimeout(uint32_t s, uint32_t tio) {
         if (b_disabled) return false;

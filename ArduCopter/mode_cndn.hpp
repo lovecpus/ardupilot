@@ -184,6 +184,7 @@ private:
     AP_Int16        _spray_backs;           ///< Sprayer minimum steps
     AP_Int8         _sensor_pin;            ///< CNDN Level sensor gpio pin
     AP_Int16        _avoid_cm;              ///< avoid 10cm
+    AP_Int16        _mc8_option;            ///< CNDN Mission computer options
 };
 
 #endif
